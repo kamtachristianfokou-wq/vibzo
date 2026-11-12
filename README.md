@@ -2,8 +2,8 @@
 
 Vidéos courtes, emplois et boutiques en Afrique de l'Ouest, du Centre, de l'Est et en Azerbaïdjan.
 
-- **Application** : https://kamtachristianfokou-wq.github.io/vibzo/ (installable sur téléphone)
-- **Démo** (contenus fictifs) : https://kamtachristianfokou-wq.github.io/vibzo/demo/
+- **Application** : https://vibzo.fun/ (installable sur téléphone)
+- **Démo** (contenus fictifs) : https://vibzo.fun/demo/
 - Serveur : Supabase, voir [SETUP.md](SETUP.md).
 
 ## Contenu

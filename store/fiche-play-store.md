@@ -6,9 +6,9 @@
 - **Type** : Application · **Gratuite**
 - **Catégorie** : Réseaux sociaux
 - **E-mail de contact** : kamtachristianfokou@gmail.com
-- **Site web** : https://kamtachristianfokou-wq.github.io/vibzo/
-- **Politique de confidentialité** : https://kamtachristianfokou-wq.github.io/vibzo/privacy.html
-- **Suppression de compte (URL)** : https://kamtachristianfokou-wq.github.io/vibzo/suppression-compte.html
+- **Site web** : https://vibzo.fun/
+- **Politique de confidentialité** : https://vibzo.fun/privacy.html
+- **Suppression de compte (URL)** : https://vibzo.fun/suppression-compte.html
 
 ## Description courte (80 car. max)
 Vidéos, emplois, boutiques et rencontres près de chez toi, en Afrique et à Bakou.

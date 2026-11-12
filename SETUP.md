@@ -34,7 +34,7 @@ Dans **Authentication** > **Sign In / Providers** > **Email** :
 
 Dans **Authentication** > **URL Configuration** :
 
-- Site URL : `https://kamtachristianfokou-wq.github.io/vibzo/`
+- Site URL : `https://vibzo.fun/`
 
 ## 4. Relier l'application
 
