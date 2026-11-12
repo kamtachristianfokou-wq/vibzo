@@ -23,4 +23,7 @@ Vidéos courtes, emplois et boutiques en Afrique de l'Ouest, du Centre, de l'Est
 - Messagerie privée en temps réel
 - Emploi : offres vérifiées par l'équipe, profils candidats, candidatures
 - Boutiques : produits, photos, commandes avec paiement à la livraison, WhatsApp
+- Rencontres (abonnés Gold, 18 ans et plus) par ville, région, pays ou zone, avec matchs et messagerie
+- Interface traduite dans la langue officielle de chaque pays (français, anglais, portugais, espagnol, arabe, swahili, amharique, azerbaïdjanais)
+- Demandes d'abonnement Gold et Vendeur, activées par l'équipe dans le back-office
 - Signalements et back-office d'administration

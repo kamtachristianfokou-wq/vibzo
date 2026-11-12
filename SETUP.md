@@ -19,6 +19,7 @@ les boutiques et les offres d'emploi.
 1. Dans le menu de gauche : **SQL Editor** > **New query**.
 2. Copie tout le contenu du fichier `supabase/schema.sql`, colle-le, puis clique sur **Run**.
 3. Le message « Success. No rows returned » doit s'afficher.
+4. Fais de même avec `supabase/migration_002_rencontres.sql` (section Rencontres, demandes d'abonnement, langues).
 
 ## 3. Réglages de connexion
 

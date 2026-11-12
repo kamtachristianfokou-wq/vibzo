@@ -4,6 +4,7 @@
 import { C, ZONES, SECTORS, CONTRACTS, REMOTE, REPORT_REASONS, money } from './data.js';
 import { SUPPORT_WHATSAPP, ANDROID_APK_URL } from './config.js';
 import { getClient, isConfigured } from './supa.js';
+import { initI18n, LANGS, langFor, ALSO, getLang } from './i18n.js';
 
 /* ---------- utilitaires ---------- */
 const $ = s => document.querySelector(s);
@@ -66,6 +67,20 @@ async function installApp() {
   ${ANDROID_APK_URL ? `<a class="btn" style="text-decoration:none" href="${ANDROID_APK_URL}">⬇️ Télécharger l’app Android (APK)</a><p class="mut small" style="margin-top:8px">Si Android le demande, autorise l’installation depuis ton navigateur.</p>` : ''}`);
 }
 
+/* ---------- langue ---------- */
+const savedLang = () => { try { return localStorage.getItem('vibzo_lang'); } catch (e) { return null; } };
+function applyLang() { initI18n(savedLang() || (S.me && S.me.lang) || langFor((S.me && S.me.country) || S.loc.country)); }
+function langSheet() {
+  const cc = (S.me && S.me.country) || S.loc.country; const rec = [langFor(cc), ...(ALSO[cc] || [])];
+  const order = [...new Set([...rec, ...Object.keys(LANGS)])];
+  sheet('🌐 Langue', `<p class="mut small">Langue officielle de ${esc(C[cc].n)} : <b>${LANGS[langFor(cc)]}</b></p><div class="chips" style="margin-top:12px">${order.map(l => `<button class="chip ${getLang() === l ? 'on' : ''}" onclick="V.setLang('${l}')">${LANGS[l]}${rec.includes(l) ? ' ★' : ''}</button>`).join('')}</div>`);
+}
+async function setLang(l) {
+  try { localStorage.setItem('vibzo_lang', l); } catch (e) { }
+  closeSheet(); initI18n(l); renderNav(); go(S.cur);
+  if (uid()) { const { error } = await sb.from('profiles').update({ lang: l }).eq('id', uid()); if (!error && S.me) S.me.lang = l; }
+}
+
 /* ---------- état ---------- */
 let sb;
 const S = {
@@ -90,7 +105,7 @@ function requireAuth(msg) {
 }
 
 /* ---------- navigation ---------- */
-const NAV = [['home', 'Accueil', I.home], ['shop', 'Boutique', I.bag], ['create', '', I.plus], ['jobs', 'Emplois', I.brief], ['profile', 'Profil', I.user]];
+const NAV = [['home', 'Accueil', I.home], ['shop', 'Boutique', I.bag], ['create', '', I.plus], ['dating', 'Rencontres', I.heart], ['jobs', 'Emplois', I.brief], ['profile', 'Profil', I.user]];
 function renderNav() {
   $('#nav').style.display = S.cur === 'auth' || S.cur === 'chat' ? 'none' : 'flex';
   $('#nav').innerHTML = NAV.map(([k, l, ic]) => k === 'create'
@@ -137,7 +152,7 @@ async function applyLoc() {
     if (error) return fail(error);
     S.me.country = S.loc.country; S.me.region = S.loc.region; toast('Région de profil mise à jour');
   }
-  closeSheet(); go(S.cur);
+  closeSheet(); applyLang(); renderNav(); go(S.cur);
 }
 
 /* =====================================================================
@@ -146,7 +161,7 @@ async function applyLoc() {
 let authMode = 'signup';
 SCREENS.auth = () => {
   const ccOpts = Object.keys(ZONES).map(z => `<optgroup label="${ZONES[z]}">${Object.entries(C).filter(([, c]) => c.z === z).map(([k, c]) => `<option value="${k}" ${k === S.loc.country ? 'selected' : ''}>${c.f} ${c.n}</option>`).join('')}</optgroup>`).join('');
-  $('#s-auth').innerHTML = `<div class="auth"><div class="logo"><span>Vibzo</span></div><p class="mut small" style="text-align:center;margin-top:4px">Vidéos · Emplois · Boutiques près de chez toi</p>
+  $('#s-auth').innerHTML = `<div class="auth"><div class="logo"><span>Vibzo</span></div><p class="mut small" style="text-align:center;margin-top:4px">Vidéos · Emplois · Boutiques près de chez toi</p><div style="text-align:center;margin-top:10px"><button class="chip" onclick="V.langSheet()">🌐 ${LANGS[getLang()]} ▾</button></div>
   <div class="seg" style="margin-top:20px"><button class="${authMode === 'signup' ? 'on' : ''}" onclick="V.authTab('signup')">Créer un compte</button><button class="${authMode === 'login' ? 'on' : ''}" onclick="V.authTab('login')">Se connecter</button></div>
   <form onsubmit="event.preventDefault();V.submitAuth()" style="margin-top:6px">
   ${authMode === 'signup' ? `<div class="field"><label>Ton nom</label><input id="aName" maxlength="40" required placeholder="Ex : Christian K."></div>
@@ -163,7 +178,7 @@ SCREENS.auth = () => {
   <button class="btn ghost" onclick="V.go('home')">Continuer sans compte</button><button class="btn ghost" onclick="V.installApp()">📲 Installer l’application</button></div>`;
   if (authMode === 'signup') authRegions();
 };
-function authRegions() { const cc = $('#aCc').value; $('#aRg').innerHTML = C[cc].r.map(r => `<option>${esc(r)}</option>`).join(''); $('#aInd').textContent = C[cc].tel; }
+function authRegions() { const cc = $('#aCc').value; if (!savedLang() && langFor(cc) !== getLang()) { S.loc.country = cc; initI18n(langFor(cc)); } $('#aRg').innerHTML = C[cc].r.map(r => `<option>${esc(r)}</option>`).join(''); $('#aInd').textContent = C[cc].tel; }
 function authTab(m) { authMode = m; SCREENS.auth(); }
 async function submitAuth() {
   const btn = $('#aBtn'), err = $('#aErr'); err.textContent = '';
@@ -614,7 +629,7 @@ async function myShopSheet() {
   const sh = S.myShop;
   sheet('🏪 ' + esc(sh.name), `<div class="row"><span class="grow">${pill(sh.status)}</span><button class="chip" onclick="V.shopForm()">✏️ Modifier</button></div>
   ${sh.status === 'pending' ? `<p class="small" style="margin-top:10px">Tu peux déjà ajouter tes produits. Ils seront visibles dès l’activation de ta boutique.${SUPPORT_WHATSAPP ? ` <a href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent('Bonjour, je souhaite activer ma boutique Vibzo « ' + sh.name + ' ».')}" target="_blank" rel="noopener">Contacter l’équipe sur WhatsApp</a>` : ''}</p>` : ''}
-  <div class="lbl">Mes produits</div><div id="myProds">${loading()}</div>
+  ${sh.status !== 'active' ? `<div class="card" style="margin-top:12px"><b>Activer ma boutique (abonnement Vendeur)</b>${goldBlock('vendeur')}</div>` : ''}<div class="lbl">Mes produits</div><div id="myProds">${loading()}</div>
   <div class="lbl">Ajouter un produit</div>
   <div class="field"><input id="pn" maxlength="80" placeholder="Nom du produit"></div>
   <div class="row"><div class="field grow"><input id="pp" type="number" inputmode="decimal" min="0" placeholder="Prix (${esc(C[sh.country].cur)})"></div><div class="field" style="width:110px"><input id="ps" type="number" inputmode="numeric" min="0" placeholder="Stock"></div></div>
@@ -668,7 +683,7 @@ async function setOrder(id, st) { const { error } = await sb.from('orders').upda
    ===================================================================== */
 SCREENS.profile = async () => {
   const id = S.viewUser || uid();
-  if (!id) { $('#s-profile').innerHTML = hdr('Profil') + `<div class="empty"><div class="big">👤</div><p>Crée ton compte pour publier, suivre des créateurs, postuler et vendre.</p><button class="btn" onclick="V.go('auth')">Se connecter / s’inscrire</button></div><div class="slist"><button onclick="V.openLoc()"><span class="e">📍</span>Pays & région<span class="r">${esc(locLabel())} ›</span></button><button onclick="V.installApp()"><span class="e">📲</span>Installer l’application<span class="r">›</span></button><button onclick="window.open('privacy.html','_blank')"><span class="e">🔒</span>Confidentialité<span class="r">›</span></button></div>`; return; }
+  if (!id) { $('#s-profile').innerHTML = hdr('Profil') + `<div class="empty"><div class="big">👤</div><p>Crée ton compte pour publier, suivre des créateurs, postuler et vendre.</p><button class="btn" onclick="V.go('auth')">Se connecter / s’inscrire</button></div><div class="slist"><button onclick="V.openLoc()"><span class="e">📍</span>Pays & région<span class="r">${esc(locLabel())} ›</span></button><button onclick="V.langSheet()"><span class="e">🌐</span>Langue<span class="r">${LANGS[getLang()]} ›</span></button><button onclick="V.installApp()"><span class="e">📲</span>Installer l’application<span class="r">›</span></button><button onclick="window.open('privacy.html','_blank')"><span class="e">🔒</span>Confidentialité<span class="r">›</span></button></div>`; return; }
   const own = id === uid();
   $('#s-profile').innerHTML = hdr('Profil', own ? `<button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button><button class="ib" onclick="V.settings()" aria-label="Paramètres">${I.gear}</button>` : '', own ? '' : (S.prev && S.prev !== 'profile' ? S.prev : 'home')) + loading();
   const { data: p, error } = await sb.from('profile_stats').select('*').eq('id', id).maybeSingle();
@@ -730,18 +745,158 @@ function settings() {
   <button onclick="V.gold()"><span class="e">👑</span>Vibzo Gold<span class="r">${vip ? 'Actif jusqu’au ' + new Date(S.me.vip_until).toLocaleDateString('fr-FR') : 'Découvrir'} ›</span></button>
   <button onclick="V.closeSheet();${S.myShop ? 'V.myShopSheet()' : 'V.shopForm()'}"><span class="e">🏪</span>Ma boutique<span class="r">${S.myShop ? (ST[S.myShop.status] || [''])[0] : 'Ouvrir'} ›</span></button>
   <button onclick="V.myCV()"><span class="e">📄</span>Mon profil candidat<span class="r">›</span></button>
+  <button onclick="V.langSheet()"><span class="e">🌐</span>Langue<span class="r">${LANGS[getLang()]} ›</span></button>
   <button onclick="V.installApp()"><span class="e">📲</span>Installer l’application<span class="r">›</span></button>
   <button onclick="window.open('privacy.html','_blank')"><span class="e">🔒</span>Confidentialité<span class="r">›</span></button>
   ${S.me.role === 'admin' ? `<button onclick="V.closeSheet();V.go('admin')"><span class="e">🛠️</span>Back-office admin<span class="r">›</span></button>` : ''}
   <button onclick="V.logout()"><span class="e">🚪</span>Se déconnecter</button></div>
   <p class="mut small" style="text-align:center;margin-top:14px">Connecté : ${esc(S.session.user.email || '')}</p>`);
 }
-function gold() {
-  const msg = encodeURIComponent('Bonjour, je souhaite activer Vibzo Gold pour le compte @' + S.me.username);
-  sheet('👑 Vibzo Gold', `<div class="hero" style="margin:0"><div class="cr">👑</div><h2>Vibzo Gold</h2><div class="perks"><div>✨ Badge Gold sur ton profil et tes vidéos</div><div>💼 Mise en avant de tes candidatures et offres (bientôt)</div><div>💘 Espace rencontres entre adultes vérifiés (bientôt)</div></div></div>
-  <p class="small" style="margin-top:14px">Le paiement en ligne arrive bientôt. En attendant, l’activation se fait avec l’équipe Vibzo.</p>
-  ${SUPPORT_WHATSAPP ? `<a class="btn gold" style="text-decoration:none" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${msg}" target="_blank" rel="noopener">Activer Gold sur WhatsApp</a>` : '<p class="mut small">Contact de l’équipe à venir.</p>'}`);
+/* =====================================================================
+   RENCONTRES (abonnés Gold, 18 ans et plus)
+   ===================================================================== */
+const isVip = () => !!(S.me && (S.me.role === 'admin' || (S.me.vip_until && new Date(S.me.vip_until) > new Date())));
+const PAYZ = { O: ['Orange Money', 'MTN MoMo', 'Wave', 'Moov Money'], C: ['Orange Money', 'MTN MoMo', 'Airtel Money', 'Moov Money'], E: ['M-Pesa', 'Airtel Money', 'MTN MoMo'], A: ['m10', 'Birbank', 'Carte bancaire'] };
+const INTENT = { serieux: ['💍', 'Relation sérieuse'], libre: ['🔥', 'Sans lendemain'], les_deux: ['✨', 'Ouvert(e) aux deux'] };
+let dScope = 'city', dIntent = null, dAge = 'all', dQueue = [], dMe = null;
+function goldBlock(plan = 'gold') {
+  const zone = C[(S.me && S.me.country) || S.loc.country].z;
+  return `<div class="field"><label>Durée</label><select id="gMonths"><option value="1">1 mois</option><option value="3">3 mois</option><option value="12">12 mois</option></select></div>
+  <div class="field"><label>Comment veux-tu payer ?</label><select id="gPay">${[...PAYZ[zone], 'Espèces', 'Autre'].map(p => `<option>${p}</option>`).join('')}</select></div>
+  <button class="btn gold" id="gBtn" onclick="V.requestSub('${plan}')">${plan === 'gold' ? '👑 Demander l’activation Gold' : '🏪 Demander l’activation Vendeur'}</button>
+  <p class="mut small" style="margin-top:8px;text-align:center">L’équipe Vibzo te contacte dans la messagerie avec le prix de ton pays et les instructions de paiement. L’abonnement est activé dès réception.</p>`;
 }
+function goldHero() {
+  return `<div class="hero" style="margin:0"><div class="cr">👑</div><h2>Vibzo Gold</h2><div class="perks"><div>💘 <span><b>Rencontres</b> : relation sérieuse ou sans lendemain, entre adultes, par ville, région ou pays</span></div><div>✨ <span>Badge Gold sur ton profil et tes vidéos</span></div><div>🛡️ <span>Profils 18+, signalement et blocage en un clic</span></div></div></div>`;
+}
+async function requestSub(plan) {
+  if (!requireAuth()) return;
+  const btn = $('#gBtn'); busy(btn, true);
+  const { error } = await sb.from('subscription_requests').insert({ user_id: uid(), plan, months: +$('#gMonths').value, payment: $('#gPay').value });
+  busy(btn, false); if (error) return fail(error);
+  closeSheet(); toast('Demande envoyée ✅ L’équipe Vibzo va te contacter.');
+  if (S.cur === 'dating') go('dating');
+}
+function gold() {
+  if (!requireAuth()) return;
+  const vip = isVip();
+  sheet('👑 Vibzo Gold', goldHero() + (vip ? `<p class="small" style="margin-top:14px;text-align:center">✅ Ton abonnement Gold est actif${S.me.vip_until ? ' jusqu’au ' + new Date(S.me.vip_until).toLocaleDateString('fr-FR') : ''}.</p><button class="btn gold" onclick="V.closeSheet();V.go('dating')">💘 Aller aux rencontres</button>` : goldBlock('gold')));
+}
+SCREENS.dating = async () => {
+  const el = $('#s-dating');
+  if (!uid()) { el.innerHTML = hdr('💘 Rencontres') + `<div class="empty"><div class="big">💘</div><p>Rencontre des personnes de ta ville, de ta région ou de ton pays.</p><button class="btn" onclick="V.go('auth')">Se connecter / s’inscrire</button></div>`; return; }
+  if (!isVip()) {
+    const { data: req } = await sb.from('subscription_requests').select('*').eq('user_id', uid()).eq('plan', 'gold').eq('status', 'pending').limit(1);
+    el.innerHTML = hdr('💘 Rencontres') + `<div class="pad">${goldHero()}<p class="small" style="margin-top:14px">L’espace rencontres est réservé aux membres <b>Gold</b> de 18 ans et plus.</p>${req && req.length ? `<div class="safety">⏳<span>Ta demande Gold est en cours. L’équipe Vibzo te contacte dans la messagerie.</span></div>` : goldBlock('gold')}</div>`;
+    return;
+  }
+  el.innerHTML = hdr('💘 Rencontres', `<button class="ib" onclick="V.datingForm()" aria-label="Mon profil rencontre">${I.user}</button>`) + `<div class="pad" id="dBody">${loading()}</div>`;
+  const { data: me, error } = await sb.from('dating_profiles').select('*').eq('user_id', uid()).maybeSingle();
+  if (error) throw error; dMe = me;
+  if (!me) {
+    $('#dBody').innerHTML = `<div class="card" style="margin-top:6px;text-align:center"><div style="font-size:44px">💘</div><h3 style="margin-top:6px">Crée ton profil de rencontre</h3><p class="mut small" style="margin-top:6px">Il est séparé de ton profil public. Seuls les membres Gold qui ont aussi un profil de rencontre peuvent le voir.</p>
+    <div class="perks" style="text-align:left;margin-top:12px"><div>🔞 <span>Réservé aux 18 ans et plus</span></div><div>🤝 <span>Respect et consentement avant tout</span></div><div>🚫 <span>Interdit : nudité, échanges d’argent, prostitution, faux profils</span></div></div>
+    <button class="btn" onclick="V.datingForm()">Créer mon profil</button></div>`;
+    return;
+  }
+  renderDating();
+};
+function datingForm() {
+  const m = dMe || {}; const cc = (S.me && S.me.country) || 'CM'; const c = C[cc];
+  const maxDate = new Date(); maxDate.setFullYear(maxDate.getFullYear() - 18);
+  sheet(m.user_id ? 'Mon profil rencontre' : 'Créer mon profil rencontre', `
+  <div class="field"><label>Photo de toi (visage visible)</label>${m.photo_url ? `<img src="${esc(m.photo_url)}" alt="" style="width:90px;height:90px;object-fit:cover;border-radius:14px;display:block;margin-bottom:8px">` : ''}<input id="dPhoto" type="file" accept="image/jpeg,image/png,image/webp"></div>
+  <div class="field"><label>Prénom</label><input id="dName" maxlength="30" value="${esc(m.first_name || (S.me && S.me.display_name.split(' ')[0]) || '')}"></div>
+  <div class="field"><label>Date de naissance</label><input id="dBirth" type="date" max="${maxDate.toISOString().slice(0, 10)}" value="${esc(m.birth_date || '')}"></div>
+  <div class="row"><div class="field grow"><label>Je suis</label><select id="dGender"><option value="homme" ${m.gender === 'homme' ? 'selected' : ''}>Un homme</option><option value="femme" ${m.gender === 'femme' ? 'selected' : ''}>Une femme</option></select></div>
+  <div class="field grow"><label>Je cherche</label><select id="dLook"><option value="femme" ${m.looking_for === 'femme' ? 'selected' : ''}>Des femmes</option><option value="homme" ${m.looking_for === 'homme' ? 'selected' : ''}>Des hommes</option><option value="tous" ${m.looking_for === 'tous' ? 'selected' : ''}>Les deux</option></select></div></div>
+  <div class="field"><label>Ce que je recherche</label><select id="dIntent">${Object.entries(INTENT).map(([k, v]) => `<option value="${k}" ${m.intent === k ? 'selected' : ''}>${v[0]} ${v[1]}</option>`).join('')}</select></div>
+  <div class="row"><div class="field grow"><label>Région</label><select id="dRegion">${c.r.map(r => `<option ${(m.region || (S.me && S.me.region)) === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+  <div class="field grow"><label>Ville</label><input id="dCity" maxlength="60" list="dCities" value="${esc(m.city || (S.me && S.me.city) || '')}" placeholder="Ex : Douala"><datalist id="dCities">${c.r.map(r => `<option value="${esc(r)}">`).join('')}</datalist></div></div>
+  <div class="field"><label>À propos de moi</label><textarea id="dBio" rows="3" maxlength="300" placeholder="Ce que j’aime, ce que je cherche…">${esc(m.bio || '')}</textarea></div>
+  <div class="field"><label>Centres d’intérêt (séparés par des virgules)</label><input id="dInt" value="${esc((m.interests || []).join(', '))}" placeholder="Musique, voyage, cuisine"></div>
+  <label class="check"><input type="checkbox" id="dVis" ${m.user_id ? (m.visible ? 'checked' : '') : 'checked'}> Mon profil est visible</label>
+  <label class="check"><input type="checkbox" id="dAdult" ${m.user_id ? 'checked' : ''}> Je certifie avoir 18 ans ou plus.</label>
+  <label class="check"><input type="checkbox" id="dRules" ${m.user_id ? 'checked' : ''}> Je respecte la charte : consentement, respect, aucun échange d’argent, aucune nudité, aucun faux profil.</label>
+  <button class="btn" id="dBtn" onclick="V.saveDating()">Enregistrer</button>
+  ${m.user_id ? `<button class="btn ghost" onclick="V.deleteDating()">Supprimer mon profil rencontre</button>` : ''}`);
+}
+async function saveDating() {
+  const name = $('#dName').value.trim(), birth = $('#dBirth').value, city = $('#dCity').value.trim();
+  if (name.length < 2) return toast('Indique ton prénom'); if (!birth) return toast('Indique ta date de naissance'); if (city.length < 2) return toast('Indique ta ville');
+  const b = new Date(birth), n = new Date(); let age = n.getFullYear() - b.getFullYear(); if (n < new Date(n.getFullYear(), b.getMonth(), b.getDate())) age--;
+  if (age < 18) return toast('⛔ L’espace rencontres est réservé aux 18 ans et plus.');
+  if (!$('#dAdult').checked || !$('#dRules').checked) return toast('Coche les deux cases pour continuer');
+  const f = $('#dPhoto').files[0]; if (!f && !(dMe && dMe.photo_url)) return toast('Ajoute une photo de toi');
+  const btn = $('#dBtn'); busy(btn, true);
+  try {
+    const row = { user_id: uid(), first_name: name, birth_date: birth, gender: $('#dGender').value, looking_for: $('#dLook').value, intent: $('#dIntent').value, region: $('#dRegion').value, city, bio: $('#dBio').value.trim(), interests: $('#dInt').value.split(',').map(s => s.trim()).filter(Boolean).slice(0, 8), visible: $('#dVis').checked, country: S.me.country };
+    row.photo_url = f ? await uploadImage(f) : dMe.photo_url;
+    const { data, error } = await sb.from('dating_profiles').upsert(row).select().single(); if (error) throw error;
+    dMe = data; closeSheet(); toast('Profil rencontre enregistré ✅'); go('dating');
+  } catch (e) { fail(e); } finally { busy(btn, false); }
+}
+function deleteDating() { confirmBox('Supprimer ton profil rencontre ?', 'V.doDeleteDating()'); }
+async function doDeleteDating() { closeSheet(); const { error } = await sb.from('dating_profiles').delete().eq('user_id', uid()); if (error) return fail(error); dMe = null; toast('Profil rencontre supprimé'); go('dating'); }
+async function renderDating() {
+  const m = dMe, zoneName = ZONES[C[m.country].z];
+  const scopes = [['city', '📍 ' + m.city], ['region', m.region || 'Ma région'], ['country', C[m.country].f + ' ' + C[m.country].n], ['zone', '🌍 ' + zoneName]];
+  $('#dBody').innerHTML = `<div class="row" style="gap:8px;overflow-x:auto;padding-bottom:4px">${scopes.map(([k, l]) => `<button class="chip ${dScope === k ? 'on' : ''}" style="flex:none" onclick="V.dSet('scope','${k}')">${esc(l)}</button>`).join('')}</div>
+  <div class="row" style="gap:8px;overflow-x:auto;padding:8px 0 4px"><button class="chip ${!dIntent ? 'on' : ''}" style="flex:none" onclick="V.dSet('intent','')">Toutes intentions</button>${Object.entries(INTENT).filter(([k]) => k !== 'les_deux').map(([k, v]) => `<button class="chip ${dIntent === k ? 'on' : ''}" style="flex:none" onclick="V.dSet('intent','${k}')">${v[0]} ${v[1]}</button>`).join('')}
+  <select onchange="V.dSet('age',this.value)" style="width:auto;flex:none;padding:7px 10px"><option value="all">Tous âges</option>${[['18-25', '18–25 ans'], ['26-35', '26–35 ans'], ['36-45', '36–45 ans'], ['46-99', '46 ans et +']].map(([k, l]) => `<option value="${k}" ${dAge === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+  <div id="dMatches"></div>
+  <div class="safety">🛡️<span>Premier rendez-vous dans un lieu public, préviens un proche. N’envoie jamais d’argent.</span></div>
+  <div class="stack" id="stack">${loading()}</div><div class="dbtns" id="dBtns"></div>`;
+  loadMatches(); loadCandidates();
+}
+function dSet(k, v) { if (k === 'scope') dScope = v; if (k === 'intent') dIntent = v || null; if (k === 'age') dAge = v; renderDating(); }
+async function loadMatches() {
+  const { data } = await sb.from('my_matches').select('*').order('created_at', { ascending: false }).limit(30);
+  const el = $('#dMatches'); if (!el) return;
+  el.innerHTML = data && data.length ? `<div class="lbl">Tes matchs (${data.length})</div><div class="matches">${data.map(x => `<button onclick="V.openChat('${x.conversation_id}')"><span class="av" style="background:#ccc;overflow:hidden"><img class="avimg" src="${esc(x.photo_url)}" alt=""></span>${esc(x.first_name)}</button>`).join('')}</div>` : '';
+}
+async function loadCandidates() {
+  const m = dMe; const [a1, a2] = dAge === 'all' ? [18, 99] : dAge.split('-').map(Number);
+  const countries = dScope === 'zone' ? Object.keys(C).filter(k => C[k].z === C[m.country].z) : [m.country];
+  const { data, error } = await sb.rpc('dating_candidates', { p_countries: countries, p_region: dScope === 'region' ? m.region : null, p_city: dScope === 'city' ? m.city : null, p_intent: dIntent, p_min_age: a1, p_max_age: a2, p_limit: 20 });
+  if (error) return fail(error);
+  dQueue = data || []; drawStack();
+}
+function dCard(d, i) {
+  const it = INTENT[d.intent] || INTENT.serieux;
+  return `<div class="dcard ${i === 0 ? 'top' : 'b' + i}" data-id="${d.user_id}" style="background:#0b2540"><img src="${esc(d.photo_url)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">${i === 0 ? `<button class="more" onclick="V.dMore('${d.user_id}')" style="color:#fff">⋯</button>` : ''}<div class="stamp l">J’AIME</div><div class="stamp n">NON</div>
+  <div class="inf"><div class="nm">${esc(d.first_name)} <small>${d.age}</small>${d.verified ? '<span class="ver">✓</span>' : ''}${d.is_vip ? ' 👑' : ''}</div><div class="small">📍 ${esc(d.city)}${d.region ? ', ' + esc(d.region) : ''}</div><span class="intent" style="background:rgba(30,155,232,.9)">${it[0]} ${it[1]}</span>${d.bio ? `<div class="bio">${esc(d.bio)}</div>` : ''}${(d.interests || []).length ? `<div class="int">${d.interests.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}</div></div>`;
+}
+function drawStack() {
+  const st = $('#stack'); if (!st) return;
+  const top = dQueue.slice(0, 3);
+  st.innerHTML = top.length ? top.map((d, i) => dCard(d, i)).reverse().join('') : `<div class="empty card" style="height:100%;display:flex;flex-direction:column;justify-content:center"><div class="big">🌍</div><b>Plus de profils ici pour l’instant</b><p class="small" style="margin-top:6px">Élargis la zone (région, pays) ou reviens plus tard : de nouveaux membres arrivent chaque jour.</p></div>`;
+  $('#dBtns').innerHTML = top.length ? `<button class="x" onclick="V.dSwipe('pass')" aria-label="Passer">✕</button><button class="h" onclick="V.dSwipe('like')" aria-label="J’aime">♥</button>` : '';
+  bindSwipe();
+}
+function bindSwipe() {
+  const c = document.querySelector('.dcard.top'); if (!c) return; let sx = 0, dx = 0, dr = false;
+  c.onpointerdown = e => { if (e.target.closest('.more')) return; dr = true; sx = e.clientX; dx = 0; c.setPointerCapture(e.pointerId); c.style.transition = 'none'; };
+  c.onpointermove = e => { if (!dr) return; dx = e.clientX - sx; c.style.transform = `translateX(${dx}px) rotate(${dx / 16}deg)`; c.dataset.dir = dx > 40 ? 'like' : dx < -40 ? 'nope' : ''; };
+  c.onpointerup = c.onpointercancel = () => { if (!dr) return; dr = false; c.style.transition = ''; if (dx > 100) dSwipe('like'); else if (dx < -100) dSwipe('pass'); else { c.style.transform = ''; c.dataset.dir = ''; } };
+}
+async function dSwipe(action, target) {
+  const c = document.querySelector('.dcard.top'); const id = target || (c && c.dataset.id); if (!id) return;
+  if (c && !target) { c.style.transform = `translateX(${action === 'like' ? 500 : -500}px) rotate(${action === 'like' ? 25 : -25}deg)`; c.style.opacity = '0'; c.dataset.dir = action === 'like' ? 'like' : 'nope'; }
+  const d = dQueue.find(x => x.user_id === id);
+  dQueue = dQueue.filter(x => x.user_id !== id);
+  setTimeout(drawStack, 250);
+  const { data, error } = await sb.rpc('dating_swipe', { p_target: id, p_action: action });
+  if (error) return fail(error);
+  if (data && data.match) {
+    modal(`<div class="match"><h2>C’est un match !</h2><p class="mut" style="color:#fff">Toi et ${esc(d ? d.first_name : '')} vous êtes plu.</p><div class="pair"><div class="av" style="overflow:hidden">${dMe.photo_url ? `<img class="avimg" src="${esc(dMe.photo_url)}" alt="">` : ''}</div><div class="av" style="overflow:hidden">${d ? `<img class="avimg" src="${esc(d.photo_url)}" alt="">` : ''}</div></div><button class="btn" onclick="V.closeModal();V.openChat('${data.conversation_id}')">💬 Envoyer un message</button><button class="btn ghost" onclick="V.closeModal();V.loadMatchesPub()">Continuer</button></div>`);
+  }
+}
+function dMore(id) {
+  sheet('Options', `<div class="slist" style="margin:0"><button onclick="V.dBlock('${id}')"><span class="e">🚫</span>Bloquer ce profil</button><button onclick="V.closeSheet();V.report('dating','${id}')"><span class="e">🚩</span>Signaler ce profil</button><button onclick="V.dSafety()"><span class="e">🛡️</span>Conseils de sécurité</button></div>`);
+}
+async function dBlock(id) { closeSheet(); await dSwipe('block', id); toast('Profil bloqué'); drawStack(); }
+function dSafety() { sheet('Conseils de sécurité', `<div class="perks" style="margin:0">${['☕ Premier rendez-vous dans un lieu public', '📲 Préviens un proche de l’heure et du lieu', '💸 N’envoie jamais d’argent à un match', '🤝 Le consentement est clair, explicite et peut être retiré à tout moment', '🚩 Signale tout comportement abusif ou suspect'].map(t => `<div>${t}</div>`).join('')}</div>`); }
 
 /* =====================================================================
    MESSAGERIE
@@ -752,7 +907,7 @@ SCREENS.msgs = async () => {
   const { data, error } = await sb.from('conversation_list').select('*').order('last_at', { ascending: false }).limit(100);
   if (error) throw error;
   S.unread = data.filter(c => c.unread).length;
-  const tl = { dm: ['Message', 'dm'], job: ['Emploi', 'job'], shop: ['Boutique', 'shop'] };
+  const tl = { dm: ['Message', 'dm'], job: ['Emploi', 'job'], shop: ['Boutique', 'shop'], match: ['Rencontre', 'match'] };
   $('#mlist').innerHTML = data.length ? data.map(c => `<button class="mitem" onclick="V.openChat('${c.id}')">${avatar({ avatar_url: c.other_avatar, display_name: c.other_name || '?' }, 52)}<div class="grow"><div class="n">${esc(c.other_name || 'Utilisateur')} <span class="typ ${tl[c.kind][1]}">${tl[c.kind][0]}</span></div><div class="l">${c.title ? esc(c.title) + ' · ' : ''}${c.last_body ? (c.last_sender === uid() ? 'Toi : ' : '') + esc(c.last_body) : ''}</div></div>${c.unread ? '<span class="dot"></span>' : `<span class="mut small">${ago(c.last_at)}</span>`}</button>`).join('') : `<div class="empty"><div class="big">💬</div>Aucune conversation.<br><span class="small">Contacte un créateur, un recruteur ou un vendeur pour commencer.</span></div>`;
 };
 async function openChat(id) { S.chatId = id; go('chat'); }
@@ -799,18 +954,20 @@ async function refreshUnread() {
 SCREENS.admin = async () => {
   if (!S.me || S.me.role !== 'admin') { $('#s-admin').innerHTML = hdr('Back-office', '', 'profile') + '<div class="empty">Accès réservé.</div>'; return; }
   $('#s-admin').innerHTML = hdr('Back-office', '', 'profile') + `<div class="pad" id="adm">${loading()}</div>`;
-  const [st, offers, shops, reports] = await Promise.all([
+  const [st, offers, shops, reports, subs] = await Promise.all([
     sb.rpc('admin_stats'),
     sb.from('offers_view').select('*').eq('status', 'pending').order('created_at').limit(50),
     sb.from('shops').select('*').in('status', ['pending', 'active', 'suspended']).order('created_at', { ascending: false }).limit(100),
     sb.from('reports').select('*').eq('status', 'open').order('created_at').limit(100),
+    sb.from('subscription_requests_view').select('*').eq('status', 'pending').order('created_at').limit(100),
   ]);
   if (st.error) throw st.error;
   const s = st.data;
   (offers.data || []).forEach(o => S.offers.set(o.id, o));
-  $('#adm').innerHTML = `<div class="stats">${[['Utilisateurs', s.users], ['Nouveaux (7 j)', s.users_7d], ['Vidéos', s.videos], ['Membres Gold', s.vip], ['Boutiques actives', s.shops_active], ['Boutiques en attente', s.shops_pending], ['Offres en ligne', s.offers_open], ['Offres à valider', s.offers_pending], ['Commandes', s.orders], ['Signalements ouverts', s.reports_open]].map(([l, v]) => `<div class="stat"><b>${fmtN(v)}</b><span>${l}</span></div>`).join('')}</div>
+  $('#adm').innerHTML = `<div class="stats">${[['Utilisateurs', s.users], ['Nouveaux (7 j)', s.users_7d], ['Vidéos', s.videos], ['Membres Gold', s.vip], ['Profils rencontre', s.dating], ['Matchs', s.matches], ['Demandes d’abonnement', s.requests], ['Boutiques actives', s.shops_active], ['Boutiques en attente', s.shops_pending], ['Offres en ligne', s.offers_open], ['Offres à valider', s.offers_pending], ['Commandes', s.orders], ['Signalements ouverts', s.reports_open]].map(([l, v]) => `<div class="stat"><b>${fmtN(v)}</b><span>${l}</span></div>`).join('')}</div>
   <div class="lbl">Utilisateurs par pays</div><div class="tags">${Object.entries(s.by_country || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${(C[k] || {}).f || ''} ${esc((C[k] || {}).n || k)} : ${n}</span>`).join('')}</div>
-  <div class="lbl">Activer Gold (paiement reçu)</div><div class="row"><input id="vu" placeholder="nom d’utilisateur"><input id="vd" type="number" value="30" style="width:80px"><button class="btn sm" style="width:auto" onclick="V.setVip()">OK</button></div>
+  <div class="lbl">Demandes d’abonnement (${(subs.data || []).length})</div>${(subs.data || []).map(r => `<div class="mq"><span class="k">${r.plan === 'gold' ? '👑' : '🏪'}</span><div class="grow"><b style="font-size:14px">${r.plan === 'gold' ? 'Gold' : 'Vendeur'} · ${r.months} mois</b><div class="mut small">@${esc(r.username)} · ${esc((C[r.country] || {}).n || '')} · ${esc(r.payment)}${r.phone ? ' · ' + esc(r.phone) : ''} · ${ago(r.created_at)}</div></div><div class="acts"><button class="ok" onclick="V.chatWith('${r.user_id}','dm','Abonnement ${r.plan === 'gold' ? 'Gold' : 'Vendeur'}',null)">💬</button><button class="ok" onclick="V.activateReq('${r.id}')">Activer</button></div></div>`).join('') || '<p class="mut small">Aucune demande.</p>'}
+  <div class="lbl">Activer Gold manuellement (paiement reçu)</div><div class="row"><input id="vu" placeholder="nom d’utilisateur"><input id="vd" type="number" value="30" style="width:80px"><button class="btn sm" style="width:auto" onclick="V.setVip()">OK</button></div>
   <div class="lbl">Offres à valider (${(offers.data || []).length})</div>${(offers.data || []).map(o => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(o.title)}</b><div class="mut small">${esc(o.company)} · ${esc((C[o.country] || {}).n || '')} · par ${esc(o.poster_name)}</div><button class="mut small" onclick="V.offerDetail('${o.id}')" style="text-decoration:underline">Lire</button></div><div class="acts"><button class="ok" onclick="V.modOffer('${o.id}','open')">Publier</button><button class="ko" onclick="V.modOffer('${o.id}','rejected')">Refuser</button></div></div>`).join('') || '<p class="mut small">Rien à valider.</p>'}
   <div class="lbl">Boutiques</div>${(shops.data || []).map(sh => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(sh.name)}</b> ${pill(sh.status)}<div class="mut small">${esc((C[sh.country] || {}).n || '')} · ${esc(sh.platform)}${sh.whatsapp ? ' · ' + esc(sh.whatsapp) : ''}${sh.paid_until ? ' · payé jusqu’au ' + new Date(sh.paid_until).toLocaleDateString('fr-FR') : ''}</div></div><div class="acts"><button class="ok" onclick="V.modShop('${sh.id}','active')">+30 j</button>${sh.status !== 'suspended' ? `<button class="ko" onclick="V.modShop('${sh.id}','suspended')">Suspendre</button>` : ''}</div></div>`).join('') || '<p class="mut small">Aucune boutique.</p>'}
   <div class="lbl">Signalements (${(reports.data || []).length})</div>${(reports.data || []).map(r => `<div class="mq"><span class="k">🚩</span><div class="grow"><b style="font-size:14px">${esc(r.reason)}</b><div class="mut small">${esc(r.target_type)} · ${ago(r.created_at)}</div></div><div class="acts">${r.target_type === 'video' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','hide')">Masquer</button>` : r.target_type === 'comment' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','delc')">Supprimer</button>` : r.target_type === 'profile' ? `<button class="ok" onclick="V.openProfile('${esc(r.target_id)}')">Voir</button>` : ''}<button class="ok" onclick="V.modReport('${r.id}','','ok')">Classer</button></div></div>`).join('') || '<p class="mut small">Aucun signalement 🎉</p>'}`;
@@ -825,6 +982,7 @@ async function modReport(id, target, action) {
   if (action === 'delc') { const { error } = await sb.from('comments').delete().eq('id', target); if (error) return fail(error); }
   const { error } = await sb.from('reports').update({ status: 'resolved' }).eq('id', id); if (error) return fail(error); toast('Signalement traité'); go('admin');
 }
+async function activateReq(id) { const { data, error } = await sb.rpc('admin_activate_request', { p_request: id }); if (error) return fail(error); toast('Activé jusqu’au ' + new Date(data).toLocaleDateString('fr-FR')); go('admin'); }
 async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d = +$('#vd').value || 30; if (!u) return; const { data, error } = await sb.rpc('admin_set_vip', { p_username: u, p_days: d }); if (error) return fail(error); toast('Gold actif jusqu’au ' + new Date(data).toLocaleDateString('fr-FR')); }
 
 /* =====================================================================
@@ -837,7 +995,7 @@ window.V = {
   jobTab: t => { S.jobTab = t; go('jobs'); }, jobSector: s => { S.jobSector = s; go('jobs'); }, offerDetail, applyJob, sendApp, contactCand, postJob, savePost, myCV, saveCV, offerApps, closeOffer, chatWith,
   openProduct, orderForm, placeOrder, shopForm, saveShop, myShopSheet, addProd, toggleProd, delProd, orderTab: t => { orderTab = t; go('orders'); }, setOrder,
   openProfile, toggleFollow, editProfile, saveProfile, regionOpts, settings, gold, profTab: t => { S.profTab = t; go('profile'); },
-  installApp, openMsgs, openChat, sendMsg, chatMore, modOffer, modShop, modReport, setVip,
+  installApp, langSheet, setLang, requestSub, datingForm, saveDating, deleteDating, doDeleteDating, dSet, dSwipe, dMore, dBlock, dSafety, loadMatchesPub: () => loadMatches(), openMsgs, openChat, sendMsg, chatMore, activateReq, modOffer, modShop, modReport, setVip,
 };
 
 async function start() {
@@ -847,14 +1005,16 @@ async function start() {
     $('#s-home').innerHTML = `<div class="setup"><div class="logo" style="font-size:34px"><span>Vibzo</span></div><h2 style="margin-top:14px">Configuration requise</h2><p class="mut">Le serveur n’est pas encore relié. Ouvre <code>app/config.js</code> et renseigne l’adresse et la clé publique de ton projet Supabase (voir <code>SETUP.md</code>).</p></div>`;
     return;
   }
+  applyLang();
   try { sb = await getClient(); } catch (e) { $('#s-home').innerHTML = `<div class="setup"><h2>Connexion impossible</h2><p class="mut">Vérifie ta connexion internet puis recharge la page.</p></div>`; return; }
   const { data } = await sb.auth.getSession(); S.session = data.session;
   await loadMe().catch(fail);
   if (S.me && !localStorage.getItem('vibzo_loc')) { S.loc = { country: S.me.country, region: null, zone: false }; saveLoc(); }
+  applyLang();
   sb.auth.onAuthStateChange(async (ev, session) => {
     const was = uid(); S.session = session;
     if (ev === 'PASSWORD_RECOVERY') { const np = prompt('Nouveau mot de passe (8 caractères minimum)'); if (np && np.length >= 8) { const { error } = await sb.auth.updateUser({ password: np }); toast(error ? '⚠️ ' + error.message : 'Mot de passe modifié ✅'); } }
-    if ((session && session.user.id) !== was) { await loadMe().catch(fail); if (session && S.cur === 'auth') { toast('Bienvenue sur Vibzo 👋'); go('home'); } }
+    if ((session && session.user.id) !== was) { await loadMe().catch(fail); applyLang(); if (session && S.cur === 'auth') { toast('Bienvenue sur Vibzo 👋'); go('home'); } }
   });
   go('home');
   setInterval(refreshUnread, 30000); refreshUnread();

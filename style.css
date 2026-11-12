@@ -16,10 +16,10 @@ svg{width:24px;height:24px;flex:none}
 #s-chat.on{display:flex}
 /* nav */
 #nav{position:absolute;left:0;right:0;bottom:0;height:calc(62px + var(--sb));padding-bottom:var(--sb);background:#fff;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;z-index:20}
-#nav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:#8aa3bb;width:64px}
+#nav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:#8aa3bb;width:60px}
 #nav button.on{color:var(--vio);font-weight:700}
 #nav button.gold.on,#nav button.gold.on svg{color:var(--gold)}
-#nav .plus{width:52px;height:34px;border-radius:11px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 0 #9be3ff,3px 0 0 #0a6fc2}
+#nav .plus{width:46px;height:34px;border-radius:11px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 0 #9be3ff,3px 0 0 #0a6fc2}
 #nav .plus svg{color:#fff}
 /* header */
 .hdr{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(12px);padding:calc(12px + var(--st)) 16px 12px;display:flex;align-items:center;gap:10px}
