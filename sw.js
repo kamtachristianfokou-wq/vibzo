@@ -1,5 +1,5 @@
 // Vibzo : met en cache l'interface (les données viennent toujours du serveur)
-const CACHE = 'vibzo-app-v6';
+const CACHE = 'vibzo-app-v7';
 const SHELL = ['./', 'index.html', 'style.css', 'main.js', 'data.js', 'i18n.js', 'supa.js', 'config.js', 'manifest.json'];
 
 self.addEventListener('install', e => {
@@ -13,7 +13,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request).then(res => {
+    (e.request.mode === 'navigate' ? fetch(e.request) : fetch(e.request.url, { cache: 'no-cache' })).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
       return res;
     }).catch(() => caches.match(e.request).then(hit => hit || caches.match('index.html')))
