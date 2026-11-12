@@ -213,6 +213,23 @@ async function loadMe() {
   ]);
   S.me = me; S.myShop = shop;
 }
+function deleteAccount() {
+  closeSheet();
+  modal(`<div class="card" style="max-width:340px;width:100%;text-align:center;background:#fff"><div style="font-size:40px">⚠️</div><h3>Supprimer définitivement ton compte ?</h3><p class="mut small" style="margin-top:6px">Tes vidéos, messages, profil de rencontre, boutique, offres et commandes seront effacés. Cette action est irréversible.</p><div class="field"><label>Écris SUPPRIMER pour confirmer</label><input id="delConf" autocomplete="off"></div><button class="btn" id="delBtn" style="background:#d81f45" onclick="V.doDeleteAccount()">Supprimer mon compte</button><button class="btn ghost" onclick="V.closeModal()">Annuler</button></div>`);
+}
+async function doDeleteAccount() {
+  if (($('#delConf').value || '').trim().toUpperCase() !== 'SUPPRIMER') return toast('Écris SUPPRIMER pour confirmer');
+  const btn = $('#delBtn'); busy(btn, true);
+  try {
+    for (const b of ['videos', 'images']) {
+      const { data } = await sb.storage.from(b).list(uid(), { limit: 1000 });
+      if (data && data.length) await sb.storage.from(b).remove(data.map(f => uid() + '/' + f.name));
+    }
+    const { error } = await sb.rpc('delete_my_account'); if (error) throw error;
+    await sb.auth.signOut(); S.session = null; S.me = null; S.myShop = null;
+    closeModal(); toast('Ton compte a été supprimé'); go('home');
+  } catch (e) { fail(e); } finally { busy(btn, false); }
+}
 async function logout() { closeSheet(); await sb.auth.signOut(); S.session = null; S.me = null; S.myShop = null; toast('Déconnecté'); go('home'); }
 
 /* =====================================================================
@@ -749,7 +766,8 @@ function settings() {
   <button onclick="V.installApp()"><span class="e">📲</span>Installer l’application<span class="r">›</span></button>
   <button onclick="window.open('privacy.html','_blank')"><span class="e">🔒</span>Confidentialité<span class="r">›</span></button>
   ${S.me.role === 'admin' ? `<button onclick="V.closeSheet();V.go('admin')"><span class="e">🛠️</span>Back-office admin<span class="r">›</span></button>` : ''}
-  <button onclick="V.logout()"><span class="e">🚪</span>Se déconnecter</button></div>
+  <button onclick="V.logout()"><span class="e">🚪</span>Se déconnecter</button>
+  <button onclick="V.deleteAccount()" style="color:#d81f45"><span class="e">🗑️</span>Supprimer mon compte</button></div>
   <p class="mut small" style="text-align:center;margin-top:14px">Connecté : ${esc(S.session.user.email || '')}</p>`);
 }
 /* =====================================================================
@@ -995,7 +1013,7 @@ window.V = {
   jobTab: t => { S.jobTab = t; go('jobs'); }, jobSector: s => { S.jobSector = s; go('jobs'); }, offerDetail, applyJob, sendApp, contactCand, postJob, savePost, myCV, saveCV, offerApps, closeOffer, chatWith,
   openProduct, orderForm, placeOrder, shopForm, saveShop, myShopSheet, addProd, toggleProd, delProd, orderTab: t => { orderTab = t; go('orders'); }, setOrder,
   openProfile, toggleFollow, editProfile, saveProfile, regionOpts, settings, gold, profTab: t => { S.profTab = t; go('profile'); },
-  installApp, langSheet, setLang, requestSub, datingForm, saveDating, deleteDating, doDeleteDating, dSet, dSwipe, dMore, dBlock, dSafety, loadMatchesPub: () => loadMatches(), openMsgs, openChat, sendMsg, chatMore, activateReq, modOffer, modShop, modReport, setVip,
+  deleteAccount, doDeleteAccount, installApp, langSheet, setLang, requestSub, datingForm, saveDating, deleteDating, doDeleteDating, dSet, dSwipe, dMore, dBlock, dSafety, loadMatchesPub: () => loadMatches(), openMsgs, openChat, sendMsg, chatMore, activateReq, modOffer, modShop, modReport, setVip,
 };
 
 async function start() {

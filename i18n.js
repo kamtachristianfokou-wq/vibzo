@@ -404,6 +404,10 @@ Afrique centrale|Central Africa|África Central|África Central|وسط أفري�
 Afrique de l’Est|East Africa|África Oriental|África Oriental|شرق أفريقيا|Afrika Mashariki|ምሥራቅ አፍሪካ|Şərqi Afrika
 Azerbaïdjan|Azerbaijan|Azerbaijão|Azerbaiyán|أذربيجان|Azabajani|አዘርባይጃን|Azərbaycan
 à l’instant|just now|agora mesmo|ahora mismo|الآن|sasa hivi|አሁን|indicə
+Supprimer mon compte|Delete my account|Eliminar a minha conta|Eliminar mi cuenta|حذف حسابي|Futa akaunti yangu|መለያዬን ሰርዝ|Hesabımı sil
+Supprimer définitivement ton compte|Permanently delete your account|Eliminar definitivamente a tua conta|¿Eliminar definitivamente tu cuenta|حذف حسابك نهائياً|Futa akaunti yako kabisa|መለያህን በቋሚነት ሰርዝ|Hesabını həmişəlik sil
+Écris SUPPRIMER pour confirmer|Type SUPPRIMER to confirm|Escreve SUPPRIMER para confirmar|Escribe SUPPRIMER para confirmar|اكتب SUPPRIMER للتأكيد|Andika SUPPRIMER kuthibitisha|ለማረጋገጥ SUPPRIMER ጻፍ|Təsdiq üçün SUPPRIMER yaz
+Ton compte a été supprimé|Your account has been deleted|A tua conta foi eliminada|Tu cuenta ha sido eliminada|تم حذف حسابك|Akaunti yako imefutwa|መለያህ ተሰርዟል|Hesabın silindi
 Utilisateurs par pays|Users by country|Utilizadores por país|Usuarios por país|المستخدمون حسب البلد|Watumiaji kwa nchi|ተጠቃሚዎች በአገር|Ölkələr üzrə istifadəçilər`;
 
 const DICT = new Map();

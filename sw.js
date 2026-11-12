@@ -1,5 +1,5 @@
 // Vibzo : met en cache l'interface (les données viennent toujours du serveur)
-const CACHE = 'vibzo-app-v4';
+const CACHE = 'vibzo-app-v5';
 const SHELL = ['./', 'index.html', 'style.css', 'main.js', 'data.js', 'i18n.js', 'supa.js', 'config.js', 'manifest.json'];
 
 self.addEventListener('install', e => {
