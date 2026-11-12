@@ -1,5 +1,5 @@
 // Vibzo : cache hors ligne de l'application
-const CACHE = 'vibzo-v1';
+const CACHE = 'vibzo-v2';
 const FILES = ['./', 'index.html', 'manifest.json', 'privacy.html', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

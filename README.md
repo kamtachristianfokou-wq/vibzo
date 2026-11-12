@@ -1,6 +1,6 @@
 # Vibzo
 
-Vidéos courtes, rencontres, emplois et boutiques en Afrique de l'Ouest, du Centre et de l'Est.
+Vidéos courtes, rencontres, emplois et boutiques en Afrique de l'Ouest, du Centre, de l'Est et en Azerbaïdjan.
 
 **Version de démonstration** : contenus fictifs, aucun paiement réel, aucune donnée envoyée à un serveur.
 
