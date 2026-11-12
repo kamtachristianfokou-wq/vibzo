@@ -109,6 +109,8 @@ Pays|Country|País|País|البلد|Nchi|አገር|Ölkə
 Région|Region|Região|Región|المنطقة|Mkoa|ክልል|Region
 Ville|City|Cidade|Ciudad|المدينة|Mji|ከተማ|Şəhər
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
+Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
+Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)
 Tout le pays|Whole country|Todo o país|Todo el país|البلد كله|Nchi nzima|መላው አገር|Bütün ölkə
 Vibzo t’affiche les vidéos, emplois et boutiques de la zone choisie|Vibzo shows you videos, jobs and shops from the chosen area|O Vibzo mostra-te vídeos, empregos e lojas da zona escolhida|Vibzo te muestra videos, empleos y tiendas de la zona elegida|يعرض لك Vibzo الفيديوهات والوظائف والمتاجر في المنطقة المختارة|Vibzo inakuonyesha video, kazi na maduka ya eneo ulilochagua|Vibzo ከተመረጠው አካባቢ ቪዲዮዎችን፣ ስራዎችንና ሱቆችን ያሳያል|Vibzo seçilmiş bölgənin videolarını, işlərini və mağazalarını göstərir
 Enregistrer comme ma région de profil|Save as my profile region|Guardar como a minha região de perfil|Guardar como mi región de perfil|احفظها كمنطقة ملفي|Hifadhi kama mkoa wa wasifu wangu|እንደ መገለጫ ክልሌ አስቀምጥ|Profil regionum kimi saxla

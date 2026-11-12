@@ -85,18 +85,20 @@ async function setLang(l) {
 let sb;
 const S = {
   session: null, me: null, myShop: null, cur: 'home', prev: 'home', tab: 'pour', muted: true,
-  loc: { country: 'CM', region: null, zone: false },
+  loc: { country: 'CM', region: null, zone: false, world: true },
   feed: [], feedOffset: 0, feedDone: false, feedLoading: false, override: null,
   vids: new Map(), prods: new Map(), offers: new Map(), cands: new Map(), orders: new Map(),
   jobTab: 'offres', jobSector: 'all', profTab: 'videos', viewUser: null, chatId: null, chatSub: null, chatInfo: null, unread: 0,
 };
 const uid = () => S.session && S.session.user && S.session.user.id;
-try { const l = JSON.parse(localStorage.getItem('vibzo_loc') || 'null'); if (l && C[l.country]) S.loc = l; } catch (e) { }
-const saveLoc = () => { try { localStorage.setItem('vibzo_loc', JSON.stringify(S.loc)); } catch (e) { } };
-const countries = () => S.loc.zone ? Object.keys(C).filter(k => C[k].z === C[S.loc.country].z) : [S.loc.country];
-const regionF = () => (S.loc.zone ? null : S.loc.region);
-const locLabel = () => S.loc.zone ? '🌍 ' + ZONES[C[S.loc.country].z] : C[S.loc.country].f + ' ' + (S.loc.region || C[S.loc.country].n);
-const inScope = q => { q = q.in('country', countries()); const r = regionF(); return r ? q.eq('region', r) : q; };
+const LOC_KEY = 'vibzo_loc2';
+try { const l = JSON.parse(localStorage.getItem(LOC_KEY) || 'null'); if (l && C[l.country]) S.loc = l; } catch (e) { }
+const saveLoc = () => { try { localStorage.setItem(LOC_KEY, JSON.stringify(S.loc)); } catch (e) { } };
+const worldLoc = cc => ({ country: cc || 'CM', region: null, zone: false, world: true });
+const countries = () => S.loc.world ? null : S.loc.zone ? Object.keys(C).filter(k => C[k].z === C[S.loc.country].z) : [S.loc.country];
+const regionF = () => (S.loc.world || S.loc.zone ? null : S.loc.region);
+const locLabel = () => S.loc.world ? '🌐 Monde entier' : S.loc.zone ? '🌍 ' + ZONES[C[S.loc.country].z] : C[S.loc.country].f + ' ' + (S.loc.region || C[S.loc.country].n);
+const inScope = q => { const cs = countries(); if (cs) q = q.in('country', cs); const r = regionF(); return r ? q.eq('region', r) : q; };
 
 function requireAuth(msg) {
   if (uid()) return true;
@@ -135,12 +137,13 @@ function openLoc() {
   locChips();
 }
 function locChips() {
-  $('#ccChips').innerHTML = Object.keys(ZONES).map(z => `<div style="width:100%;font-size:12.5px;font-weight:700;margin:6px 0 2px">${ZONES[z]}</div>` + Object.entries(C).filter(([, c]) => c.z === z).map(([k, c]) => `<button class="chip ${k === S.loc.country ? 'on' : ''}" onclick="V.setLoc('${k}')">${c.f} ${c.n}</button>`).join('')).join('');
-  $('#rgChips').innerHTML = `<button class="chip ${S.loc.zone ? 'on' : ''}" onclick="V.setLoc(null,'zone')">🌍 Toute la zone</button><button class="chip ${!S.loc.zone && !S.loc.region ? 'on' : ''}" onclick="V.setLoc(null,'all')">Tout le pays</button>` +
-    C[S.loc.country].r.map((r, i) => `<button class="chip ${!S.loc.zone && S.loc.region === r ? 'on' : ''}" onclick="V.setLoc(null,${i})">${esc(r)}</button>`).join('');
+  $('#ccChips').innerHTML = `<button class="chip ${S.loc.world ? 'on' : ''}" onclick="V.setLoc(null,'world')">🌐 Monde entier (tous les pays)</button>` + Object.keys(ZONES).map(z => `<div style="width:100%;font-size:12.5px;font-weight:700;margin:6px 0 2px">${ZONES[z]}</div>` + Object.entries(C).filter(([, c]) => c.z === z).map(([k, c]) => `<button class="chip ${!S.loc.world && k === S.loc.country ? 'on' : ''}" onclick="V.setLoc('${k}')">${c.f} ${c.n}</button>`).join('')).join('');
+  $('#rgChips').innerHTML = `<button class="chip ${!S.loc.world && S.loc.zone ? 'on' : ''}" onclick="V.setLoc(null,'zone')">🌍 Toute la zone</button><button class="chip ${!S.loc.world && !S.loc.zone && !S.loc.region ? 'on' : ''}" onclick="V.setLoc(null,'all')">Tout le pays</button>` +
+    C[S.loc.country].r.map((r, i) => `<button class="chip ${!S.loc.world && !S.loc.zone && S.loc.region === r ? 'on' : ''}" onclick="V.setLoc(null,${i})">${esc(r)}</button>`).join('');
 }
 function setLoc(country, reg) {
-  if (country) S.loc = { country, region: null, zone: false };
+  if (country) S.loc = { country, region: null, zone: false, world: false };
+  if (reg === 'world') S.loc.world = true; else if (reg != null) S.loc.world = false;
   if (reg === 'zone') S.loc.zone = true; else if (reg === 'all') { S.loc.zone = false; S.loc.region = null; } else if (reg != null) { S.loc.zone = false; S.loc.region = C[S.loc.country].r[reg]; }
   locChips();
 }
@@ -189,7 +192,7 @@ async function submitAuth() {
       const cc = $('#aCc').value, tel = $('#aTel').value.replace(/[^\d]/g, '');
       const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.href.split('#')[0], data: { username: $('#aUser').value.trim().toLowerCase(), display_name: $('#aName').value.trim(), country: cc, region: $('#aRg').value, phone: tel ? C[cc].tel + tel : '' } } });
       if (error) throw error;
-      S.loc = { country: cc, region: $('#aRg').value, zone: false }; saveLoc();
+      S.loc = worldLoc(cc); saveLoc();
       if (!data.session) { modal(`<div class="card" style="max-width:340px;width:100%;text-align:center;background:#fff"><div style="font-size:40px">📧</div><h3>Vérifie ta boîte e-mail</h3><p class="mut small" style="margin-top:6px">Nous avons envoyé un lien de confirmation à <b>${esc(email)}</b>. Clique dessus, puis reviens te connecter.</p><button class="btn" onclick="V.closeModal();V.authTab('login')">OK</button></div>`); }
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password });
@@ -464,7 +467,7 @@ async function publish() {
     const row = { user_id: uid(), video_url: pub.publicUrl, title: $('#ct').value.trim(), caption: $('#cd').value.trim(), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null };
     const { error } = await sb.from('videos').insert(row); if (error) throw error;
     bar.style.width = '100%'; draft = null; toast('Vidéo publiée 🎉');
-    S.tab = 'pour'; S.loc = { country: S.me.country, region: null, zone: false }; saveLoc();
+    S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc();
     go('profile');
   } catch (e) { fail(e); } finally { clearInterval(timer); busy(btn, false); }
 }
@@ -1027,7 +1030,7 @@ async function start() {
   try { sb = await getClient(); } catch (e) { $('#s-home').innerHTML = `<div class="setup"><h2>Connexion impossible</h2><p class="mut">Vérifie ta connexion internet puis recharge la page.</p></div>`; return; }
   const { data } = await sb.auth.getSession(); S.session = data.session;
   await loadMe().catch(fail);
-  if (S.me && !localStorage.getItem('vibzo_loc')) { S.loc = { country: S.me.country, region: null, zone: false }; saveLoc(); }
+  if (S.me && !localStorage.getItem(LOC_KEY)) { S.loc = worldLoc(S.me.country); saveLoc(); }
   applyLang();
   sb.auth.onAuthStateChange(async (ev, session) => {
     const was = uid(); S.session = session;
