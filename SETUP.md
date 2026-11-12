@@ -1,6 +1,6 @@
 # Vibzo : mise en service de la version réelle
 
-La version réelle de Vibzo se trouve dans le dossier `app/`. Elle a besoin d'un serveur
+La version réelle de Vibzo se trouve à la racine du dépôt. Elle a besoin d'un serveur
 **Supabase** (gratuit pour démarrer) qui stocke les comptes, les vidéos, les messages,
 les boutiques et les offres d'emploi.
 
@@ -33,12 +33,12 @@ Dans **Authentication** > **Sign In / Providers** > **Email** :
 
 Dans **Authentication** > **URL Configuration** :
 
-- Site URL : `https://kamtachristianfokou-wq.github.io/vibzo/app/`
+- Site URL : `https://kamtachristianfokou-wq.github.io/vibzo/`
 
 ## 4. Relier l'application
 
 1. **Project Settings** > **API** (ou **Data API**) : copie la **Project URL** et la clé **anon public**.
-2. Ouvre `app/config.js` et remplace les deux valeurs (déjà fait pour le projet pcfebfknjtqtgkhctxll).
+2. Ouvre `config.js` et remplace les deux valeurs (déjà fait pour le projet pcfebfknjtqtgkhctxll).
 3. Facultatif : mets ton numéro WhatsApp dans `SUPPORT_WHATSAPP` (format international sans +,
    par exemple `994501234567`). Il sert aux demandes d'activation Gold et Vendeur.
 

@@ -2,7 +2,7 @@
 // VIBZO : application (version réelle)
 // =====================================================================
 import { C, ZONES, SECTORS, CONTRACTS, REMOTE, REPORT_REASONS, money } from './data.js';
-import { SUPPORT_WHATSAPP } from './config.js';
+import { SUPPORT_WHATSAPP, ANDROID_APK_URL } from './config.js';
 import { getClient, isConfigured } from './supa.js';
 
 /* ---------- utilitaires ---------- */
@@ -51,6 +51,20 @@ const loading = (t = 'Chargement…') => `<div class="loading"><span class="spin
 const errMsg = e => (e && (e.message || e.error_description)) || 'Erreur inconnue';
 function fail(e) { console.error(e); toast('⚠️ ' + errMsg(e)); }
 const busy = (btn, on, label) => { if (!btn) return; btn.disabled = on; if (on) { btn.dataset.l = btn.innerHTML; btn.innerHTML = `<span class="spin"></span> ${label || 'Patiente…'}`; } else if (btn.dataset.l) btn.innerHTML = btn.dataset.l; };
+
+/* ---------- installation de l'application ---------- */
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; });
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+async function installApp() {
+  closeSheet();
+  if (deferredInstall) { deferredInstall.prompt(); try { await deferredInstall.userChoice; } catch (e) { } deferredInstall = null; return; }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  sheet('📲 Installer Vibzo', `${isStandalone() ? '<p class="small">Vibzo est déjà installée sur cet appareil ✅</p>' : ios
+    ? '<ol class="small" style="line-height:1.8;padding-left:18px"><li>Ouvre ce site dans <b>Safari</b></li><li>Touche le bouton <b>Partager</b> (carré avec une flèche)</li><li>Choisis <b>« Sur l’écran d’accueil »</b></li></ol>'
+    : '<ol class="small" style="line-height:1.8;padding-left:18px"><li>Ouvre ce site dans <b>Chrome</b></li><li>Touche le menu <b>⋮</b> en haut à droite</li><li>Choisis <b>« Installer l’application »</b> ou <b>« Ajouter à l’écran d’accueil »</b></li></ol>'}
+  ${ANDROID_APK_URL ? `<a class="btn" style="text-decoration:none" href="${ANDROID_APK_URL}">⬇️ Télécharger l’app Android (APK)</a><p class="mut small" style="margin-top:8px">Si Android le demande, autorise l’installation depuis ton navigateur.</p>` : ''}`);
+}
 
 /* ---------- état ---------- */
 let sb;
@@ -143,10 +157,10 @@ SCREENS.auth = () => {
   <div class="field"><label>Région</label><select id="aRg"></select></div>
   <div class="field"><label>Téléphone (facultatif)</label><div class="row"><span class="chip" id="aInd" style="flex:none">${C[S.loc.country].tel}</span><input id="aTel" type="tel" inputmode="tel" placeholder="6 12 34 56 78"></div></div>
   <label class="check"><input type="checkbox" id="aAge" required> J’ai 16 ans ou plus.</label>
-  <label class="check"><input type="checkbox" id="aCgu" required> J’accepte la <a href="../privacy.html" target="_blank" rel="noopener">politique de confidentialité</a> et je m’engage à respecter les autres membres.</label>` : `<p style="margin-top:8px"><button type="button" class="mut small" onclick="V.forgot()" style="text-decoration:underline">Mot de passe oublié ?</button></p>`}
+  <label class="check"><input type="checkbox" id="aCgu" required> J’accepte la <a href="privacy.html" target="_blank" rel="noopener">politique de confidentialité</a> et je m’engage à respecter les autres membres.</label>` : `<p style="margin-top:8px"><button type="button" class="mut small" onclick="V.forgot()" style="text-decoration:underline">Mot de passe oublié ?</button></p>`}
   <div class="err" id="aErr"></div>
   <button class="btn" id="aBtn">${authMode === 'signup' ? 'Créer mon compte' : 'Se connecter'}</button></form>
-  <button class="btn ghost" onclick="V.go('home')">Continuer sans compte</button></div>`;
+  <button class="btn ghost" onclick="V.go('home')">Continuer sans compte</button><button class="btn ghost" onclick="V.installApp()">📲 Installer l’application</button></div>`;
   if (authMode === 'signup') authRegions();
 };
 function authRegions() { const cc = $('#aCc').value; $('#aRg').innerHTML = C[cc].r.map(r => `<option>${esc(r)}</option>`).join(''); $('#aInd').textContent = C[cc].tel; }
@@ -654,7 +668,7 @@ async function setOrder(id, st) { const { error } = await sb.from('orders').upda
    ===================================================================== */
 SCREENS.profile = async () => {
   const id = S.viewUser || uid();
-  if (!id) { $('#s-profile').innerHTML = hdr('Profil') + `<div class="empty"><div class="big">👤</div><p>Crée ton compte pour publier, suivre des créateurs, postuler et vendre.</p><button class="btn" onclick="V.go('auth')">Se connecter / s’inscrire</button></div><div class="slist"><button onclick="V.openLoc()"><span class="e">📍</span>Pays & région<span class="r">${esc(locLabel())} ›</span></button><button onclick="window.open('../privacy.html','_blank')"><span class="e">🔒</span>Confidentialité<span class="r">›</span></button></div>`; return; }
+  if (!id) { $('#s-profile').innerHTML = hdr('Profil') + `<div class="empty"><div class="big">👤</div><p>Crée ton compte pour publier, suivre des créateurs, postuler et vendre.</p><button class="btn" onclick="V.go('auth')">Se connecter / s’inscrire</button></div><div class="slist"><button onclick="V.openLoc()"><span class="e">📍</span>Pays & région<span class="r">${esc(locLabel())} ›</span></button><button onclick="V.installApp()"><span class="e">📲</span>Installer l’application<span class="r">›</span></button><button onclick="window.open('privacy.html','_blank')"><span class="e">🔒</span>Confidentialité<span class="r">›</span></button></div>`; return; }
   const own = id === uid();
   $('#s-profile').innerHTML = hdr('Profil', own ? `<button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button><button class="ib" onclick="V.settings()" aria-label="Paramètres">${I.gear}</button>` : '', own ? '' : (S.prev && S.prev !== 'profile' ? S.prev : 'home')) + loading();
   const { data: p, error } = await sb.from('profile_stats').select('*').eq('id', id).maybeSingle();
@@ -716,7 +730,8 @@ function settings() {
   <button onclick="V.gold()"><span class="e">👑</span>Vibzo Gold<span class="r">${vip ? 'Actif jusqu’au ' + new Date(S.me.vip_until).toLocaleDateString('fr-FR') : 'Découvrir'} ›</span></button>
   <button onclick="V.closeSheet();${S.myShop ? 'V.myShopSheet()' : 'V.shopForm()'}"><span class="e">🏪</span>Ma boutique<span class="r">${S.myShop ? (ST[S.myShop.status] || [''])[0] : 'Ouvrir'} ›</span></button>
   <button onclick="V.myCV()"><span class="e">📄</span>Mon profil candidat<span class="r">›</span></button>
-  <button onclick="window.open('../privacy.html','_blank')"><span class="e">🔒</span>Confidentialité<span class="r">›</span></button>
+  <button onclick="V.installApp()"><span class="e">📲</span>Installer l’application<span class="r">›</span></button>
+  <button onclick="window.open('privacy.html','_blank')"><span class="e">🔒</span>Confidentialité<span class="r">›</span></button>
   ${S.me.role === 'admin' ? `<button onclick="V.closeSheet();V.go('admin')"><span class="e">🛠️</span>Back-office admin<span class="r">›</span></button>` : ''}
   <button onclick="V.logout()"><span class="e">🚪</span>Se déconnecter</button></div>
   <p class="mut small" style="text-align:center;margin-top:14px">Connecté : ${esc(S.session.user.email || '')}</p>`);
@@ -822,7 +837,7 @@ window.V = {
   jobTab: t => { S.jobTab = t; go('jobs'); }, jobSector: s => { S.jobSector = s; go('jobs'); }, offerDetail, applyJob, sendApp, contactCand, postJob, savePost, myCV, saveCV, offerApps, closeOffer, chatWith,
   openProduct, orderForm, placeOrder, shopForm, saveShop, myShopSheet, addProd, toggleProd, delProd, orderTab: t => { orderTab = t; go('orders'); }, setOrder,
   openProfile, toggleFollow, editProfile, saveProfile, regionOpts, settings, gold, profTab: t => { S.profTab = t; go('profile'); },
-  openMsgs, openChat, sendMsg, chatMore, modOffer, modShop, modReport, setVip,
+  installApp, openMsgs, openChat, sendMsg, chatMore, modOffer, modShop, modReport, setVip,
 };
 
 async function start() {

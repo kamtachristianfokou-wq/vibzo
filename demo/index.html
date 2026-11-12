@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Vibzo</title>
+<meta name="description" content="Vibzo : vidéos courtes, rencontres, emplois et boutiques en Afrique de l’Ouest, du Centre, de l’Est et en Azerbaïdjan.">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vibzo">
+
+<link rel="icon" type="image/png" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffffff;--card:#f4faff;--card2:#e9f5fe;--line:#cfe6f7;--txt:#0b2540;--mut:#5b7a99;--pink:#1e9be8;--vio:#0a7fd0;--like:#ff3b5c;--gold:#e0a800;--green:#13a86b;--grad:linear-gradient(135deg,#5ccbff,#1e9be8);--goldg:linear-gradient(135deg,#ffe28a,#f7c948 45%,#c8901b);--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#e3f3fd;color:var(--txt);font-family:'Plus Jakarta Sans',system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,textarea,select{font:inherit;color:var(--txt);background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--vio)}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);flex:none}
+input[type=file]{padding:10px;font-size:13px}
+svg{width:24px;height:24px;flex:none}
+#app{position:relative;max-width:440px;height:100dvh;margin:0 auto;background:var(--bg);overflow:hidden}
+.screen{position:absolute;inset:0 0 calc(62px + var(--sb)) 0;overflow-y:auto;display:none;padding-bottom:24px}
+.screen.on{display:block}
+#s-home{padding:0;overflow:hidden}
+#s-chat{display:none;flex-direction:column;padding:0;overflow:hidden}
+#s-chat.on{display:flex}
+/* nav */
+#nav{position:absolute;left:0;right:0;bottom:0;height:calc(62px + var(--sb));padding-bottom:var(--sb);background:#fff;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;z-index:20}
+#nav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:#8aa3bb;width:64px}
+#nav button.on{color:var(--vio);font-weight:700}
+#nav button.gold.on,#nav button.gold.on svg{color:var(--gold)}
+#nav .plus{width:52px;height:34px;border-radius:11px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 0 #9be3ff,3px 0 0 #0a6fc2}
+#nav .plus svg{color:#fff}
+/* header */
+.hdr{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(12px);padding:calc(12px + var(--st)) 16px 12px;display:flex;align-items:center;gap:10px}
+.hdr h1{font-size:20px;font-weight:800;flex:1}
+.hdr .ib{width:38px;height:38px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;position:relative}
+.hdr .ib svg{width:20px;height:20px}
+.badge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;border-radius:9px;background:var(--like);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.loc{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.pad{padding:0 16px}
+.lbl{font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 13px;border-radius:20px;background:var(--card2);border:1px solid var(--line);font-size:13px;font-weight:600}
+.chip.on{background:var(--grad);border-color:transparent;color:#fff}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;background:var(--grad);color:#fff;font-weight:700;font-size:15px;margin-top:16px}
+.btn.gold{background:var(--goldg);color:#2a1d00}
+.btn.ghost{background:var(--card2);border:1px solid var(--line);color:var(--txt)}
+.btn.sm{padding:10px 12px;font-size:13px;margin-top:0;border-radius:12px}
+.btn:disabled{opacity:.6}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+.mut{color:var(--mut)}
+.small{font-size:12.5px}
+.row{display:flex;align-items:center;gap:10px}
+.grow{flex:1;min-width:0}
+.field{margin-top:12px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;margin-top:12px;line-height:1.4}
+.empty{text-align:center;padding:40px 20px;color:var(--mut)}
+.empty .big{font-size:48px;margin-bottom:10px}
+.seg{display:flex;background:var(--card2);border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;padding:10px 6px;border-radius:11px;font-weight:700;font-size:13.5px;color:var(--mut)}
+.seg button.on{background:#fff;color:var(--vio);box-shadow:0 2px 8px rgba(30,155,232,.18)}
+.seg.goldseg button.on{background:var(--goldg);color:#2a1d00}
+.av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex:none;background:var(--grad);color:#fff}
+/* feed */
+#topbar{color:#fff;position:absolute;top:0;left:0;right:0;z-index:6;padding:calc(10px + var(--st)) 12px 10px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+#topbar .tabs{display:flex;gap:12px;font-weight:700;font-size:14.5px;white-space:nowrap}
+#topbar .tabs button{color:rgba(255,255,255,.6);padding-bottom:4px;border-bottom:2.5px solid transparent}
+#topbar .tabs button.on{color:#fff;border-color:#fff}
+#topbar .loc{background:rgba(0,0,0,.35);border-color:rgba(255,255,255,.15);font-size:12px;padding:6px 10px;max-width:96px;overflow:hidden;text-overflow:ellipsis}
+#topbar .rt{display:flex;gap:8px}
+#topbar .ib{width:34px;height:34px;display:flex;align-items:center;justify-content:center;position:relative}
+#topbar .ib svg{width:22px;height:22px}
+#feed{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none}
+#feed::-webkit-scrollbar{display:none}
+.slide{height:100%;scroll-snap-align:start;scroll-snap-stop:always;position:relative;overflow:hidden;background:#0b2540;color:#fff}
+.vbg{position:absolute;inset:0;background:linear-gradient(160deg,var(--g1),var(--g2),var(--g3));background-size:300% 300%;animation:gmove 9s ease infinite}
+video.vbg{width:100%;height:100%;object-fit:cover;background:#000;animation:none}
+.vbg::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.18),transparent 45%),linear-gradient(transparent 55%,rgba(0,0,0,.65))}
+@keyframes gmove{0%,100%{background-position:0 0}50%{background-position:100% 100%}}
+.vemoji{position:absolute;left:50%;top:34%;font-size:110px;transform:translate(-50%,-50%);animation:float 3.2s ease-in-out infinite;filter:drop-shadow(0 12px 30px rgba(0,0,0,.35))}
+@keyframes float{0%,100%{transform:translate(-50%,-50%) rotate(-4deg)}50%{transform:translate(-50%,-60%) rotate(4deg)}}
+.vtitle{position:absolute;left:24px;right:80px;top:52%;font-size:24px;font-weight:800;line-height:1.2;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.slide.paused .vbg,.slide.paused .vemoji,.slide.paused .prog i,.slide.paused .disc{animation-play-state:paused}
+.vtap{position:absolute;inset:0;z-index:1}
+.pauseIc{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:60px;opacity:0;pointer-events:none;transition:.2s;z-index:2;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+.slide.paused .pauseIc{opacity:.85}
+.rail{position:absolute;right:8px;bottom:22px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:16px}
+.rail .av{width:46px;height:46px;border:2px solid #fff;position:relative;margin-bottom:8px}
+.fol{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:var(--pink);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;line-height:1}
+.fol.on{background:#fff;color:var(--vio);font-size:12px}
+.rb{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.rb svg{width:34px;height:34px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+.rb.on svg{fill:var(--like);stroke:var(--like);animation:pop .35s}
+.rb.on2 svg{fill:var(--gold);stroke:var(--gold);animation:pop .35s}
+@keyframes pop{50%{transform:scale(1.3)}}
+.disc{width:42px;height:42px;border-radius:50%;border:8px solid #222;display:flex;align-items:center;justify-content:center;font-size:12px;animation:spin 4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vinfo{position:absolute;left:14px;right:78px;bottom:18px;z-index:3;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.vauth{font-weight:800;font-size:15.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vloc{font-size:11.5px;font-weight:600;background:rgba(0,0,0,.35);padding:3px 8px;border-radius:10px}
+.vgold{font-size:11px;background:var(--goldg);color:#2a1d00;padding:2px 7px;border-radius:8px;text-shadow:none}
+.vcap{font-size:14px;line-height:1.4;margin-top:6px}
+.vcap b{font-weight:700}
+.vprod{margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);color:#111;font-size:12.5px;font-weight:700;padding:7px 11px;border-radius:9px;text-shadow:none}
+.vsnd{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:8px}
+.vsnd svg{width:15px;height:15px}
+.marq{overflow:hidden;white-space:nowrap;max-width:200px}
+.marq span{display:inline-block;padding-left:100%;animation:marq 9s linear infinite}
+@keyframes marq{to{transform:translateX(-100%)}}
+.prog{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(255,255,255,.2);z-index:3}
+.prog i{display:block;height:100%;width:0;background:#fff;animation:prog 15s linear infinite}
+@keyframes prog{to{width:100%}}
+.burst{position:absolute;font-size:90px;transform:translate(-50%,-50%);animation:burst .8s forwards;pointer-events:none;z-index:5}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(.3) rotate(-15deg);opacity:0}25%{transform:translate(-50%,-50%) scale(1.2) rotate(-15deg);opacity:1}100%{transform:translate(-50%,-140%) scale(1) rotate(-15deg);opacity:0}}
+.endslide{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;background:linear-gradient(180deg,#d9f1ff,#ffffff 70%);color:var(--txt)}
+/* sheet */
+#sheetBg{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:40;opacity:0;pointer-events:none;transition:.25s}
+#sheetBg.on{opacity:1;pointer-events:auto}
+#sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;background:#fff;border-radius:22px 22px 0 0;display:flex;flex-direction:column;transform:translateY(100%);transition:.3s cubic-bezier(.2,.8,.2,1)}
+#sheetBg.on #sheet{transform:none}
+.sh-h{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;font-weight:800;font-size:16px;border-bottom:1px solid var(--line)}
+.sh-b{overflow-y:auto;padding:12px 16px calc(20px + var(--sb))}
+.clist{display:flex;flex-direction:column;gap:16px;padding:4px 0 10px}
+.cm{display:flex;gap:10px}
+.cm .av{width:34px;height:34px;font-size:14px}
+.cm .n{font-size:12.5px;color:var(--mut);font-weight:600}
+.cm .t{font-size:14px;margin-top:2px;line-height:1.35}
+.cm .lk{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--mut)}
+.cm .lk svg{width:18px;height:18px}
+.cm .lk.on svg{fill:var(--like);stroke:var(--like)}
+.cinput{display:flex;gap:8px;position:sticky;bottom:0;background:#fff;padding-top:10px}
+.cinput button{width:46px;border-radius:12px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.cinput svg{width:20px;height:20px}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center;font-size:11.5px}
+.sgrid button{display:flex;flex-direction:column;align-items:center;gap:6px}
+.sgrid .ci{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;background:var(--card2)}
+/* modal & toast */
+#modal{position:absolute;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);padding:24px}
+#modal.on{display:flex}
+#toast{position:absolute;left:50%;top:calc(70px + var(--st));transform:translate(-50%,-20px);background:#0b2540;color:#fff;font-weight:700;font-size:13.5px;padding:11px 16px;border-radius:14px;z-index:80;opacity:0;transition:.3s;pointer-events:none;max-width:88%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+/* discover */
+.search{display:flex;align-items:center;gap:8px;background:var(--card2);border-radius:12px;padding:0 12px;flex:1}
+.search input{border:0;background:none;padding:11px 0}
+.search svg{width:18px;height:18px;color:var(--mut)}
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.vth{color:#fff;aspect-ratio:3/4;position:relative;background:linear-gradient(160deg,var(--g1),var(--g2));display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden}
+.vth video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vth span{position:absolute;left:6px;bottom:5px;font-size:11.5px;font-weight:700;text-shadow:0 1px 3px #000}
+/* create */
+.up{border:2px dashed var(--line);border-radius:18px;padding:22px;text-align:center;display:block;cursor:pointer}
+.up .big{font-size:38px}
+.styles{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.styles button{flex:none;width:64px;height:84px;border-radius:14px;font-size:30px;border:2px solid transparent}
+.styles button.on{border-color:#fff}
+.prev{height:200px;border-radius:18px;overflow:hidden;position:relative;margin-top:12px;display:flex;align-items:center;justify-content:center;font-size:70px}
+.prev video{width:100%;height:100%;object-fit:cover}
+.tog{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.sw{width:46px;height:28px;border-radius:14px;background:var(--line);position:relative;transition:.2s;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--pink)}
+.sw.on::after{left:21px}
+/* vip */
+.hero{margin:6px 16px 0;border-radius:24px;padding:24px 20px;background:radial-gradient(circle at 80% 0%,rgba(92,203,255,.35),transparent 55%),linear-gradient(160deg,#fff8e1,#ffffff);border:1px solid rgba(224,168,0,.45);text-align:center}
+.hero .cr{font-size:52px}
+.hero h2{font-size:26px;font-weight:800;color:#a87800}
+.perks{display:grid;gap:10px;margin-top:16px;text-align:left}
+.perks div{display:flex;gap:10px;font-size:14px;align-items:flex-start}
+.plans{display:grid;gap:10px}
+.plan{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--card);border:2px solid var(--line);text-align:left;position:relative}
+.plan.on{border-color:var(--gold);background:#fff8e1}
+.plan .rd{width:20px;height:20px;border-radius:50%;border:2px solid var(--mut);flex:none}
+.plan.on .rd{border:6px solid var(--gold)}
+.plan .pp{font-weight:800;font-size:16px}
+.plan .tag{position:absolute;top:-9px;right:14px;background:var(--goldg);color:#2a1d00;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:8px}
+.goldbar{display:flex;align-items:center;gap:8px;font-weight:800;font-size:19px}
+.goldbar .cr{background:var(--goldg);-webkit-background-clip:text;background-clip:text;color:transparent}
+.safety{display:flex;gap:10px;align-items:center;background:rgba(19,168,107,.08);border:1px solid rgba(19,168,107,.3);color:#0d6b45;border-radius:14px;padding:10px 12px;font-size:12.5px;margin-top:12px}
+.stack{position:relative;height:430px;margin-top:14px}
+.dcard{position:absolute;inset:0;color:#fff;border-radius:24px;overflow:hidden;background:linear-gradient(160deg,var(--g1),var(--g2));transition:transform .3s,opacity .3s;touch-action:pan-y;user-select:none;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.dcard.b1{transform:scale(.95) translateY(14px);opacity:.8}
+.dcard.b2{transform:scale(.9) translateY(28px);opacity:.5}
+.dcard .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:150px;font-weight:800;color:rgba(255,255,255,.9)}
+.dcard .vibe{position:absolute;top:16px;left:16px;font-size:30px}
+.dcard .more{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.35);font-weight:800}
+.dcard .inf{position:absolute;left:0;right:0;bottom:0;padding:60px 18px 18px;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+.dcard .nm{font-size:26px;font-weight:800}
+.dcard .nm small{font-weight:500;font-size:22px}
+.dcard .ver{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1e9bff;font-size:12px;vertical-align:middle;margin-left:4px}
+.dcard .bio{font-size:13.5px;margin-top:6px;line-height:1.4;opacity:.95}
+.int{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.int span{font-size:12px;background:rgba(255,255,255,.18);padding:5px 9px;border-radius:12px;font-weight:600}
+.intent{display:inline-block;font-size:11.5px;font-weight:800;padding:4px 9px;border-radius:10px;margin-top:8px}
+.stamp{position:absolute;top:40px;font-size:34px;font-weight:800;padding:6px 14px;border:4px solid;border-radius:12px;opacity:0;transition:.15s}
+.stamp.l{left:24px;color:var(--green);transform:rotate(-14deg)}
+.stamp.n{right:24px;color:var(--like);transform:rotate(14deg)}
+.dcard[data-dir=like] .stamp.l,.dcard[data-dir=nope] .stamp.n{opacity:1}
+.dbtns{display:flex;justify-content:center;gap:22px;margin-top:20px}
+.dbtns button{width:62px;height:62px;border-radius:50%;background:var(--card);border:1px solid var(--line);font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.dbtns .x{color:var(--like)}
+.dbtns .s{width:50px;height:50px;align-self:center;color:#3db8ff;font-size:20px}
+.dbtns .h{background:var(--grad);border:0;color:#fff}
+.matches{display:flex;gap:12px;overflow-x:auto;padding:2px 0 4px}
+.matches button{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;flex:none}
+.matches .av{width:56px;height:56px;border:2px solid var(--gold);font-size:20px}
+.match{text-align:center;max-width:340px}
+.match h2{font-size:34px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-style:italic}
+.match .pair{display:flex;justify-content:center;margin:24px 0}
+.match .pair .av{width:96px;height:96px;font-size:38px;border:3px solid #fff}
+.match .pair .av+.av{margin-left:-18px}
+/* jobs */
+.jlist{display:grid;gap:12px;margin-top:14px}
+.job .t{font-weight:800;font-size:16px}
+.job .co{font-size:13.5px;color:var(--mut);margin-top:3px;display:flex;align-items:center;gap:6px}
+.vchk{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#1e9bff;color:#fff;font-size:10px;font-weight:800}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tags span{font-size:12px;background:var(--card2);border:1px solid var(--line);padding:5px 9px;border-radius:10px;font-weight:600}
+.tags span.g{color:var(--green);border-color:rgba(19,168,107,.35)}
+.jact{display:flex;gap:8px;margin-top:12px}
+.jact .btn{margin:0}
+.dots{width:42px;flex:none;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-weight:800}
+/* shop */
+.sbanner{margin:4px 16px 0;border-radius:20px;padding:16px;background:var(--grad);color:#fff;display:flex;align-items:center;gap:12px}
+.sbanner .big{font-size:36px}
+.sbanner b{font-size:15px}
+.sbanner .btn{width:auto;margin:0;background:#fff;color:#111;padding:10px 14px;font-size:13px}
+.shops{display:flex;gap:10px;overflow-x:auto;padding:0 16px 4px}
+.shop{flex:none;width:136px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:left}
+.shop.on{border-color:var(--pink)}
+.shop .lg{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:8px}
+.shop .n{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:7px;display:inline-block;margin-top:4px}
+.pl.Shopify{background:#95bf47;color:#10200a}.pl.WooCommerce{background:#7f54b3;color:#fff}.pl.Vibzo{background:var(--grad);color:#fff}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px}
+.prod{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;text-align:left}
+.prod .im{color:#fff;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:56px;background:linear-gradient(160deg,var(--g1),var(--g2))}
+.prod .bd{padding:10px 12px 12px}
+.prod .n{font-weight:700;font-size:13.5px;line-height:1.3;height:35px;overflow:hidden}
+.prod .p{font-weight:800;font-size:15px;margin-top:4px}
+.prod .s{font-size:11.5px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bigim{height:220px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:110px;background:linear-gradient(160deg,var(--g1),var(--g2))}
+.qty{display:flex;align-items:center;gap:14px;background:var(--card2);border-radius:12px;padding:6px 10px;font-weight:800}
+.qty button{width:28px;height:28px;border-radius:8px;background:var(--line);font-size:18px}
+.citem{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.citem .im{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(160deg,var(--g1),var(--g2));flex:none}
+.track{display:grid;gap:0;margin-top:14px}
+.track div{display:flex;gap:12px;align-items:center;padding:8px 0;font-size:14px}
+.track i{width:14px;height:14px;border-radius:50%;background:var(--line);flex:none}
+.track .ok i{background:var(--green);box-shadow:0 0 0 4px rgba(19,168,107,.2)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--card2);border-radius:14px;padding:12px}
+.stat b{display:block;font-size:20px;font-weight:800}
+.stat span{font-size:12px;color:var(--mut)}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--grad)}
+/* messages */
+.mitem{display:flex;gap:12px;align-items:center;padding:12px 16px;width:100%;text-align:left}
+.mitem .av{width:52px;height:52px;font-size:20px}
+.mitem .n{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px}
+.mitem .l{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--like);flex:none}
+.typ{font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px}
+.typ.match{background:rgba(255,59,92,.12);color:#d81f45}.typ.job{background:rgba(30,155,232,.14);color:#0a6fc2}.typ.dm{background:var(--card2);color:var(--mut)}.typ.shop{background:rgba(19,168,107,.12);color:var(--green)}
+.msgs{flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:8px}
+.bub{max-width:78%;padding:10px 13px;border-radius:18px;font-size:14.5px;line-height:1.4;background:var(--card2);align-self:flex-start;border-bottom-left-radius:6px;word-wrap:break-word}
+.bub.me{align-self:flex-end;background:var(--grad);color:#fff;border-radius:18px;border-bottom-right-radius:6px}
+.bub.sys{align-self:center;background:none;color:var(--mut);font-size:12px;text-align:center;max-width:90%}
+.cbar{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--bg)}
+.cbar button{width:46px;border-radius:12px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+/* profile */
+.ptop{text-align:center;padding:8px 16px 0}
+.pav{width:96px;height:96px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;background:var(--grad);color:#fff;position:relative}
+.pav.gold{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--gold)}
+.pav .gb{position:absolute;bottom:-4px;right:-4px;font-size:22px}
+.pstats{display:flex;justify-content:center;gap:28px;margin-top:14px}
+.pstats b{display:block;font-size:18px;font-weight:800}
+.pstats span{font-size:12.5px;color:var(--mut)}
+.pbtns{display:flex;gap:8px;margin:16px 0 0}
+.pbtns .btn{margin:0}
+.ptabs{display:flex;border-bottom:1px solid var(--line);margin-top:18px}
+.ptabs button{flex:1;padding:12px;font-weight:700;font-size:13.5px;color:var(--mut);border-bottom:2px solid transparent}
+.ptabs button.on{color:var(--vio);border-color:var(--vio)}
+.slist{margin:18px 16px 0;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.slist button{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;font-size:14.5px;font-weight:600}
+.slist button:last-child{border-bottom:0}
+.slist .e{width:32px;height:32px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:16px}
+.slist .r{margin-left:auto;color:var(--mut);font-size:13px;font-weight:500}
+.mq{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.mq .k{font-size:22px}
+.mq .acts{display:flex;gap:6px}
+.mq .acts button{padding:7px 10px;border-radius:9px;font-size:12px;font-weight:700}
+.ok{background:rgba(19,168,107,.12);color:var(--green)}.ko{background:rgba(255,59,92,.12);color:#d81f45}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--mut);font-weight:700;font-size:11.5px;text-transform:uppercase}
+.spin{width:18px;height:18px;border:2.5px solid rgba(0,0,0,.25);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite}
+.logo{font-weight:800;font-size:22px;letter-spacing:-.02em}
+.logo span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+</style>
+</head>
+<body>
+<div id="app">
+  <section class="screen on" id="s-home">
+    <div id="topbar">
+      <button class="loc" id="locHome" onclick="openLoc()"></button>
+      <div class="tabs"><button id="tabAbo" onclick="setTab('abo')">Abonnements</button><button id="tabPour" onclick="setTab('pour')">Pour toi</button></div>
+      <div class="rt"><button class="ib" onclick="go('discover')" aria-label="Rechercher"></button><button class="ib" id="msgBtn" onclick="go('msgs')" aria-label="Messages"></button></div>
+    </div>
+    <div id="feed"></div>
+  </section>
+  <section class="screen" id="s-discover"></section>
+  <section class="screen" id="s-create"></section>
+  <section class="screen" id="s-vip"></section>
+  <section class="screen" id="s-shop"></section>
+  <section class="screen" id="s-profile"></section>
+  <section class="screen" id="s-msgs"></section>
+  <section class="screen" id="s-chat"></section>
+  <section class="screen" id="s-admin"></section>
+  <nav id="nav"></nav>
+  <div id="sheetBg" onclick="if(event.target.id==='sheetBg')closeSheet()"><div id="sheet"></div></div>
+  <div id="modal"></div>
+  <div id="toast"></div>
+</div>
+<script>
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=rng(2026);
+const pick=a=>a[Math.floor(R()*a.length)];
+const rint=(a,b)=>a+Math.floor(R()*(b-a+1));
+const fmtN=n=>n>=1e6?(n/1e6).toFixed(1).replace('.',',')+' M':n>=1e4?Math.round(n/1e3)+' k':n>=1e3?(n/1e3).toFixed(1).replace('.',',')+' k':String(n);
+const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const sv=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const I={
+home:sv('<path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/>'),
+bag:sv('<path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/>'),
+plus:sv('<path d="M12 5v14M5 12h14"/>'),
+crown:sv('<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>'),
+user:sv('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>'),
+heart:sv('<path d="M12 21s-8-5.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.5-8 11-8 11z"/>'),
+comment:sv('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>'),
+bookmark:sv('<path d="M6 3h12v18l-6-4-6 4z"/>'),
+share:sv('<path d="M14 5l7 7-7 7v-4c-6 0-9 2-11 5 1-6 4-10 11-11z"/>'),
+search:sv('<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>'),
+chat:sv('<path d="M4 5h16v11H8l-4 4z"/>'),
+back:sv('<path d="M15 5l-7 7 7 7"/>'),
+close:sv('<path d="M6 6l12 12M18 6 6 18"/>'),
+cart:sv('<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l3 12h11l2-8H6"/>'),
+send:sv('<path d="M4 12 20 4l-6 16-3-7z"/>'),
+music:sv('<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>'),
+gear:sv('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>')
+};
+const GR=[['#5ccbff','#1e9be8'],['#87d8ff','#3a7bd5'],['#3dd6ff','#0a6fc2'],['#7ee8fa','#1e9be8'],['#a1e3ff','#4facfe'],['#4facfe','#00c6fb'],['#6dd5fa','#2980b9'],['#89f7fe','#66a6ff']];
+const gstyle=g=>`--g1:${g[0]};--g2:${g[1]};--g3:${g[2]||g[0]}`;
+const gbg=g=>`background:linear-gradient(135deg,${g[0]},${g[1]})`;
+
+/* ---------- pays & régions ---------- */
+const NP={
+WF:['Aïcha','Moussa','Fatou','Ibrahim','Mariam','Abdoul','Awa','Seydou','Kadiatou','Yacouba'],
+WA:['Chioma','Emeka','Ama','Kwame','Ngozi','Tunde','Efua','Kofi','Adaeze','Femi'],
+CF:['Brenda','Junior','Christelle','Arnold','Grâce','Patrick','Merveille','Rodrigue','Divine','Cédric'],
+EA:['Amani','Baraka','Neema','Juma','Wanjiru','Otieno','Zawadi','Kamau','Aisha','Imani'],
+HA:['Hanna','Dawit','Selam','Yonas','Amina','Abdi','Liya','Mohamed','Hodan','Samuel'],
+PT:['Ana','João','Maria','Carlos','Inês','Paulo','Sónia','Nuno','Rita','Hélder'],
+ES:['María','José','Carmen','Juan','Lucía','Pedro','Rosa','Miguel','Elena','Santiago'],
+RB:['Aline','Eric','Clarisse','Jean','Ange','Olivier','Diane','Kevin','Sandrine','Fabrice'],
+AZ:['Leyla','Elvin','Aysel','Murad','Nigar','Rauf','Günel','Kamran','Sabina','Orkhan'],
+SS:['Deng','Achol','Garang','Nyandeng','Majok','Abuk','Kuol','Ayen','Mading','Atong']};
+const ZN={O:'Afrique de l’Ouest',C:'Afrique centrale',E:'Afrique de l’Est',A:'Azerbaïdjan'};
+
+const CL=[
+['BJ','Bénin','🇧🇯','O','FCFA',655.96,'+229',['Littoral','Atlantique','Borgou','Zou'],['Cotonou','Abomey-Calavi','Parakou','Bohicon'],'WF'],
+['BF','Burkina Faso','🇧🇫','O','FCFA',655.96,'+226',['Centre','Hauts-Bassins','Nord','Centre-Ouest'],['Ouagadougou','Bobo-Dioulasso','Ouahigouya','Koudougou'],'WF'],
+['CV','Cap-Vert','🇨🇻','O','CVE',110.27,'+238',['Santiago','São Vicente','Sal'],['Praia','Mindelo','Espargos'],'PT'],
+['CI','Côte d’Ivoire','🇨🇮','O','FCFA',655.96,'+225',['Abidjan','Yamoussoukro','Bouaké','San-Pédro'],['Abidjan','Yamoussoukro','Bouaké','San-Pédro'],'WF'],
+['GM','Gambie','🇬🇲','O','GMD',80,'+220',['Banjul','Kanifing','Brikama'],['Banjul','Serrekunda','Brikama'],'WF'],
+['GH','Ghana','🇬🇭','O','GH₵',16,'+233',['Grand Accra','Ashanti','Centrale','Nord'],['Accra','Kumasi','Cape Coast','Tamale'],'WA'],
+['GN','Guinée','🇬🇳','O','GNF',9800,'+224',['Conakry','Kankan','Labé','Nzérékoré'],['Conakry','Kankan','Labé','Nzérékoré'],'WF'],
+['GW','Guinée-Bissau','🇬🇼','O','FCFA',655.96,'+245',['Bissau','Bafatá','Gabú'],['Bissau','Bafatá','Gabú'],'PT'],
+['LR','Liberia','🇱🇷','O','L$',210,'+231',['Montserrado','Bong','Nimba'],['Monrovia','Gbarnga','Ganta'],'WA'],
+['ML','Mali','🇲🇱','O','FCFA',655.96,'+223',['Bamako','Sikasso','Ségou','Kayes'],['Bamako','Sikasso','Ségou','Kayes'],'WF'],
+['MR','Mauritanie','🇲🇷','O','MRU',45,'+222',['Nouakchott','Nouadhibou','Assaba'],['Nouakchott','Nouadhibou','Kiffa'],'WF'],
+['NE','Niger','🇳🇪','O','FCFA',655.96,'+227',['Niamey','Zinder','Maradi','Tahoua'],['Niamey','Zinder','Maradi','Tahoua'],'WF'],
+['NG','Nigeria','🇳🇬','O','₦',1700,'+234',['Lagos','FCT Abuja','Rivers','Kano','Oyo'],['Lagos','Abuja','Port Harcourt','Kano','Ibadan'],'WA'],
+['SN','Sénégal','🇸🇳','O','FCFA',655.96,'+221',['Dakar','Thiès','Saint-Louis','Ziguinchor'],['Dakar','Thiès','Saint-Louis','Ziguinchor'],'WF'],
+['SL','Sierra Leone','🇸🇱','O','Le',25,'+232',['Western Area','Bo','Kenema'],['Freetown','Bo','Kenema'],'WA'],
+['TG','Togo','🇹🇬','O','FCFA',655.96,'+228',['Maritime','Plateaux','Kara','Centrale'],['Lomé','Atakpamé','Kara','Sokodé'],'WF'],
+['CM','Cameroun','🇨🇲','C','FCFA',655.96,'+237',['Littoral','Centre','Ouest','Nord','Sud-Ouest'],['Douala','Yaoundé','Bafoussam','Garoua','Buéa'],'CF'],
+['CF','Centrafrique','🇨🇫','C','FCFA',655.96,'+236',['Bangui','Ombella-M’Poko','Ouham'],['Bangui','Bimbo','Bossangoa'],'CF'],
+['CG','Congo-Brazzaville','🇨🇬','C','FCFA',655.96,'+242',['Brazzaville','Pointe-Noire','Niari'],['Brazzaville','Pointe-Noire','Dolisie'],'CF'],
+['CD','RD Congo','🇨🇩','C','FC',3200,'+243',['Kinshasa','Haut-Katanga','Nord-Kivu','Kasaï-Central'],['Kinshasa','Lubumbashi','Goma','Kananga'],'CF'],
+['GA','Gabon','🇬🇦','C','FCFA',655.96,'+241',['Estuaire','Haut-Ogooué','Ogooué-Maritime'],['Libreville','Franceville','Port-Gentil'],'CF'],
+['GQ','Guinée équatoriale','🇬🇶','C','FCFA',655.96,'+240',['Bioko Nord','Littoral'],['Malabo','Bata'],'ES'],
+['TD','Tchad','🇹🇩','C','FCFA',655.96,'+235',['N’Djamena','Logone Occidental','Ouaddaï'],['N’Djamena','Moundou','Abéché'],'WF'],
+['ST','São Tomé-et-Principe','🇸🇹','C','Db',24.5,'+239',['Água Grande','Príncipe'],['São Tomé','Santo António'],'PT'],
+['BI','Burundi','🇧🇮','E','FBu',3300,'+257',['Bujumbura','Gitega','Ngozi'],['Bujumbura','Gitega','Ngozi'],'RB'],
+['DJ','Djibouti','🇩🇯','E','Fdj',205,'+253',['Djibouti','Ali Sabieh','Tadjourah'],['Djibouti','Ali Sabieh','Tadjourah'],'HA'],
+['ER','Érythrée','🇪🇷','E','Nfk',17,'+291',['Maekel','Debub','Mer Rouge Nord'],['Asmara','Mendefera','Massawa'],'HA'],
+['ET','Éthiopie','🇪🇹','E','Br',160,'+251',['Addis-Abeba','Oromia','Amhara','Tigré'],['Addis-Abeba','Adama','Bahir Dar','Mekele'],'HA'],
+['KE','Kenya','🇰🇪','E','KSh',150,'+254',['Nairobi','Mombasa','Kisumu','Nakuru'],['Nairobi','Mombasa','Kisumu','Nakuru'],'EA'],
+['UG','Ouganda','🇺🇬','E','USh',4200,'+256',['Centrale','Ouest','Est','Nord'],['Kampala','Mbarara','Jinja','Gulu'],'EA'],
+['RW','Rwanda','🇷🇼','E','RF',1650,'+250',['Kigali','Sud','Nord','Ouest'],['Kigali','Huye','Musanze','Rubavu'],'RB'],
+['SO','Somalie','🇸🇴','E','Sh.So.',660,'+252',['Banaadir','Woqooyi Galbeed','Bari'],['Mogadiscio','Hargeisa','Bosaso'],'HA'],
+['SS','Soudan du Sud','🇸🇸','E','SSP',5000,'+211',['Équatoria-Central','Jonglei','Bahr el Ghazal'],['Djouba','Bor','Wau'],'SS'],
+['TZ','Tanzanie','🇹🇿','E','TSh',2900,'+255',['Dar es Salaam','Arusha','Mwanza','Zanzibar'],['Dar es Salaam','Arusha','Mwanza','Zanzibar'],'EA'],
+['AZ','Azerbaïdjan','🇦🇿','A','₼',1.9,'+994',['Bakou','Gandja','Soumgaït','Lankaran'],['Bakou','Gandja','Soumgaït','Lankaran'],'AZ']];
+const C={};CL.forEach(([k,n,f,z,cur,rt,tel,r,ci,np])=>C[k]={n,f,z,cur,rt,tel,r,ci,nm:NP[np],pp:['GA','GQ','CV','AZ'].includes(k)?0.8:['NG','KE','GH'].includes(k)?0.7:0.6});
+function price(eur,cc){const c=C[cc||S.country];let v=eur*c.rt;if(eur<=0)return '0 '+c.cur;if(c.rt>=100){const st=v>=20000?500:v>=2000?50:10;v=Math.max(st,Math.round(v/st)*st);return v.toLocaleString('fr-FR')+' '+c.cur}if(c.rt>=10)return Math.max(1,Math.round(v)).toLocaleString('fr-FR')+' '+c.cur;return v.toFixed(2).replace('.',',')+' '+c.cur}
+const subPrice=(eur,cc)=>price(eur*C[cc||S.country].pp,cc);
+
+/* ---------- state ---------- */
+const S={country:'CM',region:'all',tab:'pour',vip:false,plan:'m',pay:'Carte bancaire',verified:false,blocked18:false,seller:null,cart:[],orders:[],liked:new Set(),saved:new Set(),follow:new Set(),swiped:new Set(),matches:[],hidden:false,dmode:'serieux',dage:'all',vipTab:'dating',jobTab:'offres',jobSector:'all',applied:new Set(),shopFilter:null,profTab:'videos',me:{name:'Moi',handle:'@moi_vibzo',bio:'Bienvenue sur mon profil ✨'},chats:[],cur:'home',prev:'home',chatId:null,q:''};
+let firstRun=true;try{const sc=localStorage.getItem('vibzo_cc');if(sc&&C[sc]){S.country=sc;S.region=localStorage.getItem('vibzo_rg')||'all';firstRun=false}}catch(e){}
+
+/* ---------- données de démo ---------- */
+const VT=[
+{e:'💃',t:'Nouveau challenge danse 🔥',cap:'Qui peut faire mieux ? Montre-moi ta version !',tags:['danse','challenge','afrobeat'],snd:'Afro Vibes (Remix)',g:['#4facfe','#00c6fb','#a1e3ff']},
+{e:'🍲',t:'Recette express en 60 s',cap:'Le plat de ma grand-mère, version rapide 😋',tags:['cuisine','recette','food'],snd:'Son original',g:['#56ccf2','#2f80ed','#89f7fe']},
+{e:'😂',t:'POV : ta mère trouve ton bulletin',cap:'Ça vous est déjà arrivé ? 😭',tags:['humour','pov','drole'],snd:'Funny Beat',g:['#36d1dc','#5b86e5','#a1e3ff']},
+{e:'👗',t:'Tenue du jour ✨',cap:'Look stylé à petit prix, produit en lien 👇',tags:['mode','ootd','style'],snd:'Runway Pulse',g:['#7ee8fa','#1e9be8','#ffffff'],prod:0},
+{e:'⚽',t:'Le geste technique du jour',cap:'Tuto : le petit pont parfait en 3 étapes',tags:['foot','sport','tuto'],snd:'Stadium Energy',g:['#00b4db','#0083b0','#5ccbff']},
+{e:'💼',t:'3 conseils pour décrocher un job',cap:'Ce que les recruteurs regardent vraiment 👀',tags:['emploi','conseils','carriere'],snd:'Focus Lo-fi',g:['#2193b0','#6dd5ed','#1e9be8']},
+{e:'🎤',t:'Freestyle improvisé',cap:'Donnez-moi un thème en commentaire 🎶',tags:['musique','rap','freestyle'],snd:'Beat Drill 140',g:['#1e9be8','#0a5fa8','#5ccbff']},
+{e:'🌅',t:'Coucher de soleil chez moi',cap:'Ma ville est la plus belle, change my mind',tags:['voyage','paysage','city'],snd:'Golden Hour',g:['#6dd5fa','#2980b9','#ffffff']},
+{e:'💄',t:'Make-up glow en 5 étapes',cap:'Tous les produits sont dans la boutique ✨',tags:['beaute','makeup','tuto'],snd:'Glow Up',g:['#89f7fe','#66a6ff','#4facfe'],prod:3}
+];
+const CPOOL=['Trop fort 🔥🔥','J’adore !!','Tu viens d’où exactement ?','Le son est incroyable 🎶','Part 2 svp 🙏','Mdrrr 😂','Respect 👏','Tellement vrai 😭','Ça donne envie !','Abonné(e) direct ✅','Tu peux faire un tuto ?','Le niveau 😮'];
+const PT=[{e:'👗',n:'Robe wax élégante',p:24,s:0},{e:'👜',n:'Sac en cuir artisanal',p:55,s:0},{e:'👠',n:'Escarpins dorés',p:35,s:0},{e:'💄',n:'Kit maquillage Glow',p:18,s:1},{e:'🧴',n:'Beurre de karité bio',p:8,s:1},{e:'🌸',n:'Parfum Oud Rose',p:42,s:1},{e:'👟',n:'Baskets urbaines',p:39,s:2},{e:'🕶️',n:'Lunettes de soleil',p:20,s:2},{e:'⌚',n:'Montre minimaliste',p:45,s:2},{e:'🎧',n:'Écouteurs sans fil',p:29,s:2}];
+const PL=['Shopify','WooCommerce','Vibzo'];
+const BIOS={serieux:['Je cherche une relation sincère et durable. Cuisine, voyages et fous rires.','Famille, ambition et bonne humeur. Prêt(e) pour du sérieux.','Romantique assumé(e). Un café pour commencer ?','Je crois encore aux belles histoires. Et toi ?'],libre:['Ici pour des rencontres sans prise de tête, toujours dans le respect 🙂','Spontané(e), on voit où ça mène. Respect et consentement avant tout.','Pas de pression, juste de bons moments entre adultes.','Sorties, musique, bonne vibe. Honnête sur mes intentions.']};
+const INTS=['Musique','Voyage','Cuisine','Sport','Cinéma','Mode','Danse','Lecture','Business','Gaming','Art','Nature'];
+const VIBES=['🌴','🎶','📚','🍷','⚽','🎨','✈️','🍳','💪','🎬'];
+const JT=[{p:'Développeur web React',s:'Informatique',c:'CDI',sal:450,tt:'Hybride'},{p:'Commercial terrain',s:'Commerce',c:'CDD',sal:180,tt:'Sur site'},{p:'Community manager',s:'Marketing',c:'Freelance',sal:200,tt:'Télétravail'},{p:'Comptable confirmé',s:'Finance',c:'CDI',sal:350,tt:'Sur site'},{p:'Chauffeur-livreur',s:'Transport',c:'CDD',sal:130,tt:'Sur site'},{p:'Serveur / Serveuse',s:'Hôtellerie',c:'Temps partiel',sal:100,tt:'Sur site'},{p:'Infirmier(ère)',s:'Santé',c:'CDI',sal:300,tt:'Sur site'},{p:'Professeur d’anglais',s:'Éducation',c:'Temps partiel',sal:200,tt:'Hybride'}];
+const SECT=['Informatique','Commerce','Marketing','Finance','Transport','Hôtellerie','Santé','Éducation'];
+const CT=[{m:'Développeur mobile',s:'Informatique',k:['Flutter','Firebase','UI']},{m:'Vendeur(se) en boutique',s:'Commerce',k:['Accueil','Caisse','Stock']},{m:'Graphiste',s:'Marketing',k:['Photoshop','Canva','Branding']},{m:'Aide-comptable',s:'Finance',k:['Excel','Sage','Paie']},{m:'Cuisinier(ère)',s:'Hôtellerie',k:['Cuisine locale','Pâtisserie','Hygiène']},{m:'Aide-soignant(e)',s:'Santé',k:['Soins','Écoute','Gardes de nuit']}];
+const VIDEOS=[],PRODUCTS=[],SHOPS=[],DATERS=[],JOBS=[],CANDS=[];
+Object.entries(C).forEach(([cc,c],ci)=>{
+  [0,1,2].forEach(si=>{const nm=[ 'Maison '+c.ci[0], c.nm[2]+' Beauty', 'Urban '+c.ci[c.ci.length-1]][si];
+    SHOPS.push({id:SHOPS.length,cc,n:nm,pl:PL[si],region:c.r[si%c.r.length],e:['👗','💄','👟'][si],g:GR[(si+ci)%GR.length],rating:(4.3+R()*0.6).toFixed(1)})});
+  const shopBase=SHOPS.length-3;
+  const pIds=[];
+  PT.forEach((t,pi)=>{const sh=SHOPS[shopBase+t.s];pIds.push(PRODUCTS.length);PRODUCTS.push({id:PRODUCTS.length,cc,e:t.e,n:t.n,p:t.p,shop:sh.id,region:sh.region,g:GR[(pi+ci)%GR.length],rating:(4+R()).toFixed(1),rev:rint(8,420)})});
+  VT.forEach((t,ti)=>{const a=c.nm[(ti+ci)%c.nm.length];
+    VIDEOS.push({id:VIDEOS.length,cc,region:c.r[ti%c.r.length],author:a,handle:'@'+norm(a)+'_'+norm(c.ci[ti%c.ci.length]),t:t.t,cap:t.cap,tags:t.tags,snd:t.snd,g:t.g,e:t.e,likes:rint(900,240000),shares:rint(40,9000),saves:rint(30,6000),cn:rint(40,3200),comments:Array.from({length:rint(3,6)},()=>({n:pick(c.nm),t:pick(CPOOL),time:rint(1,23)+' h',l:rint(0,900)})),prod:t.prod!=null?pIds[t.prod]:null})});
+  for(let i=0;i<10;i++){const it=i%3===0?'both':i%2===0?'serieux':'libre';const n=c.nm[(i*3+ci)%c.nm.length];
+    DATERS.push({id:DATERS.length,cc,n,age:rint(21,38),region:c.r[i%c.r.length],city:c.ci[i%c.ci.length],km:rint(1,28),intent:it,bio:pick(BIOS[it==='both'?pick(['serieux','libre']):it]),ints:[pick(INTS),pick(INTS),pick(INTS)].filter((v,k,a)=>a.indexOf(v)===k),vibe:pick(VIBES),g:GR[(i+ci)%GR.length],ver:R()>.25})}
+  const cos=[c.ci[0]+' Digital','Groupe '+c.nm[5],c.n+' Logistique','Hôtel Le '+c.ci[1%c.ci.length],'Clinique Sainte-'+c.nm[0],'Cabinet '+c.nm[3]+' & Associés','Bright School '+c.ci[0]];
+  JT.forEach((j,i)=>{JOBS.push({id:JOBS.length,cc,p:j.p,s:j.s,c:j.c,sal:j.sal,tt:j.tt,co:cos[i%cos.length],region:c.r[i%c.r.length],city:c.ci[i%c.ci.length],ver:R()>.2,d:rint(1,14)})});
+  CT.forEach((t,i)=>{CANDS.push({id:CANDS.length,cc,n:c.nm[(i+4)%c.nm.length],m:t.m,s:t.s,k:t.k,exp:rint(1,9),dispo:pick(['Immédiate','Sous 2 semaines','Sous 1 mois']),region:c.r[(i+1)%c.r.length],g:GR[i%GR.length]})});
+});
+const V=id=>VIDEOS.find(v=>v.id===id);
+const P=id=>PRODUCTS.find(p=>p.id===id);
+const inZone=o=>S.region==='zone'?C[o.cc].z===C[S.country].z:o.cc===S.country&&(S.region==='all'||o.region===S.region);
+const pubRegion=()=>S.region==='all'||S.region==='zone'?C[S.country].r[0]:S.region;
+const locLabel=()=>{const c=C[S.country];return S.region==='zone'?'🌍 '+ZN[c.z]:c.f+' '+(S.region==='all'?c.n:S.region)};
+
+/* ---------- navigation ---------- */
+const NAV=[['home','Accueil',I.home],['shop','Boutique',I.bag],['create','',I.plus],['vip','Gold',I.crown],['profile','Profil',I.user]];
+function renderNav(){$('#nav').innerHTML=NAV.map(([k,l,ic])=>k==='create'?`<button onclick="go('create')" aria-label="Créer"><span class="plus">${ic}</span></button>`:`<button class="${k==='vip'?'gold ':''}${S.cur===k?'on':''}" onclick="go('${k}')">${ic}<span>${l}</span></button>`).join('')}
+function go(k){
+  if(k!==S.cur&&!['chat'].includes(k))S.prev=S.cur;
+  S.cur=k;document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$('#s-'+k).classList.add('on');
+  if(k!=='home')document.querySelectorAll('#feed video').forEach(v=>v.pause());
+  ({home:renderHome,discover:renderDiscover,create:renderCreate,vip:renderVip,shop:renderShop,profile:renderProfile,msgs:renderMsgs,chat:renderChat,admin:renderAdmin})[k]();
+  renderNav();
+}
+function refresh(){try{localStorage.setItem('vibzo_cc',S.country);localStorage.setItem('vibzo_rg',S.region)}catch(e){}go(S.cur)}
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2300)}
+function sheet(title,body){$('#sheet').innerHTML=`<div class="sh-h"><span>${title}</span><button onclick="closeSheet()" aria-label="Fermer">${I.close}</button></div><div class="sh-b">${body}</div>`;$('#sheetBg').classList.add('on')}
+function closeSheet(){$('#sheetBg').classList.remove('on')}
+function modal(html){$('#modal').innerHTML=html;$('#modal').classList.add('on')}
+function closeModal(){$('#modal').classList.remove('on')}
+const unread=()=>S.chats.filter(c=>c.unread).length;
+const hdr=(title,right='',back=false)=>`<div class="hdr">${back?`<button class="ib" onclick="go('${back}')" aria-label="Retour">${I.back}</button>`:''}<h1>${title}</h1>${right}</div>`;
+const locBtn=()=>`<button class="loc" onclick="openLoc()">📍 ${locLabel()} ▾</button>`;
+
+/* ---------- pays/région ---------- */
+function openLoc(){sheet('Pays & région',`<div class="mut small">Vibzo est disponible dans 35 pays : Afrique de l’Ouest, du Centre, de l’Est et Azerbaïdjan. Le fil, les rencontres, les emplois et les boutiques s’adaptent à ta zone.</div><div class="lbl">Pays</div><div class="chips" id="ccChips"></div><div class="lbl">Région</div><div class="chips" id="rgChips"></div><button class="btn" onclick="closeSheet();refresh()">Appliquer</button>`);locChips()}
+function locChips(){$('#ccChips').innerHTML=Object.keys(ZN).map(z=>`<div style="width:100%;font-size:12.5px;font-weight:700;margin:6px 0 2px">${ZN[z]}</div>`+Object.entries(C).filter(([k,c])=>c.z===z).map(([k,c])=>`<button class="chip ${k===S.country?'on':''}" onclick="S.country='${k}';S.region='all';locChips()">${c.f} ${c.n}</button>`).join('')).join('');
+$('#rgChips').innerHTML=`<button class="chip ${S.region==='zone'?'on':''}" onclick="S.region='zone';locChips()">🌍 Toute ma zone</button><button class="chip ${S.region==='all'?'on':''}" onclick="S.region='all';locChips()">Tout le pays</button>`+C[S.country].r.map((r,i)=>`<button class="chip ${S.region===r?'on':''}" onclick="S.region=C[S.country].r[${i}];locChips()">${r}</button>`).join('')}
+
+/* ---------- ACCUEIL / FIL ---------- */
+function setTab(t){S.tab=t;renderHome()}
+function feedList(){if(S.tab==='abo')return VIDEOS.filter(v=>S.follow.has(v.handle)||v.mine);return VIDEOS.filter(v=>inZone(v)||(v.mine&&v.cc===S.country))}
+function slideHTML(v){
+  const lk=S.liked.has(v.id),sv_=S.saved.has(v.id),fo=S.follow.has(v.handle),p=v.prod!=null?P(v.prod):null;
+  return `<div class="slide" data-id="${v.id}">
+  ${v.src?`<video class="vbg" src="${v.src}" loop muted playsinline></video>`:`<div class="vbg" style="${gstyle(v.g)}"></div><div class="vemoji">${v.e}</div><div class="vtitle">${esc(v.t)}</div>`}
+  <div class="vtap" onclick="tapVid(event,${v.id})"></div><div class="pauseIc">▶</div>
+  <div class="rail">
+    <div class="av" style="${gbg(v.g)}">${esc(v.author[0])}${v.mine?'':`<button class="fol ${fo?'on':''}" onclick="toggleFollow(${v.id})" aria-label="Suivre">${fo?'✓':'+'}</button>`}</div>
+    <button class="rb ${lk?'on':''}" id="lk${v.id}" onclick="toggleLike(${v.id})">${I.heart}<span>${fmtN(v.likes+(lk?1:0))}</span></button>
+    <button class="rb" onclick="openComments(${v.id})">${I.comment}<span id="cc${v.id}">${fmtN(v.cn)}</span></button>
+    <button class="rb ${sv_?'on2':''}" id="sv${v.id}" onclick="toggleSave(${v.id})">${I.bookmark}<span>${fmtN(v.saves+(sv_?1:0))}</span></button>
+    <button class="rb" onclick="openShare(${v.id})">${I.share}<span>${fmtN(v.shares)}</span></button>
+    <div class="disc" style="${gbg(v.g)}">♪</div>
+  </div>
+  <div class="vinfo">
+    <div class="vauth">${esc(v.handle)}${v.mine&&S.vip?'<span class="vgold">👑 Gold</span>':''}<span class="vloc">📍 ${esc(v.region)}</span></div>
+    <div class="vcap">${esc(v.cap)} ${v.tags.map(t=>`<b>#${esc(t)}</b>`).join(' ')}</div>
+    ${p?`<button class="vprod" onclick="openProduct(${p.id})">🛍️ ${esc(p.n)} · ${price(p.p,p.cc)}</button>`:''}
+    <div class="vsnd">${I.music}<span class="marq"><span>${esc(v.snd)} · ${esc(v.author)}</span></span></div>
+  </div><div class="prog"><i></i></div></div>`}
+function renderHome(){
+  $('#locHome').textContent=locLabel();
+  $('#tabAbo').classList.toggle('on',S.tab==='abo');$('#tabPour').classList.toggle('on',S.tab==='pour');
+  const rt=$('#topbar .rt').children;rt[0].innerHTML=I.search;rt[1].innerHTML=I.chat+(unread()?`<span class="badge">${unread()}</span>`:'');
+  const l=feedList();
+  let end;
+  if(S.tab==='abo'&&!l.length)end=`<div class="big" style="font-size:54px">👥</div><h2 style="margin:10px 0 6px">Aucun abonnement</h2><p class="mut">Appuie sur le <b>+</b> d’un créateur dans « Pour toi » pour voir ses vidéos ici.</p><button class="btn" style="width:auto;padding:12px 22px" onclick="setTab('pour')">Découvrir des créateurs</button>`;
+  else end=`<div style="font-size:54px">🎉</div><h2 style="margin:10px 0 6px">Tu as tout vu ${S.region==='all'?'':S.region==='zone'?'dans ta zone':'à '+esc(S.region)}</h2><p class="mut">Explore d’autres régions ou publie ta propre vidéo.</p><button class="btn" style="width:auto;padding:12px 22px" onclick="openLoc()">📍 Changer de zone</button><button class="btn ghost" style="width:auto;padding:12px 22px;margin-top:10px" onclick="go('create')">＋ Publier une vidéo</button>`;
+  $('#feed').innerHTML=l.map(slideHTML).join('')+`<div class="slide endslide">${end}</div>`;
+  $('#feed').scrollTop=0;observeVideos();
+}
+let io;
+function observeVideos(){if(io)io.disconnect();io=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target.querySelector('video');if(!v)return;if(e.isIntersecting&&S.cur==='home'&&!e.target.classList.contains('paused'))v.play().catch(()=>{});else v.pause()}),{threshold:.6});document.querySelectorAll('#feed .slide').forEach(s=>io.observe(s))}
+let lastTap=0,tapT;
+function tapVid(e,id){const now=Date.now(),sl=e.currentTarget.parentElement;
+  if(now-lastTap<300){clearTimeout(tapT);lastTap=0;if(!S.liked.has(id))toggleLike(id);const r=sl.getBoundingClientRect(),h=document.createElement('div');h.className='burst';h.textContent='❤️';h.style.left=(e.clientX-r.left)+'px';h.style.top=(e.clientY-r.top)+'px';sl.appendChild(h);setTimeout(()=>h.remove(),800);return}
+  lastTap=now;tapT=setTimeout(()=>{sl.classList.toggle('paused');const v=sl.querySelector('video');if(v)sl.classList.contains('paused')?v.pause():v.play().catch(()=>{})},300)}
+function toggleLike(id){const v=V(id);S.liked.has(id)?S.liked.delete(id):S.liked.add(id);const b=$('#lk'+id);if(b){b.classList.toggle('on',S.liked.has(id));b.querySelector('span').textContent=fmtN(v.likes+(S.liked.has(id)?1:0))}}
+function toggleSave(id){const v=V(id);const on=!S.saved.has(id);on?S.saved.add(id):S.saved.delete(id);const b=$('#sv'+id);if(b){b.classList.toggle('on2',on);b.querySelector('span').textContent=fmtN(v.saves+(on?1:0))}toast(on?'Ajouté aux favoris 🔖':'Retiré des favoris')}
+function toggleFollow(id){const v=V(id);const on=!S.follow.has(v.handle);on?S.follow.add(v.handle):S.follow.delete(v.handle);document.querySelectorAll('.slide').forEach(sl=>{const x=V(+sl.dataset.id);if(x&&x.handle===v.handle){const f=sl.querySelector('.fol');if(f){f.classList.toggle('on',on);f.textContent=on?'✓':'+'}}});toast(on?'Tu suis '+v.handle:'Abonnement retiré')}
+function cHTML(c,i,vid){return `<div class="cm"><div class="av" style="${gbg(GR[c.n.length%GR.length])}">${esc(c.n[0])}</div><div class="grow"><div class="n">${esc(c.n)}${c.me&&S.vip?' 👑':''}</div><div class="t">${esc(c.t)}</div><div class="n" style="font-weight:500;margin-top:4px">${esc(c.time)} · <button class="mut small" onclick="replyTo(${vid},${i})">Répondre</button></div></div><button class="lk ${c.on?'on':''}" onclick="likeC(${vid},${i},this)">${I.heart}<span>${c.l+(c.on?1:0)}</span></button></div>`}
+function openComments(id){const v=V(id);sheet(`${fmtN(v.cn)} commentaires`,`<div class="clist" id="clist">${v.comments.map((c,i)=>cHTML(c,i,id)).join('')}</div><form class="cinput" onsubmit="addComment(event,${id})"><input id="cIn" placeholder="Ajouter un commentaire…" maxlength="200" autocomplete="off"><button aria-label="Envoyer">${I.send}</button></form>`)}
+function likeC(vid,i,el){const c=V(vid).comments[i];c.on=!c.on;el.classList.toggle('on',c.on);el.querySelector('span').textContent=c.l+(c.on?1:0)}
+function replyTo(vid,i){const inp=$('#cIn');inp.value='@'+V(vid).comments[i].n+' ';inp.focus()}
+function addComment(e,id){e.preventDefault();const t=$('#cIn').value.trim();if(!t)return;const v=V(id);v.comments.unshift({n:S.me.name,t,time:'à l’instant',l:0,me:true});v.cn++;$('#clist').innerHTML=v.comments.map((c,i)=>cHTML(c,i,id)).join('');$('#cIn').value='';const cc=$('#cc'+id);if(cc)cc.textContent=fmtN(v.cn);$('#sheet .sh-h span').textContent=fmtN(v.cn)+' commentaires'}
+function openShare(id){const v=V(id);sheet('Partager',`<div class="sgrid">${[['🔗','Copier le lien','copy'],['🟢','WhatsApp','x'],['🔵','Facebook','x'],['✉️','Message Vibzo','dm'],['🎭','Duo','duo'],['✂️','Stitch','duo'],['⬇️','Enregistrer','dl'],['🚩','Signaler','rep']].map(([e,l,a])=>`<button onclick="shareAct('${a}',${id},'${l}')"><span class="ci">${e}</span>${l}</button>`).join('')}</div>`)}
+function shareAct(a,id,l){const v=V(id);closeSheet();
+  if(a==='copy'){try{navigator.clipboard.writeText('https://vibzo.app/v/'+id).then(()=>toast('Lien copié 🔗'),()=>toast('vibzo.app/v/'+id))}catch(e){toast('vibzo.app/v/'+id)}v.shares++}
+  else if(a==='dm'){openChatWith({key:'dm-'+v.handle,name:v.author,sub:v.handle,type:'dm',g:v.g});pushMsg(S.chatId,true,'🎬 Vidéo partagée : « '+v.t+' »')}
+  else if(a==='duo'){toast(l+' : ouvre la caméra pour répondre à '+v.handle);go('create')}
+  else if(a==='rep'){toast('Merci, la modération va examiner cette vidéo 🛡️')}
+  else{v.shares++;toast('Partagé via '+l+' ✅')}}
+
+/* ---------- DÉCOUVRIR ---------- */
+function renderDiscover(){
+  const tags={};VIDEOS.filter(v=>v.cc===S.country).forEach(v=>v.tags.forEach(t=>tags[t]=(tags[t]||0)+v.likes));
+  const top=Object.entries(tags).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  $('#s-discover').innerHTML=`<div class="hdr"><button class="ib" onclick="go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, sons, créateurs…" value="${esc(S.q)}" oninput="S.q=this.value;discResults()"></div></div>
+  <div class="pad"><div class="row" style="justify-content:space-between"><div class="lbl" style="margin:6px 0 8px">Tendances · ${C[S.country].f} ${C[S.country].n}</div>${''}</div><div class="chips">${top.map(([t,n])=>`<button class="chip" onclick="S.q='${t}';$('#q').value='${t}';discResults()">#${t} <span class="mut">${fmtN(n)}</span></button>`).join('')}</div>
+  <div class="lbl">Défis de la semaine</div><div class="row" style="gap:10px;overflow-x:auto">${['💃 #VibzoDanceChallenge','🍲 #RecetteEn60s','💼 #MonPremierJob'].map((t,i)=>`<div class="card" style="flex:none;width:200px;${gbg(GR[i])};border:0"><b>${t}</b><div class="small" style="margin-top:6px;opacity:.9">${fmtN(rint(2e5,5e6))} vues</div></div>`).join('')}</div>
+  <div class="lbl">Vidéos</div></div><div class="vgrid" id="dres"></div>`;discResults()}
+function discResults(){const q=norm(S.q||'');const l=VIDEOS.filter(v=>v.cc===S.country||v.mine).filter(v=>!q||norm(v.cap+v.t+v.tags.join(' ')+v.handle+v.snd).includes(q));
+  $('#dres').innerHTML=l.length?l.map(v=>`<button class="vth" style="${gstyle(v.g)}" onclick="openVideo(${v.id})">${v.src?`<video src="${v.src}" muted></video>`:v.e}<span>▷ ${fmtN(v.likes)}</span></button>`).join(''):`<div class="empty" style="grid-column:1/-1">Aucun résultat pour « ${esc(S.q)} »</div>`}
+function openVideo(id){const v=V(id);S.tab='pour';if(!inZone(v)){S.country=v.cc;S.region='all'}go('home');setTimeout(()=>{const el=document.querySelector(`.slide[data-id="${id}"]`);if(el)$('#feed').scrollTop=el.offsetTop},30)}
+
+/* ---------- CRÉER ---------- */
+const STY=[['💃',VT[0].g],['🍲',VT[1].g],['😂',VT[2].g],['👗',VT[3].g],['⚽',VT[4].g],['🎤',VT[6].g],['🌅',VT[7].g],['💄',VT[8].g]];
+let draft={sty:0,src:null};
+function renderCreate(){
+  const myProds=S.seller?PRODUCTS.filter(p=>p.mine):[];
+  $('#s-create').innerHTML=hdr('Nouvelle vidéo',`<button class="loc" onclick="openLoc()">📍 ${locLabel()}</button>`)+`<div class="pad">
+  <label class="up"><input type="file" accept="video/*" style="display:none" onchange="pickVid(this)"><div class="big">📹</div><b>Importer une vidéo</b><div class="mut small" style="margin-top:4px">Depuis ta galerie · jusqu’à 10 min</div></label>
+  <div class="lbl">Ou crée avec un style animé</div><div class="styles">${STY.map((s,i)=>`<button class="${draft.sty===i&&!draft.src?'on':''}" style="${gbg(s[1])}" onclick="draft.sty=${i};draft.src=null;renderCreate()">${s[0]}</button>`).join('')}</div>
+  <div class="prev" style="${draft.src?'':gbg(STY[draft.sty][1])}">${draft.src?`<video src="${draft.src}" autoplay loop muted playsinline></video>`:STY[draft.sty][0]}</div>
+  <div class="field"><label>Titre à l’écran</label><input id="ct" maxlength="60" placeholder="Ex : Mon premier challenge 🔥"></div>
+  <div class="field"><label>Description</label><textarea id="cd" rows="2" maxlength="300" placeholder="Décris ta vidéo…"></textarea></div>
+  <div class="field"><label>Hashtags</label><input id="ch" placeholder="danse, challenge, ${norm(C[S.country].n)}"></div>
+  <div class="field"><label>Son</label><select id="cs">${[...new Set(VT.map(t=>t.snd))].map(s=>`<option>${s}</option>`).join('')}</select></div>
+  ${S.seller?`<div class="field"><label>🛍️ Taguer un produit de ma boutique</label><select id="cp"><option value="">Aucun</option>${myProds.map(p=>`<option value="${p.id}">${esc(p.n)} · ${price(p.p,p.cc)}</option>`).join('')}</select></div>`:''}
+  <div class="lbl">Options</div>
+  ${[['Autoriser les commentaires',1],['Autoriser Duo et Stitch',1],['Sous-titres automatiques',1],['Visible uniquement par mes abonnés',0]].map(([l,on])=>`<div class="tog"><span>${l}</span><button class="sw ${on?'on':''}" onclick="this.classList.toggle('on')"></button></div>`).join('')}
+  <button class="btn" onclick="publish()">Publier</button></div>`}
+function pickVid(inp){const f=inp.files[0];if(!f)return;draft.src=URL.createObjectURL(f);renderCreate();toast('Vidéo importée ✅')}
+function publish(){const t=$('#ct').value.trim()||'Ma nouvelle vidéo ✨',d=$('#cd').value.trim()||'Première sur Vibzo 🚀';const tags=($('#ch').value||'vibzo').split(/[,\s#]+/).filter(Boolean).slice(0,6);
+  const cp=$('#cp')?$('#cp').value:'';const st=STY[draft.sty];
+  VIDEOS.unshift({id:VIDEOS.length+1000,mine:true,cc:S.country,region:pubRegion(),author:S.me.name,handle:S.me.handle,t,cap:d,tags,snd:$('#cs').value,g:[st[1][0],st[1][1],st[1][0]],e:st[0],src:draft.src,likes:0,shares:0,saves:0,cn:0,comments:[],prod:cp!==''?+cp:null});
+  draft={sty:0,src:null};S.tab='pour';toast('Vidéo publiée 🎉');go('home')}
+
+/* ---------- VIP GOLD ---------- */
+const PLANS=[{id:'w',n:'Hebdomadaire',p:1.49,per:'/ semaine'},{id:'m',n:'Mensuel',p:4.99,per:'/ mois'},{id:'t',n:'Trimestriel',p:12.99,per:'/ 3 mois',tag:'−13 %'},{id:'a',n:'Annuel',p:39.99,per:'/ an',tag:'Meilleure offre'}];
+const PAYZ={O:['Orange Money','MTN MoMo','Wave','Moov Money'],C:['Orange Money','MTN MoMo','Airtel Money','Moov Money'],E:['M-Pesa','Airtel Money','MTN MoMo'],A:['m10','Birbank','Apple Pay','Google Pay']};
+const payList=cod=>[...PAYZ[C[S.country].z],'Carte bancaire',...(cod?['Paiement à la livraison']:[])];
+const payChips=cod=>{if(!payList(cod).includes(S.pay))S.pay=payList(cod)[0];return `<div class="chips">${payList(cod).map(p=>`<button class="chip ${S.pay===p?'on':''}" onclick="S.pay='${p}';this.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===this))">${p}</button>`).join('')}</div><p class="mut small" style="margin-top:6px">Selon disponibilité dans ton pays</p>`};
+function renderVip(){
+  const el=$('#s-vip');
+  if(!S.vip){el.innerHTML=`<div style="height:calc(10px + var(--st))"></div><div class="hero"><div class="cr">👑</div><h2>Vibzo Gold</h2><p class="mut" style="margin-top:6px">L’espace privé réservé aux membres</p>
+    <div class="perks"><div><span>💘</span><span><b>Rencontres</b> : relation sérieuse ou sans lendemain, entre adultes vérifiés</span></div><div><span>💼</span><span><b>Emplois</b> : candidats et recruteurs en contact direct</span></div><div><span>📍</span><span>Filtres par <b>pays et région</b></span></div><div><span>✨</span><span>Badge Gold, profil mis en avant, messages illimités</span></div><div><span>🚫</span><span>Zéro publicité</span></div></div></div>
+    <div class="pad"><div class="lbl">Choisis ton abonnement · ${C[S.country].f} ${C[S.country].n}</div><div class="plans">${PLANS.map(p=>`<button class="plan ${S.plan===p.id?'on':''}" onclick="S.plan='${p.id}';renderVip()"><span class="rd"></span><span class="grow"><b>${p.n}</b><div class="mut small">${p.per}</div></span><span class="pp">${subPrice(p.p)}</span>${p.tag?`<span class="tag">${p.tag}</span>`:''}</button>`).join('')}</div>
+    <div class="lbl">Moyen de paiement</div>${payChips()}
+    <button class="btn gold" id="payBtn" onclick="payGold()">👑 Devenir membre Gold</button>
+    <p class="mut small" style="text-align:center;margin-top:10px">Démo : aucun paiement réel. Prix adaptés à ton pays, résiliable à tout moment. Rencontres réservées aux 18 ans et plus.</p></div>`;return}
+  el.innerHTML=`<div class="hdr"><div class="goldbar grow"><span>👑</span><span class="cr">Vibzo Gold</span></div>${locBtn()}</div>
+  <div class="pad"><div class="seg goldseg"><button class="${S.vipTab==='dating'?'on':''}" onclick="S.vipTab='dating';renderVip()">💘 Rencontres</button><button class="${S.vipTab==='jobs'?'on':''}" onclick="S.vipTab='jobs';renderVip()">💼 Emplois</button></div><div id="vipBody"></div></div>`;
+  S.vipTab==='dating'?renderDating():renderJobs()}
+function payGold(){const b=$('#payBtn');b.disabled=true;b.innerHTML='<span class="spin"></span> Paiement via '+S.pay+'…';setTimeout(()=>{S.vip=true;toast('Bienvenue dans Vibzo Gold 👑');renderVip()},1300)}
+
+/* -- rencontres -- */
+function dList(){return DATERS.filter(d=>inZone(d)&&!S.swiped.has(d.id)&&(d.intent===S.dmode||d.intent==='both')&&(S.dage==='all'||(S.dage==='a'&&d.age<=25)||(S.dage==='b'&&d.age>25&&d.age<=32)||(S.dage==='c'&&d.age>32)))}
+function renderDating(){
+  const b=$('#vipBody');
+  if(S.blocked18){b.innerHTML=`<div class="empty"><div class="big">⛔</div><h3>Accès refusé</h3><p style="margin-top:8px">L’espace rencontres est strictement réservé aux personnes majeures. Tu peux continuer à profiter de la section Emplois et du reste de Vibzo.</p></div>`;return}
+  if(!S.verified){b.innerHTML=`<div class="card" style="margin-top:14px"><div style="font-size:34px">🔞</div><h3 style="margin-top:6px">Vérification obligatoire</h3><p class="mut small" style="margin-top:6px">Pour la sécurité de tous, l’espace rencontres est réservé aux adultes dont l’identité est vérifiée.</p>
+    <div class="field"><label>Date de naissance</label><input type="date" id="dob"></div>
+    <div class="field"><label>Pièce d’identité nationale ou passeport</label><input type="file" accept="image/*" id="idf"></div>
+    <div class="field"><label>Selfie de vérification</label><input type="file" accept="image/*" id="slf"></div>
+    <label class="check"><input type="checkbox" id="c1"> Je certifie avoir 18 ans ou plus.</label>
+    <label class="check"><input type="checkbox" id="c2"> J’accepte la charte : respect, consentement explicite, aucun échange tarifé, aucun contenu non consenti, signalement de tout comportement abusif.</label>
+    <button class="btn gold" onclick="verifyAge()">Vérifier mon identité</button><p class="mut small" style="margin-top:10px;text-align:center">Démo : les fichiers ne sont envoyés nulle part.</p></div>`;return}
+  const l=dList();const top=l.slice(0,3);
+  b.innerHTML=`<div class="seg" style="margin-top:12px"><button class="${S.dmode==='serieux'?'on':''}" onclick="S.dmode='serieux';renderDating()">💍 Relation sérieuse</button><button class="${S.dmode==='libre'?'on':''}" onclick="S.dmode='libre';renderDating()">🔥 Sans lendemain</button></div>
+  <div class="row" style="margin-top:10px;gap:8px;overflow-x:auto">${[['all','Tous âges'],['a','18–25'],['b','26–32'],['c','33+']].map(([k,l])=>`<button class="chip ${S.dage===k?'on':''}" onclick="S.dage='${k}';renderDating()">${l}</button>`).join('')}</div>
+  ${S.matches.length?`<div class="lbl">Tes matchs (${S.matches.length})</div><div class="matches">${S.matches.map(id=>{const d=DATERS[id];return `<button onclick="chatDater(${id})"><span class="av" style="${gbg(d.g)}">${esc(d.n[0])}</span>${esc(d.n)}</button>`}).join('')}</div>`:''}
+  <div class="safety">🛡️<span>Premier rendez-vous dans un lieu public, préviens un proche. Le consentement passe avant tout.</span></div>
+  <div class="stack" id="stack">${top.length?top.map((d,i)=>dCard(d,i)).reverse().join(''):`<div class="empty card" style="height:100%;display:flex;flex-direction:column;justify-content:center"><div class="big">🌍</div><b>Plus de profils dans ta zone</b><p class="small" style="margin-top:6px">Élargis ta région ou change de mode.</p><button class="btn" onclick="openLoc()">📍 Changer de zone</button></div>`}</div>
+  ${top.length?`<div class="dbtns"><button class="x" onclick="swipe('nope')" aria-label="Passer">✕</button><button class="s" onclick="swipe('super')" aria-label="Super like">★</button><button class="h" onclick="swipe('like')" aria-label="J’aime">♥</button></div>`:''}
+  <div class="tog" style="margin-top:14px"><span>👻 Masquer mon profil rencontre</span><button class="sw ${S.hidden?'on':''}" onclick="S.hidden=!S.hidden;this.classList.toggle('on');toast(S.hidden?'Ton profil est masqué':'Ton profil est visible')"></button></div>`;
+  bindSwipe()}
+function dCard(d,i){const it=d.intent==='serieux'?['💍 Relation sérieuse','background:rgba(30,155,255,.85)']:d.intent==='libre'?['🔥 Sans lendemain','background:rgba(255,45,120,.85)']:['✨ Ouvert(e) aux deux','background:rgba(139,61,255,.85)'];
+  return `<div class="dcard ${i===0?'top':'b'+i}" data-id="${d.id}" style="${gstyle(d.g)}"><div class="ph">${esc(d.n[0])}</div><span class="vibe">${d.vibe}</span>${i===0?`<button class="more" onclick="dMore(${d.id})">⋯</button>`:''}<div class="stamp l">J’AIME</div><div class="stamp n">NON</div>
+  <div class="inf"><div class="nm">${esc(d.n)} <small>${d.age}</small>${d.ver?'<span class="ver">✓</span>':''}</div><div class="small">📍 ${esc(d.city)}, ${esc(d.region)} · à ${d.km} km</div><span class="intent" style="${it[1]}">${it[0]}</span><div class="bio">${esc(d.bio)}</div><div class="int">${d.ints.map(x=>`<span>${x}</span>`).join('')}</div></div></div>`}
+function bindSwipe(){const c=document.querySelector('.dcard.top');if(!c)return;let sx=0,dx=0,dr=false;
+  c.onpointerdown=e=>{if(e.target.closest('.more'))return;dr=true;sx=e.clientX;dx=0;c.setPointerCapture(e.pointerId);c.style.transition='none'};
+  c.onpointermove=e=>{if(!dr)return;dx=e.clientX-sx;c.style.transform=`translateX(${dx}px) rotate(${dx/16}deg)`;c.dataset.dir=dx>40?'like':dx<-40?'nope':''};
+  c.onpointerup=c.onpointercancel=()=>{if(!dr)return;dr=false;c.style.transition='';if(dx>100)swipe('like');else if(dx<-100)swipe('nope');else{c.style.transform='';c.dataset.dir=''}}}
+function swipe(dir){const c=document.querySelector('.dcard.top');if(!c)return;const id=+c.dataset.id;c.style.transform=`translateX(${dir==='nope'?-500:500}px) rotate(${dir==='nope'?-25:25}deg)`;c.style.opacity='0';c.dataset.dir=dir==='nope'?'nope':'like';
+  setTimeout(()=>{S.swiped.add(id);if(dir!=='nope'&&(dir==='super'||R()<.55)){S.matches.push(id);showMatch(id)}else if(dir==='super')toast('Super like envoyé ⭐');renderDating()},260)}
+function showMatch(id){const d=DATERS[id];modal(`<div class="match"><h2>C’est un match !</h2><p class="mut">Toi et ${esc(d.n)} vous êtes plu mutuellement.</p><div class="pair"><div class="av" style="background:var(--grad)">${esc(S.me.name[0])}</div><div class="av" style="${gbg(d.g)}">${esc(d.n[0])}</div></div><button class="btn" onclick="closeModal();chatDater(${id})">💬 Envoyer un message</button><button class="btn ghost" onclick="closeModal()">Continuer à découvrir</button></div>`)}
+function chatDater(id){const d=DATERS[id];openChatWith({key:'match-'+id,name:d.n,sub:'Match · '+d.city,type:'match',g:d.g,sys:'Vous avez matché ! Restez respectueux et ne partagez jamais d’argent ni de données sensibles.'})}
+function dMore(id){const d=DATERS[id];sheet(esc(d.n),`<div class="slist" style="margin:0">${[['🚩','Signaler ce profil','r'],['🚫','Bloquer','b'],['🛡️','Conseils de sécurité','s']].map(([e,l,a])=>`<button onclick="dAct('${a}',${id})"><span class="e">${e}</span>${l}</button>`).join('')}</div>`)}
+function dAct(a,id){closeSheet();if(a==='s'){sheet('Conseils de sécurité',`<div class="perks" style="margin:0">${['☕ Premier rendez-vous dans un lieu public','📲 Préviens un proche de l’heure et du lieu','💸 N’envoie jamais d’argent à un match','🙅 Le consentement est clair, explicite et révocable à tout moment','🚩 Signale tout comportement abusif ou suspect'].map(t=>`<div>${t}</div>`).join('')}</div>`);return}S.swiped.add(id);toast(a==='r'?'Profil signalé, merci 🛡️':'Profil bloqué');renderDating()}
+function verifyAge(){const v=$('#dob').value;if(!v)return toast('Indique ta date de naissance');const b=new Date(v),n=new Date();let age=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))age--;
+  if(age<18){S.blocked18=true;renderDating();return}if(!$('#c1').checked||!$('#c2').checked)return toast('Coche les deux cases pour continuer');
+  const btn=document.querySelector('#vipBody .btn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Vérification en cours…';setTimeout(()=>{S.verified=true;toast('Identité vérifiée ✓');renderDating()},1400)}
+
+/* -- emplois -- */
+function renderJobs(){const b=$('#vipBody');const off=S.jobTab==='offres';
+  const l=(off?JOBS:CANDS).filter(x=>inZone(x)&&(S.jobSector==='all'||x.s===S.jobSector));
+  b.innerHTML=`<div class="seg" style="margin-top:12px"><button class="${off?'on':''}" onclick="S.jobTab='offres';renderJobs()">📋 Offres d’emploi</button><button class="${!off?'on':''}" onclick="S.jobTab='cands';renderJobs()">🙋 Candidats</button></div>
+  <div class="row" style="margin-top:10px"><select onchange="S.jobSector=this.value;renderJobs()" style="flex:1"><option value="all">Tous les secteurs</option>${SECT.map(s=>`<option ${S.jobSector===s?'selected':''}>${s}</option>`).join('')}</select></div>
+  <div class="row" style="margin-top:10px"><button class="btn sm" onclick="postJob()">＋ Publier une offre</button><button class="btn sm ghost" onclick="myCV()">📄 Mon CV</button></div>
+  <div class="jlist">${l.length?l.map(off?jobCard:candCard).join(''):`<div class="empty">Rien pour le moment dans cette zone.<br><button class="btn" onclick="openLoc()">📍 Changer de zone</button></div>`}</div>`}
+const sal=j=>j.c==='Freelance'?'≈ '+price(j.sal)+' / mois':price(j.sal)+' / mois';
+function jobCard(j){const ap=S.applied.has(j.id);return `<div class="card job"><div class="row"><div class="grow"><div class="t">${esc(j.p)}</div><div class="co">${esc(j.co)} ${j.ver?'<span class="vchk">✓</span>':''}</div></div><span class="mut small">il y a ${j.d} j</span></div>
+  <div class="tags"><span>📍 ${esc(j.city)}, ${esc(j.region)}</span><span>${j.c}</span><span>${j.tt}</span><span class="g">${sal(j)}</span><span>${j.s}</span></div>
+  <div class="jact"><button class="btn sm ${ap?'ghost':''}" ${ap?'disabled':''} onclick="applyJob(${j.id})">${ap?'Candidature envoyée ✓':'Postuler'}</button><button class="dots" onclick="jobMore(${j.id})">⋯</button></div></div>`}
+function candCard(c){return `<div class="card"><div class="row"><div class="av" style="${gbg(c.g)}">${esc(c.n[0])}</div><div class="grow"><b>${esc(c.n)}${c.me?' (moi)':''}</b><div class="mut small">${esc(c.m)} · ${c.exp} an${c.exp>1?'s':''} d’expérience</div></div></div><div class="tags">${c.k.map(k=>`<span>${esc(k)}</span>`).join('')}<span>📍 ${esc(c.region)}</span><span class="g">Dispo : ${c.dispo}</span></div>${c.me?'':`<div class="jact"><button class="btn sm" onclick="contactCand(${c.id})">💬 Contacter</button></div>`}</div>`}
+function applyJob(id){const j=JOBS[id];sheet('Postuler',`<b>${esc(j.p)}</b><div class="mut small">${esc(j.co)} · ${esc(j.city)}</div><div class="field"><label>Message au recruteur</label><textarea id="lm" rows="4">Bonjour, je suis très intéressé(e) par le poste de ${esc(j.p)}. Je suis disponible pour un entretien.</textarea></div><div class="field"><label>CV (PDF ou image)</label><input type="file" accept=".pdf,image/*"></div><button class="btn" onclick="sendApp(${id})">Envoyer ma candidature</button>`)}
+function sendApp(id){const j=JOBS[id];const m=$('#lm').value.trim();closeSheet();S.applied.add(id);openChatWith({key:'job-'+id,name:'RH · '+j.co,sub:j.p,type:'job',g:GR[id%GR.length],sys:'Candidature pour « '+j.p+' »'});pushMsg(S.chatId,true,m||'Bonjour, voici ma candidature.');toast('Candidature envoyée ✅')}
+function contactCand(id){const c=CANDS[id];openChatWith({key:'cand-'+id,name:c.n,sub:c.m,type:'job',g:c.g,sys:'Contact recruteur → candidat'})}
+function jobMore(id){sheet('Offre',`<div class="slist" style="margin:0"><button onclick="closeSheet();toast('Offre enregistrée 🔖')"><span class="e">🔖</span>Enregistrer l’offre</button><button onclick="closeSheet();toast('Offre signalée, merci 🛡️')"><span class="e">🚩</span>Signaler une arnaque</button></div>`)}
+function postJob(){sheet('Publier une offre',`<div class="field"><label>Intitulé du poste</label><input id="jp" placeholder="Ex : Assistant(e) commercial(e)"></div><div class="field"><label>Entreprise</label><input id="jc" placeholder="Nom de l’entreprise"></div><div class="field"><label>Secteur</label><select id="js">${SECT.map(s=>`<option>${s}</option>`).join('')}</select></div><div class="row"><div class="field grow"><label>Contrat</label><select id="jk">${['CDI','CDD','Stage','Freelance','Temps partiel'].map(s=>`<option>${s}</option>`).join('')}</select></div><div class="field grow"><label>Mode</label><select id="jt"><option>Sur site</option><option>Hybride</option><option>Télétravail</option></select></div></div><div class="field"><label>Salaire mensuel (${C[S.country].cur})</label><input id="jsal" type="number" inputmode="numeric" placeholder="Ex : ${price(250).replace(/[^0-9]/g,'')}"></div><p class="mut small" style="margin-top:8px">📍 Publiée en : ${locLabel()}</p><button class="btn" onclick="savePost()">Publier l’offre</button>`)}
+function savePost(){const p=$('#jp').value.trim(),co=$('#jc').value.trim();if(!p||!co)return toast('Renseigne le poste et l’entreprise');const c=C[S.country];const rg=pubRegion();
+  JOBS.unshift({id:JOBS.length,cc:S.country,p,co,s:$('#js').value,c:$('#jk').value,tt:$('#jt').value,sal:(+$('#jsal').value||0)/c.rt,region:rg,city:c.ci[c.r.indexOf(rg)]||c.ci[0],ver:false,d:0});JOBS.forEach((j,i)=>j.id=i);
+  closeSheet();S.jobTab='offres';S.jobSector='all';toast('Offre publiée ✅ (vérification entreprise en cours)');renderJobs()}
+function myCV(){sheet('Mon profil candidat',`<div class="field"><label>Métier recherché</label><input id="cm" placeholder="Ex : Développeur web"></div><div class="field"><label>Secteur</label><select id="cs2">${SECT.map(s=>`<option>${s}</option>`).join('')}</select></div><div class="field"><label>Années d’expérience</label><input id="ce" type="number" inputmode="numeric" value="1"></div><div class="field"><label>Compétences (séparées par des virgules)</label><input id="ck" placeholder="Excel, Anglais, Vente"></div><div class="field"><label>Disponibilité</label><select id="cdp"><option>Immédiate</option><option>Sous 2 semaines</option><option>Sous 1 mois</option></select></div><div class="field"><label>CV vidéo (optionnel)</label><input type="file" accept="video/*"></div><button class="btn" onclick="saveCV()">Publier mon profil</button>`)}
+function saveCV(){const m=$('#cm').value.trim();if(!m)return toast('Indique le métier recherché');CANDS.unshift({id:0,me:true,cc:S.country,n:S.me.name,m,s:$('#cs2').value,k:($('#ck').value||'Motivé(e)').split(',').map(s=>s.trim()).filter(Boolean),exp:+$('#ce').value||0,dispo:$('#cdp').value,region:pubRegion(),g:GR[0]});CANDS.forEach((c,i)=>c.id=i);closeSheet();S.jobTab='cands';S.jobSector='all';toast('Profil candidat publié ✅');renderJobs()}
+
+/* ---------- BOUTIQUE ---------- */
+function renderShop(){
+  const cartN=S.cart.reduce((a,c)=>a+c.q,0);
+  const shops=SHOPS.filter(s=>S.region==='zone'?C[s.cc].z===C[S.country].z:s.cc===S.country).slice(0,15);
+  let prods=PRODUCTS.filter(p=>inZone(p)||(p.mine&&p.cc===S.country)).slice(0,40);
+  if(S.shopFilter!=null)prods=PRODUCTS.filter(p=>p.shop===S.shopFilter);
+  $('#s-shop').innerHTML=hdr('Boutiques',`${locBtn()}<button class="ib" onclick="openCart()" aria-label="Panier">${I.cart}${cartN?`<span class="badge">${cartN}</span>`:''}</button>`)+
+  (S.seller?`<div class="sbanner"><div class="big">🏪</div><div class="grow"><b>${esc(S.seller.n)}</b><div class="small" style="opacity:.9">${S.seller.pl} · liée à Vibzo</div></div><button class="btn" onclick="sellerDash()">Tableau de bord</button></div>`
+  :`<div class="sbanner"><div class="big">🛍️</div><div class="grow"><b>Tu as une boutique ?</b><div class="small" style="opacity:.9">Lie-la à Vibzo et vends directement dans tes vidéos.</div></div><button class="btn" onclick="sellerOnboard()">Lier</button></div>`)+
+  `<div class="lbl pad">Boutiques · ${S.region==='zone'?ZN[C[S.country].z]:C[S.country].n}</div><div class="shops">${shops.map(s=>`<button class="shop ${S.shopFilter===s.id?'on':''}" onclick="S.shopFilter=${S.shopFilter===s.id?'null':s.id};renderShop()"><div class="lg" style="${gbg(s.g)}">${s.e}</div><div class="n">${esc(s.n)}</div><div class="mut small">★ ${s.rating} · ${esc(s.region)}</div><span class="mut small" style="display:block">${C[s.cc].f} ${esc(C[s.cc].n)}</span><span class="pl ${s.pl}">${s.pl==='Vibzo'?'Boutique Vibzo':s.pl}</span></button>`).join('')}</div>
+  <div class="lbl pad">${S.shopFilter!=null?esc(SHOPS[S.shopFilter].n):'Produits populaires'+(S.region==='all'||S.region==='zone'?'':' · '+esc(S.region))}</div>
+  <div class="pgrid">${prods.length?prods.map(p=>`<button class="prod" onclick="openProduct(${p.id})"><div class="im" style="${gstyle(p.g)}">${p.e}</div><div class="bd"><div class="n">${esc(p.n)}</div><div class="p">${price(p.p,p.cc)}</div><div class="s">★ ${p.rating} · ${esc(SHOPS[p.shop].n)}</div></div></button>`).join(''):`<div class="empty" style="grid-column:1/-1">Aucun produit dans cette région.</div>`}</div>`}
+function openProduct(id){const p=P(id),s=SHOPS[p.shop];let q=1;
+  sheet(esc(s.n),`<div class="bigim" style="${gstyle(p.g)}">${p.e}</div><h2 style="margin-top:14px;font-size:20px">${esc(p.n)}</h2><div class="row" style="margin-top:6px"><b style="font-size:22px" class="grow">${price(p.p,p.cc)}</b><span class="mut small">★ ${p.rating} (${p.rev} avis)</span></div>
+  <div class="tags"><span class="pl ${s.pl}" style="margin:0">${s.pl==='Vibzo'?'Boutique Vibzo':s.pl}</span><span>📍 ${esc(p.region)}</span><span class="g">🚚 Livraison 24–72 h</span><span>💵 Paiement à la livraison</span></div>
+  <p class="mut" style="margin-top:12px;font-size:14px;line-height:1.5">Produit de qualité sélectionné par ${esc(s.n)}. Paiement sécurisé, retour possible sous 7 jours.</p>
+  <div class="lbl">Avis clients</div>${[['Super qualité, je recommande !',5],['Livraison rapide 👍',4]].map(([t,n])=>`<div class="card" style="padding:12px;margin-bottom:8px"><div class="small" style="color:var(--gold)">${'★'.repeat(n)}${'☆'.repeat(5-n)}</div><div style="font-size:14px;margin-top:4px">${t}</div></div>`).join('')}
+  <div class="row" style="margin-top:14px"><div class="qty"><button onclick="const e=$('#pq');e.textContent=Math.max(1,+e.textContent-1)">−</button><span id="pq">1</span><button onclick="const e=$('#pq');e.textContent=+e.textContent+1">+</button></div><button class="btn grow" style="margin:0" onclick="addCart(${id},+$('#pq').textContent)">Ajouter au panier</button></div><button class="btn ghost" onclick="closeSheet();toast('Commande envoyée au vendeur sur WhatsApp (démo) 💬')">💬 Commander sur WhatsApp</button>`)}
+function addCart(id,q){const e=S.cart.find(c=>c.id===id);e?e.q+=q:S.cart.push({id,q});closeSheet();toast('Ajouté au panier 🛒');if(S.cur==='shop')renderShop()}
+const cartTotal=()=>S.cart.reduce((a,c)=>a+P(c.id).p*c.q,0);
+function openCart(){if(!S.cart.length)return sheet('Panier',`<div class="empty"><div class="big">🛒</div>Ton panier est vide.</div>`);
+  sheet('Panier',`${S.cart.map((c,i)=>{const p=P(c.id);return `<div class="citem"><div class="im" style="${gstyle(p.g)}">${p.e}</div><div class="grow"><b style="font-size:14px">${esc(p.n)}</b><div class="mut small">${esc(SHOPS[p.shop].n)}</div><div style="font-weight:800;margin-top:2px">${price(p.p*c.q,p.cc)}</div></div><div class="qty"><button onclick="cartQ(${i},-1)">−</button>${c.q}<button onclick="cartQ(${i},1)">+</button></div></div>`}).join('')}
+  <div class="row" style="margin-top:14px"><span class="grow mut">Total</span><b style="font-size:20px">${price(cartTotal(),P(S.cart[0].id).cc)}</b></div><div class="lbl">Paiement</div>${payChips(true)}<button class="btn" id="coBtn" onclick="checkout()">Payer maintenant</button>`)}
+function cartQ(i,d){S.cart[i].q+=d;if(S.cart[i].q<1)S.cart.splice(i,1);openCart();if(S.cur==='shop')renderShop()}
+function checkout(){const b=$('#coBtn');b.disabled=true;b.innerHTML='<span class="spin"></span> Paiement via '+S.pay+'…';setTimeout(()=>{const o={id:'VB'+rint(10000,99999),items:S.cart.slice(),total:cartTotal(),cc:P(S.cart[0].id).cc,st:1,date:new Date().toLocaleDateString('fr-FR')};S.orders.unshift(o);S.cart=[];showOrder(0);if(S.cur==='shop')renderShop()},1300)}
+function showOrder(i){const o=S.orders[i];sheet('Commande #'+o.id,`<div style="text-align:center;font-size:46px">✅</div><h3 style="text-align:center;margin-top:6px">${i===0&&o.st===1?'Commande confirmée !':'Suivi de commande'}</h3><p class="mut small" style="text-align:center;margin-top:4px">${o.date} · ${price(o.total,o.cc)} · ${o.items.reduce((a,c)=>a+c.q,0)} article(s)</p><div class="track">${['Commande confirmée','En préparation','Expédiée','Livrée'].map((t,k)=>`<div class="${k<=o.st?'ok':''}"><i></i>${t}</div>`).join('')}</div><button class="btn ghost" onclick="closeSheet()">Fermer</button>`)}
+function sellerOnboard(){sheet('Lier ma boutique',`<div class="card" style="${gbg(GR[0])};border:0"><b style="font-size:17px">Abonnement Vendeur</b><div style="font-size:26px;font-weight:800;margin-top:4px">${subPrice(9.99)} <span style="font-size:14px;font-weight:600">/ mois</span></div><div class="small" style="margin-top:8px;line-height:1.6">✓ Produits tagués dans tes vidéos et lives<br>✓ Vitrine sur ton profil<br>✓ Synchronisation automatique du catalogue<br>✓ Statistiques par pays et région</div></div>
+  <div class="field"><label>Nom de la boutique</label><input id="sn" placeholder="Ex : Bella Mode ${esc(C[S.country].ci[0])}"></div>
+  <div class="field"><label>Plateforme</label><select id="spl"><option value="Shopify">Shopify</option><option value="WooCommerce">WooCommerce</option><option value="Vibzo">Créer ma boutique sur Vibzo</option></select></div>
+  <div class="field"><label>Adresse de la boutique (URL)</label><input id="su" placeholder="https://maboutique.com" inputmode="url"></div>
+  <div class="lbl">Paiement</div>${payChips()}<button class="btn" id="slBtn" onclick="linkShop()">Payer et lier ma boutique</button>`)}
+function linkShop(){const n=$('#sn').value.trim();if(!n)return toast('Donne un nom à ta boutique');const pl=$('#spl').value;const b=$('#slBtn');b.disabled=true;b.innerHTML='<span class="spin"></span> Paiement et connexion…';
+  setTimeout(()=>{const rg=pubRegion();const sh={id:SHOPS.length,cc:S.country,n,pl,region:rg,e:'🏪',g:GR[1],rating:'5.0',mine:true};SHOPS.push(sh);
+    S.seller={n,pl,shop:sh.id,views:rint(800,4000),clicks:rint(90,600),sales:0,rev:0};
+    if(pl!=='Vibzo')[['👕','T-shirt signature',15],['🧢','Casquette brodée',12],['👝','Pochette tendance',22]].forEach(([e,nm,p])=>PRODUCTS.push({id:PRODUCTS.length,cc:S.country,e,n:nm,p,shop:sh.id,region:rg,g:GR[PRODUCTS.length%GR.length],rating:'5.0',rev:0,mine:true}));
+    closeSheet();toast(pl==='Vibzo'?'Boutique créée 🎉':'Boutique '+pl+' liée et catalogue synchronisé ✅');renderShop();setTimeout(sellerDash,400)},1500)}
+function sellerDash(){const s=S.seller,ps=PRODUCTS.filter(p=>p.shop===s.shop);const regs=C[S.country].r;
+  sheet('🏪 '+esc(s.n),`<div class="stats">${[['Vues',fmtN(s.views)],['Clics produits',fmtN(s.clicks)],['Ventes',s.sales],['Revenus',price(s.rev)]].map(([l,v])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+  <div class="lbl">Audience par région</div>${regs.map((r,i)=>{const w=Math.round(90/(i+1.2));return `<div style="margin-bottom:8px"><div class="row small"><span class="grow">${r}</span><b>${w} %</b></div><div class="bar"><i style="width:${w}%"></i></div></div>`}).join('')}
+  <div class="row" style="margin-top:6px"><div class="lbl grow">Produits (${ps.length})</div>${s.pl!=='Vibzo'?`<button class="chip" onclick="syncShop()">🔄 Synchroniser</button>`:''}</div>
+  ${ps.map(p=>`<div class="citem"><div class="im" style="${gstyle(p.g)}">${p.e}</div><div class="grow"><b style="font-size:14px">${esc(p.n)}</b><div class="mut small">${price(p.p,p.cc)}</div></div><button class="chip" onclick="closeSheet();go('create')">🎬 Taguer</button></div>`).join('')||'<p class="mut small">Aucun produit pour l’instant.</p>'}
+  <div class="lbl">Ajouter un produit</div><div class="row"><select id="pe" style="width:76px;flex:none">${['👕','👗','👟','💄','👜','⌚','🧴','📱','🍫','🎁'].map(e=>`<option>${e}</option>`).join('')}</select><input id="pn" placeholder="Nom du produit"></div><div class="field"><input id="pp" type="number" inputmode="decimal" placeholder="Prix (${C[S.country].cur})"></div><button class="btn" onclick="addProd()">＋ Ajouter</button>`)}
+function syncShop(){toast('Catalogue '+S.seller.pl+' synchronisé ✅ (prix et stocks à jour)')}
+function addProd(){const n=$('#pn').value.trim(),pr=+$('#pp').value;if(!n||!pr)return toast('Nom et prix requis');const s=S.seller;PRODUCTS.push({id:PRODUCTS.length,cc:S.country,e:$('#pe').value,n,p:pr/C[S.country].rt,shop:s.shop,region:SHOPS[s.shop].region,g:GR[PRODUCTS.length%GR.length],rating:'5.0',rev:0,mine:true});toast('Produit ajouté ✅');sellerDash();if(S.cur==='shop')renderShop()}
+
+/* ---------- MESSAGES ---------- */
+const REPLIES={match:['Salut 😊 merci pour le match !','Tu fais quoi de beau dans la vie ?','Avec plaisir, on peut prendre un verre dans un lieu sympa 🙂'],job:['Bonjour, merci pour votre message.','Seriez-vous disponible pour un entretien cette semaine ?','Parfait, je vous envoie les détails par ici.'],dm:['Merci ! 🙏','Haha trop bien 😂','🔥🔥🔥'],shop:['Bonjour ! Comment puis-je vous aider ?','Oui, il est disponible en stock 👍']};
+S.chats.push({id:0,key:'team',name:'Équipe Vibzo',sub:'Officiel',type:'dm',g:GR[0],unread:true,msgs:[{me:false,t:'Bienvenue sur Vibzo 🎉 Scrolle, like, commente, et découvre Vibzo Gold pour les rencontres et l’emploi 👑'}],ri:0});
+function openChatWith(o){let c=S.chats.find(x=>x.key===o.key);if(!c){c={id:S.chats.length,key:o.key,name:o.name,sub:o.sub,type:o.type,g:o.g,msgs:o.sys?[{sys:true,t:o.sys}]:[],ri:0};S.chats.unshift(c)}c.unread=false;S.chatId=c.id;closeSheet();go('chat')}
+function renderMsgs(){$('#s-msgs').innerHTML=hdr('Messages','',S.prev==='msgs'?'home':S.prev)+(S.chats.length?S.chats.map(c=>{const last=c.msgs[c.msgs.length-1];const tl={match:'Rencontre',job:'Emploi',dm:'Message',shop:'Boutique'}[c.type];return `<button class="mitem" onclick="S.chats[${S.chats.indexOf(c)}].unread=false;S.chatId=${c.id};go('chat')"><div class="av" style="${gbg(c.g)}">${esc(c.name[0])}</div><div class="grow"><div class="n">${esc(c.name)} <span class="typ ${c.type}">${tl}</span></div><div class="l">${last?(last.me?'Toi : ':'')+esc(last.t):esc(c.sub)}</div></div>${c.unread?'<span class="dot"></span>':''}</button>`}).join(''):`<div class="empty"><div class="big">💬</div>Aucune conversation</div>`)}
+function renderChat(){const c=S.chats.find(x=>x.id===S.chatId);if(!c)return go('msgs');
+  $('#s-chat').innerHTML=`<div class="hdr"><button class="ib" onclick="go('msgs')" aria-label="Retour">${I.back}</button><div class="av" style="${gbg(c.g)};width:38px;height:38px;font-size:15px">${esc(c.name[0])}</div><div class="grow"><b>${esc(c.name)}</b><div class="mut small">${esc(c.sub)}</div></div><button class="ib" onclick="chatMore()">⋯</button></div>
+  <div class="msgs" id="msgs">${c.msgs.map(m=>`<div class="bub ${m.sys?'sys':m.me?'me':''}">${esc(m.t)}</div>`).join('')}</div>
+  <form class="cbar" onsubmit="event.preventDefault();const i=$('#mIn');if(i.value.trim()){pushMsg(${c.id},true,i.value.trim());i.value=''}"><input id="mIn" placeholder="Écris un message…" autocomplete="off"><button aria-label="Envoyer">${I.send}</button></form>`;
+  const m=$('#msgs');m.scrollTop=m.scrollHeight}
+function pushMsg(id,me,t){const c=S.chats.find(x=>x.id===id);c.msgs.push({me,t});if(S.cur==='chat'&&S.chatId===id)renderChat();
+  if(me){setTimeout(()=>{const r=REPLIES[c.type]||REPLIES.dm;c.msgs.push({me:false,t:r[c.ri++%r.length]});if(S.cur==='chat'&&S.chatId===id)renderChat();else{c.unread=true;toast('💬 '+c.name+' t’a répondu');if(S.cur==='home')renderHome()}},1500)}}
+function chatMore(){sheet('Options',`<div class="slist" style="margin:0"><button onclick="closeSheet();toast('Conversation signalée 🛡️')"><span class="e">🚩</span>Signaler</button><button onclick="closeSheet();toast('Utilisateur bloqué')"><span class="e">🚫</span>Bloquer</button></div>`)}
+
+/* ---------- PROFIL ---------- */
+function renderProfile(){const mine=VIDEOS.filter(v=>v.mine);const likes=mine.reduce((a,v)=>a+v.likes,0)+S.liked.size;
+  const grid=S.profTab==='videos'?mine:S.profTab==='fav'?VIDEOS.filter(v=>S.saved.has(v.id)):VIDEOS.filter(v=>S.liked.has(v.id));
+  $('#s-profile').innerHTML=hdr(esc(S.me.handle),`<button class="ib" onclick="go('msgs')" aria-label="Messages">${I.chat}${unread()?`<span class="badge">${unread()}</span>`:''}</button>`)+`
+  <div class="ptop"><div class="pav ${S.vip?'gold':''}">${esc(S.me.name[0])}${S.vip?'<span class="gb">👑</span>':''}</div><h2 style="margin-top:12px;font-size:19px">${esc(S.me.name)}</h2><p class="mut" style="font-size:14px;margin-top:4px">${esc(S.me.bio)}</p>
+  <div class="tags" style="justify-content:center">${S.vip?'<span style="color:#a87800;border-color:rgba(224,168,0,.45)">👑 Membre Gold</span>':''}${S.seller?`<span class="g">🏪 ${esc(S.seller.n)}</span>`:''}<span>📍 ${locLabel()}</span></div>
+  <div class="pstats"><div><b>${S.follow.size}</b><span>Abonnements</span></div><div><b>${fmtN(mine.length*37)}</b><span>Abonnés</span></div><div><b>${fmtN(likes)}</b><span>J’aime</span></div></div>
+  <div class="pbtns"><button class="btn sm ghost grow" onclick="editProfile()">Modifier le profil</button><button class="btn sm ghost" style="width:auto" onclick="openOrders()">📦 Commandes</button></div></div>
+  <div class="ptabs">${[['videos','Mes vidéos'],['fav','Favoris'],['liked','J’aime']].map(([k,l])=>`<button class="${S.profTab===k?'on':''}" onclick="S.profTab='${k}';renderProfile()">${l}</button>`).join('')}</div>
+  <div class="vgrid">${grid.length?grid.map(v=>`<button class="vth" style="${gstyle(v.g)}" onclick="openVideo(${v.id})">${v.src?`<video src="${v.src}" muted></video>`:v.e}<span>▷ ${fmtN(v.likes)}</span></button>`).join(''):`<div class="empty" style="grid-column:1/-1">${S.profTab==='videos'?'Publie ta première vidéo avec le bouton ＋':'Rien ici pour le moment'}</div>`}</div>
+  <div class="slist">${[['📍','Pays & région',locLabel(),'openLoc()'],['👑','Abonnement Gold',S.vip?'Actif':'Découvrir',"S.vip?goldManage():go('vip')"],['🏪','Ma boutique',S.seller?S.seller.pl:'Lier',"S.seller?sellerDash():sellerOnboard()"],['🔒','Confidentialité','','privacy()'],['🌐','Langue','Français','langs()'],['📶','Économie de données',S.lite?'Activée':'Désactivée',"S.lite=!S.lite;toast(S.lite?'Économie de données activée : vidéos en qualité réduite':'Qualité vidéo normale');renderProfile()"],['🛠️','Back-office admin','',"go('admin')"]].map(([e,l,r,a])=>`<button onclick="${a}"><span class="e">${e}</span>${l}<span class="r">${esc(r)} ›</span></button>`).join('')}</div>`}
+function editProfile(){sheet('Modifier le profil',`<div class="field"><label>Nom</label><input id="pn2" value="${esc(S.me.name)}" maxlength="30"></div><div class="field"><label>Nom d’utilisateur</label><input id="ph" value="${esc(S.me.handle)}" maxlength="30"></div><div class="field"><label>Bio</label><textarea id="pb" rows="3" maxlength="150">${esc(S.me.bio)}</textarea></div><button class="btn" onclick="saveProfile()">Enregistrer</button>`)}
+function saveProfile(){const old=S.me.handle;S.me.name=$('#pn2').value.trim()||'Moi';let h=$('#ph').value.trim()||'@moi';if(h[0]!=='@')h='@'+h;S.me.handle=h;S.me.bio=$('#pb').value.trim();VIDEOS.forEach(v=>{if(v.mine){v.handle=h;v.author=S.me.name}});closeSheet();toast('Profil mis à jour ✅');renderProfile()}
+function openOrders(){if(!S.orders.length)return sheet('Mes commandes',`<div class="empty"><div class="big">📦</div>Aucune commande pour l’instant.<button class="btn" onclick="closeSheet();go('shop')">Voir les boutiques</button></div>`);sheet('Mes commandes',S.orders.map((o,i)=>`<button class="citem" style="width:100%;text-align:left" onclick="showOrder(${i})"><div class="im" style="${gstyle(GR[i%GR.length])}">📦</div><div class="grow"><b>#${o.id}</b><div class="mut small">${o.date} · ${price(o.total,o.cc)}</div></div><span class="typ shop">${['Confirmée','En préparation','Expédiée','Livrée'][o.st]}</span></button>`).join(''))}
+function goldManage(){const p=PLANS.find(x=>x.id===S.plan);sheet('👑 Vibzo Gold',`<div class="card"><b>Formule ${p.n}</b><div class="mut small" style="margin-top:4px">${subPrice(p.p)} ${p.per} · ${S.pay}</div><div class="small" style="margin-top:8px;color:var(--green)">● Actif</div></div><button class="btn ghost" onclick="S.vip=false;S.verified=false;closeSheet();toast('Abonnement résilié');renderProfile()">Résilier l’abonnement</button>`)}
+function privacy(){sheet('Confidentialité',[['Compte privé',0],['Autoriser les messages de tous',1],['Afficher ma région sur mes vidéos',1],['Messages chiffrés',1],['Recommandations personnalisées',1]].map(([l,on])=>`<div class="tog"><span>${l}</span><button class="sw ${on?'on':''}" onclick="this.classList.toggle('on')"></button></div>`).join('')+`<button class="btn ghost" onclick="closeSheet();toast('Export de tes données envoyé par e-mail (démo)')">📥 Exporter mes données (RGPD)</button>`)}
+function langs(){sheet('Langue',`<div class="chips">${['Français','English','Português','Kiswahili','العربية','Hausa','Wolof','Lingala','አማርኛ','Azərbaycan dili','Русский'].map((l,i)=>`<button class="chip ${i===0?'on':''}" onclick="closeSheet();toast('${i===0?'Langue : Français':'Traduction disponible dans la version finale'}')">${l}</button>`).join('')}</div>`)}
+
+/* ---------- ADMIN ---------- */
+let adminZ='all',modQ=null;
+function renderAdmin(){
+  if(!modQ)modQ=[['🎬','Vidéo signalée',"Contenu violent présumé · "+VIDEOS[5].handle],['💘','Profil rencontre','Photo non conforme · vérification ID'],['💼','Offre d’emploi suspecte','Frais d’inscription demandés'],['🏪','Nouvelle boutique','Vérification vendeur WooCommerce'],['💬','Message signalé','Harcèlement présumé']];
+  const ccs=Object.keys(C).filter(k=>adminZ==='all'||C[k].z===adminZ);const f=ccs.length/35;
+  const users=Math.round(1284000*f),gold=Math.round(48200*f)+(S.vip?1:0),sellers=Math.round(6120*f)+(S.seller?1:0);
+  const revEur=gold*6.2+sellers*9.99;
+  $('#s-admin').innerHTML=hdr('Back-office','',"profile")+`<div class="pad"><div class="row" style="gap:8px;overflow-x:auto;padding-bottom:4px"><button class="chip ${adminZ==='all'?'on':''}" style="flex:none" onclick="adminZ='all';renderAdmin()">🌍 Toutes les zones</button>${Object.keys(ZN).map(z=>`<button class="chip ${adminZ===z?'on':''}" style="flex:none" onclick="adminZ='${z}';renderAdmin()">${ZN[z]}</button>`).join('')}</div>
+  <div class="stats" style="margin-top:14px">${[['Utilisateurs',fmtN(users)],['Membres Gold',fmtN(gold)],['Vendeurs',fmtN(sellers)],['Revenus / mois (équiv.)',Math.round(revEur*0.6*655.96).toLocaleString('fr-FR')+' FCFA'],['Vidéos publiées',fmtN(Math.round(4.2e6*f))],['Offres d’emploi',fmtN(Math.round(31800*f))]].map(([l,v])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+  <div class="lbl">File de modération (${modQ.length})</div>${modQ.length?modQ.map((m,i)=>`<div class="mq"><span class="k">${m[0]}</span><div class="grow"><b style="font-size:14px">${m[1]}</b><div class="mut small">${esc(m[2])}</div></div><div class="acts"><button class="ok" onclick="modQ.splice(${i},1);toast('Approuvé ✅');renderAdmin()">OK</button><button class="ko" onclick="modQ.splice(${i},1);toast('Supprimé 🗑️');renderAdmin()">Suppr.</button></div></div>`).join(''):'<p class="mut small">File vide 🎉</p>'}
+  <div class="lbl">Tarifs par pays</div><div class="card" style="padding:6px 12px"><table><tr><th>Pays</th><th>Gold / mois</th><th>Vendeur / mois</th></tr>${ccs.map(k=>`<tr><td>${C[k].f} ${C[k].n}</td><td>${subPrice(4.99,k)}</td><td>${subPrice(9.99,k)}</td></tr>`).join('')}</table></div>
+  <div class="lbl">Derniers paiements</div>${['Orange Money','M-Pesa','MTN MoMo','Wave','Airtel Money'].map((p,i)=>{const k=['CI','KE','CM','SN','UG'][i];return `<div class="mq"><span class="k">💳</span><div class="grow"><b style="font-size:14px">${i%2?'Abonnement Vendeur':'Abonnement Gold'}</b><div class="mut small">${C[k].f} ${C[k].n} · ${p}</div></div><b>${subPrice(i%2?9.99:4.99,k)}</b></div>`}).join('')}</div>`}
+
+/* ---------- inscription ---------- */
+function onboard(step){if(step===2){const tel=$('#obTel').value.replace(/\D/g,'');if(tel.length<6)return toast('Numéro de téléphone invalide');S.country=$('#obCc').value;S.region='all';
+  $('#modal').innerHTML=`<div class="card" style="max-width:360px;width:100%;text-align:center"><div style="font-size:40px">📲</div><h3 style="margin-top:6px">Code envoyé</h3><p class="mut small" style="margin-top:6px">Saisis le code reçu par SMS ou WhatsApp au ${C[S.country].tel} ${esc(tel)} (démo : n’importe quel code).</p><input id="obCode" inputmode="numeric" maxlength="6" placeholder="• • • • • •" style="text-align:center;font-size:22px;letter-spacing:.3em;margin-top:14px"><button class="btn" onclick="onboard(3)">Valider</button></div>`;return}
+  if(step===3){if(($('#obCode').value||'').length<4)return toast('Saisis le code à 4 chiffres ou plus');closeModal();toast('Bienvenue sur Vibzo '+C[S.country].f);refresh();return}
+  modal(`<div class="card" style="max-width:360px;width:100%"><div class="logo" style="text-align:center;font-size:34px"><span>Vibzo</span></div><p class="mut small" style="text-align:center;margin-top:6px">Disponible en Afrique de l’Ouest, du Centre, de l’Est et en Azerbaïdjan</p><p class="small" style="text-align:center;margin-top:8px;background:rgba(247,201,72,.12);color:#8a6100;border-radius:10px;padding:8px">Version de démonstration : contenus fictifs. <a href="../" style="color:#8a6100;font-weight:700">Ouvrir la vraie application →</a></p>
+  <div class="field"><label>Ton pays</label><select id="obCc" onchange="$('#obInd').textContent=C[this.value].tel">${Object.keys(ZN).map(z=>`<optgroup label="${ZN[z]}">${Object.entries(C).filter(([k,c])=>c.z===z).map(([k,c])=>`<option value="${k}" ${k===S.country?'selected':''}>${c.f} ${c.n}</option>`).join('')}</optgroup>`).join('')}</select></div>
+  <div class="field"><label>Numéro de téléphone</label><div class="row"><span class="chip" id="obInd" style="flex:none">${C[S.country].tel}</span><input id="obTel" type="tel" inputmode="tel" placeholder="6 12 34 56 78"></div></div>
+  <button class="btn" onclick="onboard(2)">Recevoir le code</button><p class="mut small" style="text-align:center;margin-top:10px">En continuant, tu acceptes la <a href="../privacy.html" style="color:var(--txt)">politique de confidentialité</a>.</p></div>`)}
+/* ---------- init ---------- */
+go('home');if(firstRun)onboard(1);
+</script>
+</body>
+</html>

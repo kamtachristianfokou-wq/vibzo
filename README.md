@@ -2,17 +2,17 @@
 
 Vidéos courtes, emplois et boutiques en Afrique de l'Ouest, du Centre, de l'Est et en Azerbaïdjan.
 
-- **Démo** (contenus fictifs) : https://kamtachristianfokou-wq.github.io/vibzo/
-- **Version réelle** (vrais comptes, vidéos, messages, commandes) : https://kamtachristianfokou-wq.github.io/vibzo/app/
-  Elle nécessite un projet Supabase : voir [SETUP.md](SETUP.md).
+- **Application** : https://kamtachristianfokou-wq.github.io/vibzo/ (installable sur téléphone)
+- **Démo** (contenus fictifs) : https://kamtachristianfokou-wq.github.io/vibzo/demo/
+- Serveur : Supabase, voir [SETUP.md](SETUP.md).
 
 ## Contenu
 
 | Dossier | Rôle |
 | --- | --- |
-| `app/` | Application réelle (PWA installable) |
+| `index.html`, `main.js`, `style.css`… | Application réelle (PWA installable) |
 | `supabase/schema.sql` | Base de données, sécurité, stockage, fonctions |
-| `index.html` | Démo interactive |
+| `demo/` | Démo interactive |
 | `privacy.html` | Politique de confidentialité |
 
 ## Fonctionnalités de la version réelle

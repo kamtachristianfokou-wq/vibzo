@@ -1,8 +1,8 @@
 {
   "name": "Vibzo",
   "short_name": "Vibzo",
-  "description": "Vidéos courtes, rencontres, emplois et boutiques en Afrique de l’Ouest, du Centre, de l’Est et en Azerbaïdjan.",
-  "id": "/",
+  "description": "Vidéos courtes, emplois et boutiques en Afrique de l’Ouest, du Centre, de l’Est et en Azerbaïdjan.",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,29 +10,10 @@
   "background_color": "#ffffff",
   "theme_color": "#1e9be8",
   "lang": "fr",
-  "categories": [
-    "social",
-    "entertainment",
-    "shopping"
-  ],
+  "categories": ["social", "entertainment", "shopping"],
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

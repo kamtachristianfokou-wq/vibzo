@@ -10,3 +10,6 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_jzRFhRUH5JlyNcIcnAwgAQ_1W8oZUoh
 
 // Numéro WhatsApp de l'équipe Vibzo (activation Gold et Vendeur), format international sans +
 export const SUPPORT_WHATSAPP = '';
+
+// Lien de téléchargement direct de l'application Android (APK), vide tant qu'il n'existe pas
+export const ANDROID_APK_URL = '';
