@@ -112,6 +112,8 @@ Continuer avec Google|Continue with Google|Continuar com o Google|Continuar con 
 — ou avec ton e-mail —|— or with your email —|— ou com o teu e-mail —|— o con tu correo —|— أو ببريدك الإلكتروني —|— au kwa barua pepe yako —|— ወይም በኢሜይልዎ —|— və ya e-poçtunla —
 Complète ton profil pour voir ce qui se passe près de chez toi.|Complete your profile to see what’s happening near you.|Completa o teu perfil para ver o que acontece perto de ti.|Completa tu perfil para ver lo que pasa cerca de ti.|أكمل ملفك لترى ما يحدث بالقرب منك.|Kamilisha wasifu wako uone kinachoendelea karibu nawe.|በአቅራቢያዎ ያለውን ለማየት መገለጫዎን ያጠናቅቁ።|Yaxınlıqda baş verənləri görmək üçün profilini tamamla.
 C’est parti|Let’s go|Vamos lá|¡Vamos!|هيا بنا|Twende|እንጀምር|Başlayaq
+Format vidéo non compatible|Incompatible video format|Formato de vídeo incompatível|Formato de vídeo no compatible|تنسيق فيديو غير متوافق|Muundo wa video hauendani|ተኳሃኝ ያልሆነ የቪዲዮ ቅርጸት|Uyğunsuz video formatı
+J’ai compris|Got it|Entendi|Entendido|فهمت|Nimeelewa|ገባኝ|Başa düşdüm
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)

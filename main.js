@@ -300,7 +300,7 @@ function slideHTML(v) {
   S.vids.set(v.id, v);
   const mine = v.user_id === uid();
   return `<div class="slide" data-id="${v.id}">
-  <div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" loop playsinline ${S.muted ? 'muted' : ''} preload="metadata"></video></div>
+  <div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" loop playsinline ${S.muted ? 'muted' : ''} preload="metadata" onloadedmetadata="V.noImg(this)"></video></div>
   ${v.title ? `<div class="vtitle" style="top:auto;bottom:150px">${esc(v.title)}</div>` : ''}
   <div class="vtap" onclick="V.tapVid(event,'${v.id}')"></div><div class="pauseIc">▶</div>
   <div class="rail">
@@ -471,16 +471,26 @@ SCREENS.create = async () => {
   <div class="progress" id="prog" style="display:none"><i></i></div>
   <button class="btn" id="pubBtn" onclick="V.publish()">Publier</button></div>`;
 };
-function pickVid(inp) {
+/* Les vidéos HEVC (H.265) ne s'affichent pas sur beaucoup de navigateurs : on les refuse avec une explication */
+async function isHevc(f) {
+  const scan = async (b) => { const t = new TextDecoder('latin1').decode(new Uint8Array(await b.arrayBuffer())); return /hvc1|hev1/.test(t); };
+  const n = 2 * 1024 * 1024;
+  try { return await scan(f.slice(0, n)) || (f.size > n && await scan(f.slice(Math.max(n, f.size - n)))); } catch (e) { return false; }
+}
+const HEVC_MSG = 'Cette vidéo est au format HEVC, que beaucoup de téléphones et navigateurs ne peuvent pas afficher. Dans les réglages de ton appareil photo, désactive « Vidéos haute efficacité / HEVC » (Android) ou choisis « Le plus compatible » (iPhone), puis filme à nouveau.';
+async function pickVid(inp) {
   const f = inp.files[0]; if (!f) return;
   if (f.size > 50 * 1024 * 1024) { toast('Vidéo trop lourde (50 Mo max). Raccourcis-la ou réduis la qualité.'); return; }
+  if (await isHevc(f)) { inp.value = ''; modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">🎞️</div><h3>Format vidéo non compatible</h3><p class="mut small" style="margin-top:6px">${HEVC_MSG}</p><button class="btn" onclick="V.closeModal()">J’ai compris</button></div>`); return; }
   const url = URL.createObjectURL(f);
-  const probe = document.createElement('video'); probe.preload = 'metadata'; probe.src = url;
+  const show = () => { draft = { file: f, url }; const p = $('#prev'); p.style.display = ''; p.innerHTML = `<video src="${url}" autoplay loop muted playsinline></video>`; };
+  const probe = document.createElement('video'); probe.preload = 'metadata'; probe.muted = true; probe.src = url;
   probe.onloadedmetadata = () => {
     if (probe.duration && probe.duration > 185) { toast('Vidéo trop longue (3 minutes max).'); return; }
-    draft = { file: f, url }; const p = $('#prev'); p.style.display = ''; p.innerHTML = `<video src="${url}" autoplay loop muted playsinline></video>`;
+    if (probe.videoWidth === 0 && probe.videoHeight === 0 && f.type.startsWith('video/')) { toast('⚠️ Cette vidéo ne contient pas d’image lisible. Essaie une autre vidéo.'); return; }
+    show();
   };
-  probe.onerror = () => { draft = { file: f, url }; const p = $('#prev'); p.style.display = ''; p.innerHTML = `<video src="${url}" autoplay loop muted playsinline></video>`; };
+  probe.onerror = show;
 }
 async function publish() {
   if (!draft) return toast('Choisis d’abord une vidéo 📹');
@@ -1040,6 +1050,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  noImg: el => { if (el.videoWidth === 0 && el.duration > 0 && !el.parentNode.querySelector('.noimg')) el.insertAdjacentHTML('afterend', '<div class="noimg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:#fff;font-size:14px;opacity:.85">🎞️ Cette vidéo est dans un format que ton appareil ne peut pas afficher (HEVC).</div>'); },
   googleAuth, setupRegions, saveSetup,
   S, go, closeSheet, closeModal, openLoc, setLoc, applyLoc, authTab, authRegions, submitAuth, forgot, logout,
   setTab, toggleMute, tapVid, like, save, follow, openComments, addComment, delComment, shareVid, vidMore, delVideo, doDelVideo, report, sendReport,
