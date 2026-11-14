@@ -166,6 +166,8 @@ SCREENS.auth = () => {
   const ccOpts = Object.keys(ZONES).map(z => `<optgroup label="${ZONES[z]}">${Object.entries(C).filter(([, c]) => c.z === z).map(([k, c]) => `<option value="${k}" ${k === S.loc.country ? 'selected' : ''}>${c.f} ${c.n}</option>`).join('')}</optgroup>`).join('');
   $('#s-auth').innerHTML = `<div class="auth"><div class="logo"><span>Vibzo</span></div><p class="mut small" style="text-align:center;margin-top:4px">Vidéos · Emplois · Boutiques près de chez toi</p><div style="text-align:center;margin-top:10px"><button class="chip" onclick="V.langSheet()">🌐 ${LANGS[getLang()]} ▾</button></div>
   <div class="seg" style="margin-top:20px"><button class="${authMode === 'signup' ? 'on' : ''}" onclick="V.authTab('signup')">Créer un compte</button><button class="${authMode === 'login' ? 'on' : ''}" onclick="V.authTab('login')">Se connecter</button></div>
+  <button type="button" class="btn ghost gbtn" onclick="V.googleAuth()" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>Continuer avec Google</button>
+  <div class="mut small" style="text-align:center;margin:12px 0 0">— ou avec ton e-mail —</div>
   <form onsubmit="event.preventDefault();V.submitAuth()" style="margin-top:6px">
   ${authMode === 'signup' ? `<div class="field"><label>Ton nom</label><input id="aName" maxlength="40" required placeholder="Ex : Christian K."></div>
   <div class="field"><label>Nom d’utilisateur</label><input id="aUser" maxlength="24" required placeholder="ex : christian.k" pattern="[a-zA-Z0-9_.]{3,24}" title="3 à 24 caractères : lettres, chiffres, . et _"></div>` : ''}
@@ -208,6 +210,33 @@ async function forgot() {
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] });
   if (error) return fail(error); toast('E-mail de réinitialisation envoyé 📧');
 }
+async function googleAuth() {
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname, queryParams: { prompt: 'select_account' } } });
+  if (error) fail(/provider is not enabled|Unsupported provider/i.test(errMsg(error)) ? { message: 'La connexion Google n’est pas encore activée. Utilise ton e-mail pour l’instant.' } : error);
+}
+/* Profil à compléter après une inscription avec Google */
+function setupProfile() {
+  const m = S.me, cc0 = (m.country && C[m.country]) ? m.country : S.loc.country;
+  const ccOpts = Object.keys(ZONES).map(z => `<optgroup label="${ZONES[z]}">${Object.entries(C).filter(([, c]) => c.z === z).map(([k, c]) => `<option value="${k}" ${k === cc0 ? 'selected' : ''}>${c.f} ${c.n}</option>`).join('')}</optgroup>`).join('');
+  modal(`<form class="card" style="max-width:360px;width:100%;background:#fff;max-height:90vh;overflow:auto" onsubmit="event.preventDefault();V.saveSetup()"><h3>Bienvenue sur Vibzo 👋</h3><p class="mut small" style="margin-top:4px">Complète ton profil pour voir ce qui se passe près de chez toi.</p>
+  <div class="field"><label>Ton nom</label><input id="sName" maxlength="40" required value="${esc(m.display_name || '')}"></div>
+  <div class="field"><label>Nom d’utilisateur</label><input id="sUser" maxlength="24" required pattern="[a-zA-Z0-9_.]{3,24}" title="3 à 24 caractères : lettres, chiffres, . et _" value="${esc(m.username || '')}"></div>
+  <div class="field"><label>Pays</label><select id="sCc" onchange="V.setupRegions()">${ccOpts}</select></div>
+  <div class="field"><label>Région</label><select id="sRg"></select></div>
+  <label class="check"><input type="checkbox" required> J’ai 16 ans ou plus.</label>
+  <label class="check"><input type="checkbox" required> J’accepte la <a href="privacy.html" target="_blank" rel="noopener">politique de confidentialité</a> et je m’engage à respecter les autres membres.</label>
+  <div class="err" id="sErr"></div><button class="btn" id="sBtn">C’est parti</button></form>`);
+  setupRegions();
+}
+function setupRegions() { const cc = $('#sCc').value; $('#sRg').innerHTML = C[cc].r.map(r => `<option ${S.me.region === r ? 'selected' : ''}>${esc(r)}</option>`).join(''); }
+async function saveSetup() {
+  const btn = $('#sBtn'); $('#sErr').textContent = ''; busy(btn, true);
+  const cc = $('#sCc').value, upd = { display_name: $('#sName').value.trim(), username: $('#sUser').value.trim().toLowerCase(), country: cc, region: $('#sRg').value, needs_setup: false };
+  const { error } = await sb.from('profiles').update(upd).eq('id', uid());
+  busy(btn, false);
+  if (error) { $('#sErr').textContent = /duplicate|unique/i.test(errMsg(error)) ? 'Ce nom d’utilisateur est déjà pris, choisis-en un autre.' : errMsg(error); return; }
+  Object.assign(S.me, upd); S.loc = worldLoc(cc); saveLoc(); applyLang(); closeModal(); toast('Profil prêt ✅'); go(S.cur === 'auth' ? 'home' : S.cur);
+}
 async function loadMe() {
   if (!uid()) { S.me = null; S.myShop = null; return; }
   const [{ data: me }, { data: shop }] = await Promise.all([
@@ -215,6 +244,7 @@ async function loadMe() {
     sb.from('shops').select('*').eq('owner_id', uid()).maybeSingle(),
   ]);
   S.me = me; S.myShop = shop;
+  if (me && me.needs_setup) setTimeout(setupProfile, 300);
 }
 function deleteAccount() {
   closeSheet();
@@ -1010,6 +1040,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  googleAuth, setupRegions, saveSetup,
   S, go, closeSheet, closeModal, openLoc, setLoc, applyLoc, authTab, authRegions, submitAuth, forgot, logout,
   setTab, toggleMute, tapVid, like, save, follow, openComments, addComment, delComment, shareVid, vidMore, delVideo, doDelVideo, report, sendReport,
   searchDebounced, openGrid, pickVid, publish,
