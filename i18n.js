@@ -60,7 +60,7 @@ Nouvelle vidéo|New video|Novo vídeo|Nuevo video|فيديو جديد|Video mpya
 Publier une vidéo|Post a video|Publicar um vídeo|Publicar un video|انشر فيديو|Chapisha video|ቪዲዮ አትም|Video paylaş
 Choisir une vidéo|Choose a video|Escolher um vídeo|Elegir un video|اختر فيديو|Chagua video|ቪዲዮ ምረጥ|Video seç
 Changer de vidéo|Change video|Mudar de vídeo|Cambiar video|غيّر الفيديو|Badilisha video|ቪዲዮ ቀይር|Videonu dəyiş
-Depuis ta galerie ou ta caméra · 50 Mo et 3 minutes maximum|From your gallery or camera · 50 MB and 3 minutes max|Da tua galeria ou câmara · 50 MB e 3 minutos no máximo|Desde tu galería o cámara · 50 MB y 3 minutos máximo|من معرضك أو الكاميرا · 50 ميغابايت و3 دقائق كحد أقصى|Kutoka kwenye picha au kamera · MB 50 na dakika 3 zaidi|ከጋለሪ ወይም ካሜራ · ከፍተኛ 50 MB እና 3 ደቂቃ|Qalereyadan və ya kameradan · maks. 50 MB və 3 dəqiqə
+Depuis ta galerie ou ta caméra · tous formats · 3 minutes maximum|From your gallery or camera · any format · 3 minutes max|Da tua galeria ou câmara · todos os formatos · 3 minutos no máximo|Desde tu galería o cámara · todos los formatos · 3 minutos máximo|من معرضك أو الكاميرا · كل الصيغ · 3 دقائق كحد أقصى|Kutoka kwenye picha au kamera · miundo yote · dakika 3 zaidi|ከጋለሪ ወይም ካሜራ · ሁሉም ቅርጸቶች · ከፍተኛ 3 ደቂቃ|Qalereyadan və ya kameradan · bütün formatlar · maks. 3 dəqiqə
 Titre à l’écran (facultatif)|On-screen title (optional)|Título no ecrã (opcional)|Título en pantalla (opcional)|عنوان على الشاشة (اختياري)|Kichwa kwenye skrini (hiari)|በስክሪን ላይ ርዕስ (አማራጭ)|Ekranda başlıq (istəyə bağlı)
 Description|Description|Descrição|Descripción|الوصف|Maelezo|መግለጫ|Təsvir
 Décris ta vidéo|Describe your video|Descreve o teu vídeo|Describe tu video|صف الفيديو|Eleza video yako|ቪዲዮህን ግለጽ|Videonu təsvir et
@@ -114,6 +114,7 @@ Complète ton profil pour voir ce qui se passe près de chez toi.|Complete your 
 C’est parti|Let’s go|Vamos lá|¡Vamos!|هيا بنا|Twende|እንጀምር|Başlayaq
 Format vidéo non compatible|Incompatible video format|Formato de vídeo incompatível|Formato de vídeo no compatible|تنسيق فيديو غير متوافق|Muundo wa video hauendani|ተኳሃኝ ያልሆነ የቪዲዮ ቅርጸት|Uyğunsuz video formatı
 J’ai compris|Got it|Entendi|Entendido|فهمت|Nimeelewa|ገባኝ|Başa düşdüm
+Préparation de la vidéo…|Preparing video…|A preparar o vídeo…|Preparando el video…|جارٍ تجهيز الفيديو…|Inaandaa video…|ቪዲዮውን በማዘጋጀት ላይ…|Video hazırlanır…
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)

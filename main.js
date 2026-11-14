@@ -461,7 +461,7 @@ SCREENS.create = async () => {
   let prods = [];
   if (S.myShop) { const { data } = await sb.from('products').select('id,name,price,currency').eq('shop_id', S.myShop.id).eq('active', true); prods = data || []; }
   $('#s-create').innerHTML = hdr('Nouvelle vidéo', `<span class="loc">📍 ${esc((C[S.me.country] || {}).f || '')} ${esc(S.me.region || '')}</span>`) + `<div class="pad">
-  <label class="up"><input type="file" accept="video/*" style="display:none" onchange="V.pickVid(this)"><div class="big">📹</div><b>${draft ? 'Changer de vidéo' : 'Choisir une vidéo'}</b><div class="mut small" style="margin-top:4px">Depuis ta galerie ou ta caméra · 50 Mo et 3 minutes maximum</div></label>
+  <label class="up"><input type="file" accept="video/*" style="display:none" onchange="V.pickVid(this)"><div class="big">📹</div><b>${draft ? 'Changer de vidéo' : 'Choisir une vidéo'}</b><div class="mut small" style="margin-top:4px">Depuis ta galerie ou ta caméra · tous formats · 3 minutes maximum</div></label>
   <div class="prev" id="prev" style="${draft ? '' : 'display:none'};background:#0b2540">${draft ? `<video src="${draft.url}" autoplay loop muted playsinline></video>` : ''}</div>
   <div class="field"><label>Titre à l’écran (facultatif)</label><input id="ct" maxlength="80" placeholder="Ex : Mon premier challenge 🔥"></div>
   <div class="field"><label>Description</label><textarea id="cd" rows="2" maxlength="300" placeholder="Décris ta vidéo…"></textarea></div>
@@ -471,25 +471,39 @@ SCREENS.create = async () => {
   <div class="progress" id="prog" style="display:none"><i></i></div>
   <button class="btn" id="pubBtn" onclick="V.publish()">Publier</button></div>`;
 };
-/* Les vidéos HEVC (H.265) ne s'affichent pas sur beaucoup de navigateurs : on les refuse avec une explication */
+/* =====================================================================
+   CONVERSION VIDÉO : tout format → MP4 H.264 + AAC, 720p max, lisible partout
+   (WebCodecs via Mediabunny, chargé seulement au moment de publier)
+   ===================================================================== */
 async function isHevc(f) {
-  const scan = async (b) => { const t = new TextDecoder('latin1').decode(new Uint8Array(await b.arrayBuffer())); return /hvc1|hev1/.test(t); };
+  const scan = async (b) => /hvc1|hev1/.test(new TextDecoder('latin1').decode(new Uint8Array(await b.arrayBuffer())));
   const n = 2 * 1024 * 1024;
   try { return await scan(f.slice(0, n)) || (f.size > n && await scan(f.slice(Math.max(n, f.size - n)))); } catch (e) { return false; }
 }
-const HEVC_MSG = 'Cette vidéo est au format HEVC, que beaucoup de téléphones et navigateurs ne peuvent pas afficher. Dans les réglages de ton appareil photo, désactive « Vidéos haute efficacité / HEVC » (Android) ou choisis « Le plus compatible » (iPhone), puis filme à nouveau.';
-async function pickVid(inp) {
+const HEVC_MSG = 'Ton appareil n’arrive pas à convertir cette vidéo (format HEVC). Dans les réglages de ton appareil photo, désactive « Vidéos haute efficacité / HEVC » (Android) ou choisis « Le plus compatible » (iPhone), puis filme à nouveau. Tu peux aussi publier depuis ton téléphone.';
+async function convertVideo(file, onProgress) {
+  if (!('VideoEncoder' in window) || !('VideoDecoder' in window)) throw new Error('webcodecs');
+  const M = await import('https://cdn.jsdelivr.net/npm/mediabunny@1/+esm');
+  const input = new M.Input({ source: new M.BlobSource(file), formats: M.ALL_FORMATS });
+  const vt = await input.getPrimaryVideoTrack(); if (!vt) throw new Error('novideo');
+  const output = new M.Output({ format: new M.Mp4OutputFormat({ fastStart: 'in-memory' }), target: new M.BufferTarget() });
+  const conv = await M.Conversion.init({
+    input, output,
+    video: { codec: 'avc', width: 720, height: 1280, fit: 'contain', bitrate: 2_000_000, frameRate: 30, forceTranscode: true },
+    audio: { codec: 'aac', bitrate: 128_000, numberOfChannels: 2, sampleRate: 44100 },
+  });
+  if (!conv.isValid || conv.discardedTracks.some(t => t.track.type === 'video')) throw new Error('invalid');
+  conv.onProgress = p => onProgress && onProgress(p);
+  await conv.execute();
+  return new Blob([output.target.buffer], { type: 'video/mp4' });
+}
+function pickVid(inp) {
   const f = inp.files[0]; if (!f) return;
-  if (f.size > 50 * 1024 * 1024) { toast('Vidéo trop lourde (50 Mo max). Raccourcis-la ou réduis la qualité.'); return; }
-  if (await isHevc(f)) { inp.value = ''; modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">🎞️</div><h3>Format vidéo non compatible</h3><p class="mut small" style="margin-top:6px">${HEVC_MSG}</p><button class="btn" onclick="V.closeModal()">J’ai compris</button></div>`); return; }
+  if (f.size > 500 * 1024 * 1024) { toast('Vidéo trop lourde (500 Mo max).'); return; }
   const url = URL.createObjectURL(f);
   const show = () => { draft = { file: f, url }; const p = $('#prev'); p.style.display = ''; p.innerHTML = `<video src="${url}" autoplay loop muted playsinline></video>`; };
   const probe = document.createElement('video'); probe.preload = 'metadata'; probe.muted = true; probe.src = url;
-  probe.onloadedmetadata = () => {
-    if (probe.duration && probe.duration > 185) { toast('Vidéo trop longue (3 minutes max).'); return; }
-    if (probe.videoWidth === 0 && probe.videoHeight === 0 && f.type.startsWith('video/')) { toast('⚠️ Cette vidéo ne contient pas d’image lisible. Essaie une autre vidéo.'); return; }
-    show();
-  };
+  probe.onloadedmetadata = () => { if (probe.duration && probe.duration > 185) { toast('Vidéo trop longue (3 minutes max).'); return; } show(); };
   probe.onerror = show;
 }
 async function publish() {
@@ -498,9 +512,21 @@ async function publish() {
   const prog = $('#prog'); prog.style.display = ''; let pct = 5; const bar = prog.querySelector('i');
   const timer = setInterval(() => { pct = Math.min(90, pct + (90 - pct) * 0.08); bar.style.width = pct + '%'; }, 400);
   try {
-    const ext = (draft.file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
+    let body = draft.file, type = draft.file.type || 'video/mp4', ext = (draft.file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
+    clearInterval(timer); btn.innerHTML = '<span class="spin"></span> Préparation de la vidéo…';
+    try {
+      body = await convertVideo(draft.file, p => { bar.style.width = Math.round(p * 70) + '%'; btn.innerHTML = `<span class="spin"></span> Préparation ${Math.round(p * 100)} %`; });
+      type = 'video/mp4'; ext = 'mp4';
+    } catch (ce) {
+      console.warn('conversion', ce);
+      if (await isHevc(draft.file)) { modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">🎞️</div><h3>Format vidéo non compatible</h3><p class="mut small" style="margin-top:6px">${HEVC_MSG}</p><button class="btn" onclick="V.closeModal()">J’ai compris</button></div>`); return; }
+    }
+    if (body.size > 50 * 1024 * 1024) throw new Error('Vidéo trop lourde après préparation (50 Mo max). Raccourcis-la.');
+    btn.innerHTML = '<span class="spin"></span> Envoi en cours…'; pct = 70; bar.style.width = '70%';
+    const timer2 = setInterval(() => { pct = Math.min(95, pct + (95 - pct) * 0.08); bar.style.width = pct + '%'; }, 400);
     const path = `${uid()}/${Date.now()}.${ext}`;
-    const { error: upErr } = await sb.storage.from('videos').upload(path, draft.file, { contentType: draft.file.type || 'video/mp4', upsert: false });
+    const { error: upErr } = await sb.storage.from('videos').upload(path, body, { contentType: type, upsert: false });
+    clearInterval(timer2);
     if (upErr) throw upErr;
     const { data: pub } = sb.storage.from('videos').getPublicUrl(path);
     const tags = ($('#ch').value || '').toLowerCase().split(/[,\s#]+/).map(t => t.replace(/[^a-z0-9àâäéèêëïîôöùûüç_]/g, '')).filter(Boolean).slice(0, 8);
@@ -1050,6 +1076,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  convertVideo,
   noImg: el => { if (el.videoWidth === 0 && el.duration > 0 && !el.parentNode.querySelector('.noimg')) el.insertAdjacentHTML('afterend', '<div class="noimg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:#fff;font-size:14px;opacity:.85">🎞️ Cette vidéo est dans un format que ton appareil ne peut pas afficher (HEVC).</div>'); },
   googleAuth, setupRegions, saveSetup,
   S, go, closeSheet, closeModal, openLoc, setLoc, applyLoc, authTab, authRegions, submitAuth, forgot, logout,
