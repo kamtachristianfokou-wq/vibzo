@@ -497,6 +497,38 @@ async function convertVideo(file, onProgress) {
   await conv.execute();
   return new Blob([output.target.buffer], { type: 'video/mp4' });
 }
+/* Plan B : conversion logicielle (FFmpeg compilé en WebAssembly) quand l'appareil
+   ne sait pas lire le format d'origine (ex. HEVC sur ordinateur). Plus lent, mais lit tout. */
+let ffmpegP = null;
+function loadFfmpeg() {
+  if (ffmpegP) return ffmpegP;
+  ffmpegP = (async () => {
+    const blobURL = async (u, type) => URL.createObjectURL(new Blob([await (await fetch(u)).arrayBuffer()], { type }));
+    const { FFmpeg } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.15/+esm');
+    const base = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
+    const ff = new FFmpeg();
+    await ff.load({
+      classWorkerURL: await blobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.15/dist/esm/worker.js/+esm', 'text/javascript'),
+      coreURL: await blobURL(base + '/ffmpeg-core.js', 'text/javascript'),
+      wasmURL: await blobURL(base + '/ffmpeg-core.wasm', 'application/wasm'),
+    });
+    return ff;
+  })();
+  ffmpegP.catch(() => { ffmpegP = null; });
+  return ffmpegP;
+}
+async function convertVideoSoft(file, onProgress) {
+  const ff = await loadFfmpeg();
+  const onP = e => onProgress && onProgress(Math.max(0, Math.min(1, e.progress || 0)));
+  ff.on('progress', onP);
+  const inName = 'in.' + ((file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4');
+  try {
+    await ff.writeFile(inName, new Uint8Array(await file.arrayBuffer()));
+    const code = await ff.exec(['-i', inName, '-vf', "scale='min(720,iw)':-2", '-r', '30', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k', '-ac', '2', '-movflags', '+faststart', 'out.mp4']);
+    if (code !== 0) throw new Error('ffmpeg ' + code);
+    return new Blob([await ff.readFile('out.mp4')], { type: 'video/mp4' });
+  } finally { ff.off('progress', onP); ff.deleteFile(inName).catch(() => { }); ff.deleteFile('out.mp4').catch(() => { }); }
+}
 function pickVid(inp) {
   const f = inp.files[0]; if (!f) return;
   if (f.size > 500 * 1024 * 1024) { toast('Vidéo trop lourde (500 Mo max).'); return; }
@@ -518,8 +550,15 @@ async function publish() {
       body = await convertVideo(draft.file, p => { bar.style.width = Math.round(p * 70) + '%'; btn.innerHTML = `<span class="spin"></span> Préparation ${Math.round(p * 100)} %`; });
       type = 'video/mp4'; ext = 'mp4';
     } catch (ce) {
-      console.warn('conversion', ce);
-      if (await isHevc(draft.file)) { modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">🎞️</div><h3>Format vidéo non compatible</h3><p class="mut small" style="margin-top:6px">${HEVC_MSG}</p><button class="btn" onclick="V.closeModal()">J’ai compris</button></div>`); return; }
+      console.warn('conversion rapide impossible, plan B', ce);
+      btn.innerHTML = '<span class="spin"></span> Conversion du format…';
+      try {
+        body = await convertVideoSoft(draft.file, p => { bar.style.width = Math.round(p * 70) + '%'; btn.innerHTML = `<span class="spin"></span> Conversion ${Math.round(p * 100)} %`; });
+        type = 'video/mp4'; ext = 'mp4';
+      } catch (se) {
+        console.warn('conversion logicielle', se);
+        throw new Error('Impossible de préparer cette vidéo. Vérifie ta connexion internet et réessaie, ou choisis une autre vidéo.');
+      }
     }
     if (body.size > 50 * 1024 * 1024) throw new Error('Vidéo trop lourde après préparation (50 Mo max). Raccourcis-la.');
     btn.innerHTML = '<span class="spin"></span> Envoi en cours…'; pct = 70; bar.style.width = '70%';

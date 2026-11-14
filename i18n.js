@@ -115,6 +115,7 @@ C’est parti|Let’s go|Vamos lá|¡Vamos!|هيا بنا|Twende|እንጀምር
 Format vidéo non compatible|Incompatible video format|Formato de vídeo incompatível|Formato de vídeo no compatible|تنسيق فيديو غير متوافق|Muundo wa video hauendani|ተኳሃኝ ያልሆነ የቪዲዮ ቅርጸት|Uyğunsuz video formatı
 J’ai compris|Got it|Entendi|Entendido|فهمت|Nimeelewa|ገባኝ|Başa düşdüm
 Préparation de la vidéo…|Preparing video…|A preparar o vídeo…|Preparando el video…|جارٍ تجهيز الفيديو…|Inaandaa video…|ቪዲዮውን በማዘጋጀት ላይ…|Video hazırlanır…
+Conversion du format…|Converting format…|A converter o formato…|Convirtiendo el formato…|جارٍ تحويل الصيغة…|Inabadilisha muundo…|ቅርጸቱን በመቀየር ላይ…|Format çevrilir…
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)
