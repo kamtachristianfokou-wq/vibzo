@@ -31,7 +31,6 @@ Rechercher|Search|Pesquisar|Buscar|بحث|Tafuta|ፈልግ|Axtar
 Messages|Messages|Mensagens|Mensajes|الرسائل|Ujumbe|መልዕክቶች|Mesajlar
 Message|Message|Mensagem|Mensaje|رسالة|Ujumbe|መልዕክት|Mesaj
 Retour|Back|Voltar|Volver|رجوع|Rudi|ተመለስ|Geri
-Fermer|Close|Fechar|Cerrar|إغلاق|Funga|ዝጋ|Bağla
 Chargement|Loading|A carregar|Cargando|جارٍ التحميل|Inapakia|በመጫን ላይ|Yüklənir
 Partager|Share|Partilhar|Compartir|مشاركة|Shiriki|አጋራ|Paylaş
 Enregistrer|Save|Guardar|Guardar|حفظ|Hifadhi|አስቀምጥ|Yadda saxla
@@ -116,6 +115,11 @@ Format vidéo non compatible|Incompatible video format|Formato de vídeo incompa
 J’ai compris|Got it|Entendi|Entendido|فهمت|Nimeelewa|ገባኝ|Başa düşdüm
 Préparation de la vidéo…|Preparing video…|A preparar o vídeo…|Preparando el video…|جارٍ تجهيز الفيديو…|Inaandaa video…|ቪዲዮውን በማዘጋጀት ላይ…|Video hazırlanır…
 Conversion du format…|Converting format…|A converter o formato…|Convirtiendo el formato…|جارٍ تحويل الصيغة…|Inabadilisha muundo…|ቅርጸቱን በመቀየር ላይ…|Format çevrilir…
+Demande envoyée|Request sent|Pedido enviado|Solicitud enviada|تم إرسال الطلب|Ombi limetumwa|ጥያቄው ተልኳል|Sorğu göndərildi
+💬 Écrire à Vibzo sur WhatsApp|💬 Message Vibzo on WhatsApp|💬 Escrever à Vibzo no WhatsApp|💬 Escribir a Vibzo por WhatsApp|💬 راسل Vibzo على واتساب|💬 Andika kwa Vibzo WhatsApp|💬 ለVibzo በWhatsApp ይጻፉ|💬 Vibzo-ya WhatsApp-da yaz
+Virement bancaire|Bank transfer|Transferência bancária|Transferencia bancaria|تحويل بنكي|Uhamisho wa benki|የባንክ ዝውውር|Bank köçürməsi
+📋 Copier l’IBAN|📋 Copy IBAN|📋 Copiar o IBAN|📋 Copiar el IBAN|📋 نسخ IBAN|📋 Nakili IBAN|📋 IBAN ይቅዱ|📋 IBAN-ı kopyala
+Fermer|Close|Fechar|Cerrar|إغلاق|Funga|ዝጋ|Bağla
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)

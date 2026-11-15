@@ -9,7 +9,11 @@ export const SUPABASE_URL = 'https://pcfebfknjtqtgkhctxll.supabase.co';
 export const SUPABASE_ANON_KEY = 'sb_publishable_jzRFhRUH5JlyNcIcnAwgAQ_1W8oZUoh';
 
 // Numéro WhatsApp de l'équipe Vibzo (activation Gold et Vendeur), format international sans +
-export const SUPPORT_WHATSAPP = '';
+export const SUPPORT_WHATSAPP = '994515201787';
+// Coordonnées de paiement affichées après une demande d'abonnement (par zone : O, C, E, A)
+export const PAYMENT_INFO = {
+  A: { bank: 'Bank Respublika', holder: 'KAMTA FOKOU CHRISTIAN', iban: 'AZ46BRES41015AZ0012121865005' },
+};
 
 // Lien de téléchargement direct de l'application Android (APK), vide tant qu'il n'existe pas
 export const ANDROID_APK_URL = '';

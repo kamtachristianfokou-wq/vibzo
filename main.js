@@ -2,7 +2,7 @@
 // VIBZO : application (version réelle)
 // =====================================================================
 import { C, ZONES, SECTORS, CONTRACTS, REMOTE, REPORT_REASONS, money } from './data.js';
-import { SUPPORT_WHATSAPP, ANDROID_APK_URL } from './config.js';
+import { SUPPORT_WHATSAPP, ANDROID_APK_URL, PAYMENT_INFO } from './config.js';
 import { getClient, isConfigured } from './supa.js';
 import { initI18n, LANGS, langFor, ALSO, getLang } from './i18n.js';
 
@@ -900,8 +900,18 @@ async function requestSub(plan) {
   const btn = $('#gBtn'); busy(btn, true);
   const { error } = await sb.from('subscription_requests').insert({ user_id: uid(), plan, months: +$('#gMonths').value, payment: $('#gPay').value });
   busy(btn, false); if (error) return fail(error);
-  closeSheet(); toast('Demande envoyée ✅ L’équipe Vibzo va te contacter.');
-  if (S.cur === 'dating') go('dating');
+  closeSheet(); if (S.cur === 'dating') go('dating');
+  payInfo(plan, +$('#gMonths')?.value || 1, $('#gPay')?.value || '');
+}
+function payInfo(plan, months, pay) {
+  const cc = (S.me && S.me.country) || S.loc.country, zone = C[cc].z, pi = PAYMENT_INFO[zone];
+  const label = plan === 'gold' ? 'Vibzo Gold' : 'Vendeur';
+  const msg = `Bonjour Vibzo 👋 Je viens de demander l’abonnement ${label} (${months} mois) depuis ${C[cc].n}. Utilisateur : @${S.me ? S.me.username : ''}. Paiement : ${pay}. Merci de m’indiquer le montant.`;
+  const wa = SUPPORT_WHATSAPP ? `<a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Écrire à Vibzo sur WhatsApp</a>` : '';
+  const bank = pi ? `<div class="card" style="text-align:left;margin-top:12px;background:#f2f9ff"><b>Virement bancaire</b><div class="small" style="margin-top:6px">Banque : <b>${esc(pi.bank)}</b><br>Bénéficiaire : <b>${esc(pi.holder)}</b><br>IBAN : <b style="user-select:all">${esc(pi.iban)}</b></div><button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${pi.iban}').then(()=>V.toast('IBAN copié ✅'))">📋 Copier l’IBAN</button></div>` : '';
+  modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center;max-height:90vh;overflow:auto"><div style="font-size:40px">✅</div><h3>Demande envoyée</h3>
+  <p class="mut small" style="margin-top:6px">1. Écris-nous sur WhatsApp : on te donne le montant pour ton pays.<br>2. Paie (${esc(pay)}${pi ? ' ou virement' : ''}) et envoie la capture du paiement.<br>3. Ton abonnement ${label} est activé dès réception.</p>${wa}${bank}
+  <button class="btn ghost" style="margin-top:10px" onclick="V.closeModal()">Fermer</button></div>`);
 }
 function gold() {
   if (!requireAuth()) return;
@@ -1115,6 +1125,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  payInfo, toast,
   convertVideo,
   noImg: el => { if (el.videoWidth === 0 && el.duration > 0 && !el.parentNode.querySelector('.noimg')) el.insertAdjacentHTML('afterend', '<div class="noimg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:#fff;font-size:14px;opacity:.85">🎞️ Cette vidéo est dans un format que ton appareil ne peut pas afficher (HEVC).</div>'); },
   googleAuth, setupRegions, saveSetup,
