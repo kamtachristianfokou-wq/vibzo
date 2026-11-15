@@ -310,3 +310,25 @@ th{color:var(--mut);font-weight:700;font-size:11.5px;text-transform:uppercase}
 .sel-row{display:flex;gap:8px}
 .sel-row select{flex:1}
 a{color:var(--vio)}
+/* Rencontres v2 : onglets, Ce soir, photos multiples, Super Like */
+.dtabs{display:flex;gap:6px;background:#e8f4fd;border-radius:16px;padding:4px;margin-bottom:8px}
+.dtabs button{flex:1;padding:10px;border-radius:12px;font-weight:800;font-size:15px;color:#3b6a8a}
+.dtabs button.on{background:#fff;color:#1e9be8;box-shadow:0 2px 8px rgba(30,155,232,.18)}
+.dtabs button.on.soir{background:linear-gradient(135deg,#ff6a3d,#ff2d6f);color:#fff}
+.dispo{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:#fff4ef;border:1px solid #ffd6c7;margin:6px 0}
+.dispo.on{background:#eafaf0;border-color:#b9ecc9}
+.likes-me{margin:8px 0;padding:10px 14px;border-radius:14px;background:#fff8dc;border:1px solid #f5e3a1;font-size:13.5px}
+.dcard .pdots{position:absolute;top:8px;left:12px;right:12px;display:flex;gap:4px;z-index:2}
+.dcard .pdots i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.4)}
+.dcard .pdots i.on{background:#fff}
+.dcard .ptap{position:absolute;top:0;bottom:45%;width:40%;z-index:1}
+.dcard .ptap.l{left:0}.dcard .ptap.r{right:0}
+.dcard .more{z-index:3}
+.dcard .tag{display:inline-block;white-space:nowrap;width:auto;height:auto;font-size:12px;font-weight:800;padding:4px 9px;border-radius:10px;margin:0 6px 6px 0}
+.dcard .tag.sup{background:#2f8cff}.dcard .tag.lk{background:#f2b705;color:#3a2a00}.dcard .tag.dv{background:#1fbf64}
+.stamp.s{left:50%;top:auto;bottom:45%;color:#2f8cff;transform:translateX(-50%) rotate(-8deg)}
+.dcard[data-dir=super] .stamp.s{opacity:1}
+.dbtns{gap:14px}
+.dbtns .rw{width:48px;height:48px;font-size:20px;color:#f2b705;align-self:center}
+.dbtns .st{width:52px;height:52px;font-size:22px;color:#2f8cff;align-self:center}
+.dbtns .h{color:var(--green)}

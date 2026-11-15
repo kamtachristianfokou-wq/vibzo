@@ -884,7 +884,7 @@ function settings() {
 const isVip = () => !!(S.me && (S.me.role === 'admin' || (S.me.vip_until && new Date(S.me.vip_until) > new Date())));
 const PAYZ = { O: ['Orange Money', 'MTN MoMo', 'Wave', 'Moov Money'], C: ['Orange Money', 'MTN MoMo', 'Airtel Money', 'Moov Money'], E: ['M-Pesa', 'Airtel Money', 'MTN MoMo'], A: ['m10', 'Birbank', 'Carte bancaire'] };
 const INTENT = { serieux: ['💍', 'Relation sérieuse'], libre: ['🔥', 'Sans lendemain'], les_deux: ['✨', 'Ouvert(e) aux deux'] };
-let dScope = 'city', dIntent = null, dAge = 'all', dQueue = [], dMe = null;
+let dScope = 'city', dMode = 'amour', dAge = 'all', dQueue = [], dMe = null, dPhotoIdx = 0;
 const subPrice = () => { const cc = payPreviewCc || (S.me && S.me.country) || S.loc.country; const p = SUB_PRICES[C[cc].z] || SUB_PRICES.default; return { ...p, local: C[cc].cur !== 'FCFA' && p.cur === 'FCFA' }; };
 const subTotal = m => { const p = subPrice(); return money(p.amount * m, p.cur) + (p.local ? ' (ou l’équivalent en monnaie locale)' : ''); };
 function goldBlock(plan = 'gold') {
@@ -952,6 +952,7 @@ function datingForm() {
   const maxDate = new Date(); maxDate.setFullYear(maxDate.getFullYear() - 18);
   sheet(m.user_id ? 'Mon profil rencontre' : 'Créer mon profil rencontre', `
   <div class="field"><label>Photo de toi (visage visible)</label>${m.photo_url ? `<img src="${esc(m.photo_url)}" alt="" style="width:90px;height:90px;object-fit:cover;border-radius:14px;display:block;margin-bottom:8px">` : ''}<input id="dPhoto" type="file" accept="image/jpeg,image/png,image/webp"></div>
+  <div class="field"><label>Autres photos (jusqu’à 5)</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:6px" id="dExtra">${(m.photos || []).map((u, i) => `<span style="position:relative"><img src="${esc(u)}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px"><button type="button" onclick="V.dDelPhoto(${i})" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#e5484d;color:#fff;font-size:12px">✕</button></span>`).join('')}</div><input id="dPhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple></div>
   <div class="field"><label>Prénom</label><input id="dName" maxlength="30" value="${esc(m.first_name || (S.me && S.me.display_name.split(' ')[0]) || '')}"></div>
   <div class="field"><label>Date de naissance</label><input id="dBirth" type="date" max="${maxDate.toISOString().slice(0, 10)}" value="${esc(m.birth_date || '')}"></div>
   <div class="row"><div class="field grow"><label>Je suis</label><select id="dGender"><option value="homme" ${m.gender === 'homme' ? 'selected' : ''}>Un homme</option><option value="femme" ${m.gender === 'femme' ? 'selected' : ''}>Une femme</option></select></div>
@@ -978,24 +979,31 @@ async function saveDating() {
   try {
     const row = { user_id: uid(), first_name: name, birth_date: birth, gender: $('#dGender').value, looking_for: $('#dLook').value, intent: $('#dIntent').value, region: $('#dRegion').value, city, bio: $('#dBio').value.trim(), interests: $('#dInt').value.split(',').map(s => s.trim()).filter(Boolean).slice(0, 8), visible: $('#dVis').checked, country: S.me.country };
     row.photo_url = f ? await uploadImage(f) : dMe.photo_url;
+    const keep = (dMe && dMe.photos) || [], extra = [...$('#dPhotos').files].slice(0, Math.max(0, 5 - keep.length));
+    row.photos = [...keep, ...(await Promise.all(extra.map(uploadImage)))].slice(0, 5);
     const { data, error } = await sb.from('dating_profiles').upsert(row).select().single(); if (error) throw error;
     dMe = data; closeSheet(); toast('Profil rencontre enregistré ✅'); go('dating');
   } catch (e) { fail(e); } finally { busy(btn, false); }
 }
+function dDelPhoto(i) { if (!dMe) return; dMe.photos = (dMe.photos || []).filter((_, k) => k !== i); const el = $('#dExtra'); if (el) el.children[i] && el.children[i].remove(); toast('Photo retirée (clique sur Enregistrer)'); }
 function deleteDating() { confirmBox('Supprimer ton profil rencontre ?', 'V.doDeleteDating()'); }
 async function doDeleteDating() { closeSheet(); const { error } = await sb.from('dating_profiles').delete().eq('user_id', uid()); if (error) return fail(error); dMe = null; toast('Profil rencontre supprimé'); go('dating'); }
 async function renderDating() {
   const m = dMe, zoneName = ZONES[C[m.country].z];
   const scopes = [['city', '📍 ' + m.city], ['region', m.region || 'Ma région'], ['country', C[m.country].f + ' ' + C[m.country].n], ['zone', '🌍 ' + zoneName]];
-  $('#dBody').innerHTML = `<div class="row" style="gap:8px;overflow-x:auto;padding-bottom:4px">${scopes.map(([k, l]) => `<button class="chip ${dScope === k ? 'on' : ''}" style="flex:none" onclick="V.dSet('scope','${k}')">${esc(l)}</button>`).join('')}</div>
-  <div class="row" style="gap:8px;overflow-x:auto;padding:8px 0 4px"><button class="chip ${!dIntent ? 'on' : ''}" style="flex:none" onclick="V.dSet('intent','')">Toutes intentions</button>${Object.entries(INTENT).filter(([k]) => k !== 'les_deux').map(([k, v]) => `<button class="chip ${dIntent === k ? 'on' : ''}" style="flex:none" onclick="V.dSet('intent','${k}')">${v[0]} ${v[1]}</button>`).join('')}
+  const avail = m.available_until && new Date(m.available_until) > new Date();
+  $('#dBody').innerHTML = `<div class="dtabs"><button class="${dMode === 'amour' ? 'on' : ''}" onclick="V.dSet('mode','amour')">💍 Amour</button><button class="${dMode === 'soir' ? 'on soir' : ''}" onclick="V.dSet('mode','soir')">🔥 Ce soir</button></div>
+  ${dMode === 'soir' ? `<div class="dispo ${avail ? 'on' : ''}"><div class="grow"><b>${avail ? '🟢 Tu es dispo ce soir' : 'Dispo ce soir ?'}</b><div class="small">${avail ? 'Jusqu’à ' + new Date(m.available_until).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' · tu apparais en premier' : 'Montre aux autres que tu es libre maintenant (6 h)'}</div></div><button class="btn sm" style="width:auto" onclick="V.dDispo(${avail ? 0 : 6})">${avail ? 'Arrêter' : 'Activer'}</button></div>` : ''}
+  <div class="row" style="gap:8px;overflow-x:auto;padding:8px 0 4px">${scopes.map(([k, l]) => `<button class="chip ${dScope === k ? 'on' : ''}" style="flex:none" onclick="V.dSet('scope','${k}')">${esc(l)}</button>`).join('')}
   <select onchange="V.dSet('age',this.value)" style="width:auto;flex:none;padding:7px 10px"><option value="all">Tous âges</option>${[['18-25', '18–25 ans'], ['26-35', '26–35 ans'], ['36-45', '36–45 ans'], ['46-99', '46 ans et +']].map(([k, l]) => `<option value="${k}" ${dAge === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
-  <div id="dMatches"></div>
-  <div class="safety">🛡️<span>Premier rendez-vous dans un lieu public, préviens un proche. N’envoie jamais d’argent.</span></div>
+  <div id="dLikes"></div><div id="dMatches"></div>
+  ${dMode === 'soir' ? `<div class="safety">🔥<span>Entre adultes consentants. Lieu public d’abord, préviens un proche, protège-toi. Aucun échange d’argent : c’est interdit et signalé.</span></div>` : `<div class="safety">🛡️<span>Premier rendez-vous dans un lieu public, préviens un proche. N’envoie jamais d’argent.</span></div>`}
   <div class="stack" id="stack">${loading()}</div><div class="dbtns" id="dBtns"></div>`;
   loadMatches(); loadCandidates();
+  sb.rpc('dating_likes_count').then(({ data }) => { const el = $('#dLikes'); if (el && data > 0) el.innerHTML = `<div class="likes-me">💛 <b>${data}</b> ${data > 1 ? 'personnes t’ont liké' : 'personne t’a liké'} · ${data > 1 ? 'elles apparaissent' : 'elle apparaît'} avec le badge « T’a liké »</div>`; }, () => { });
 }
-function dSet(k, v) { if (k === 'scope') dScope = v; if (k === 'intent') dIntent = v || null; if (k === 'age') dAge = v; renderDating(); }
+async function dDispo(h) { const { data, error } = await sb.rpc('dating_set_available', { p_hours: h }); if (error) return fail(error); dMe.available_until = data; toast(h ? '🟢 Tu es dispo ce soir' : 'Disponibilité désactivée'); renderDating(); }
+function dSet(k, v) { if (k === 'scope') dScope = v; if (k === 'mode') dMode = v; if (k === 'age') dAge = v; renderDating(); }
 async function loadMatches() {
   const { data } = await sb.from('my_matches').select('*').order('created_at', { ascending: false }).limit(30);
   const el = $('#dMatches'); if (!el) return;
@@ -1004,36 +1012,44 @@ async function loadMatches() {
 async function loadCandidates() {
   const m = dMe; const [a1, a2] = dAge === 'all' ? [18, 99] : dAge.split('-').map(Number);
   const countries = dScope === 'zone' ? Object.keys(C).filter(k => C[k].z === C[m.country].z) : [m.country];
-  const { data, error } = await sb.rpc('dating_candidates', { p_countries: countries, p_region: dScope === 'region' ? m.region : null, p_city: dScope === 'city' ? m.city : null, p_intent: dIntent, p_min_age: a1, p_max_age: a2, p_limit: 20 });
+  const { data, error } = await sb.rpc('dating_candidates', { p_countries: countries, p_region: dScope === 'region' ? m.region : null, p_city: dScope === 'city' ? m.city : null, p_mode: dMode, p_min_age: a1, p_max_age: a2, p_limit: 20 });
   if (error) return fail(error);
   dQueue = data || []; drawStack();
 }
+const dPics = d => [d.photo_url, ...(d.photos || [])].filter(Boolean);
 function dCard(d, i) {
-  const it = INTENT[d.intent] || INTENT.serieux;
-  return `<div class="dcard ${i === 0 ? 'top' : 'b' + i}" data-id="${d.user_id}" style="background:#0b2540"><img src="${esc(d.photo_url)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">${i === 0 ? `<button class="more" onclick="V.dMore('${d.user_id}')" style="color:#fff">⋯</button>` : ''}<div class="stamp l">J’AIME</div><div class="stamp n">NON</div>
-  <div class="inf"><div class="nm">${esc(d.first_name)} <small>${d.age}</small>${d.verified ? '<span class="ver">✓</span>' : ''}${d.is_vip ? ' 👑' : ''}</div><div class="small">📍 ${esc(d.city)}${d.region ? ', ' + esc(d.region) : ''}</div><span class="intent" style="background:rgba(30,155,232,.9)">${it[0]} ${it[1]}</span>${d.bio ? `<div class="bio">${esc(d.bio)}</div>` : ''}${(d.interests || []).length ? `<div class="int">${d.interests.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}</div></div>`;
+  const it = INTENT[d.intent] || INTENT.serieux, pics = dPics(d), k = i === 0 ? Math.min(dPhotoIdx, pics.length - 1) : 0;
+  return `<div class="dcard ${i === 0 ? 'top' : 'b' + i}" data-id="${d.user_id}" style="background:#0b2540"><img src="${esc(pics[k])}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+  ${pics.length > 1 ? `<div class="pdots">${pics.map((_, j) => `<i class="${j === k ? 'on' : ''}"></i>`).join('')}</div>${i === 0 ? '<div class="ptap l" onclick="V.dPhoto(-1)"></div><div class="ptap r" onclick="V.dPhoto(1)"></div>' : ''}` : ''}
+  ${i === 0 ? `<button class="more" onclick="V.dMore('${d.user_id}')" style="color:#fff">⋯</button>` : ''}<div class="stamp l">J’AIME</div><div class="stamp n">NON</div><div class="stamp s">SUPER</div>
+  <div class="inf">${d.super_me ? '<span class="tag sup">⭐ T’a super-liké</span>' : d.liked_me ? '<span class="tag lk">💛 T’a liké</span>' : ''}${d.available ? '<span class="tag dv">🟢 Dispo ce soir</span>' : ''}
+  <div class="nm">${esc(d.first_name)} <small>${d.age}</small>${d.verified ? '<span class="ver">✓</span>' : ''}${d.is_vip ? ' 👑' : ''}</div><div class="small">📍 ${esc(d.city)}${d.region ? ', ' + esc(d.region) : ''}</div><span class="intent" style="background:${d.intent === 'libre' ? 'rgba(255,90,60,.92)' : 'rgba(30,155,232,.9)'}">${it[0]} ${it[1]}</span>${d.bio ? `<div class="bio">${esc(d.bio)}</div>` : ''}${(d.interests || []).length ? `<div class="int">${d.interests.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}</div></div>`;
 }
+function dPhoto(step) { const d = dQueue[0]; if (!d) return; const n = dPics(d).length; dPhotoIdx = (dPhotoIdx + step + n) % n; drawStack(); }
+async function dRewind() { const { data, error } = await sb.rpc('dating_rewind'); if (error) return fail(error); if (!data) return toast('Rien à annuler (seulement les « Non » des 10 dernières minutes)'); toast('↺ Profil récupéré'); loadCandidates(); }
 function drawStack() {
   const st = $('#stack'); if (!st) return;
   const top = dQueue.slice(0, 3);
   st.innerHTML = top.length ? top.map((d, i) => dCard(d, i)).reverse().join('') : `<div class="empty card" style="height:100%;display:flex;flex-direction:column;justify-content:center"><div class="big">🌍</div><b>Plus de profils ici pour l’instant</b><p class="small" style="margin-top:6px">Élargis la zone (région, pays) ou reviens plus tard : de nouveaux membres arrivent chaque jour.</p></div>`;
-  $('#dBtns').innerHTML = top.length ? `<button class="x" onclick="V.dSwipe('pass')" aria-label="Passer">✕</button><button class="h" onclick="V.dSwipe('like')" aria-label="J’aime">♥</button>` : '';
+  $('#dBtns').innerHTML = top.length ? `<button class="rw" onclick="V.dRewind()" aria-label="Retour">↺</button><button class="x" onclick="V.dSwipe('pass')" aria-label="Passer">✕</button><button class="st" onclick="V.dSwipe('super')" aria-label="Super Like">★</button><button class="h" onclick="V.dSwipe('like')" aria-label="J’aime">♥</button>` : '';
   bindSwipe();
 }
 function bindSwipe() {
   const c = document.querySelector('.dcard.top'); if (!c) return; let sx = 0, dx = 0, dr = false;
-  c.onpointerdown = e => { if (e.target.closest('.more')) return; dr = true; sx = e.clientX; dx = 0; c.setPointerCapture(e.pointerId); c.style.transition = 'none'; };
+  c.onpointerdown = e => { if (e.target.closest('.more,.ptap')) return; dr = true; sx = e.clientX; dx = 0; c.setPointerCapture(e.pointerId); c.style.transition = 'none'; };
   c.onpointermove = e => { if (!dr) return; dx = e.clientX - sx; c.style.transform = `translateX(${dx}px) rotate(${dx / 16}deg)`; c.dataset.dir = dx > 40 ? 'like' : dx < -40 ? 'nope' : ''; };
   c.onpointerup = c.onpointercancel = () => { if (!dr) return; dr = false; c.style.transition = ''; if (dx > 100) dSwipe('like'); else if (dx < -100) dSwipe('pass'); else { c.style.transform = ''; c.dataset.dir = ''; } };
 }
 async function dSwipe(action, target) {
   const c = document.querySelector('.dcard.top'); const id = target || (c && c.dataset.id); if (!id) return;
-  if (c && !target) { c.style.transform = `translateX(${action === 'like' ? 500 : -500}px) rotate(${action === 'like' ? 25 : -25}deg)`; c.style.opacity = '0'; c.dataset.dir = action === 'like' ? 'like' : 'nope'; }
+  if (c && !target) { c.style.transform = action === 'super' ? 'translateY(-600px)' : `translateX(${action === 'like' ? 500 : -500}px) rotate(${action === 'like' ? 25 : -25}deg)`; c.style.opacity = '0'; c.dataset.dir = action === 'super' ? 'super' : action === 'like' ? 'like' : 'nope'; }
+  dPhotoIdx = 0;
   const d = dQueue.find(x => x.user_id === id);
   dQueue = dQueue.filter(x => x.user_id !== id);
   setTimeout(drawStack, 250);
   const { data, error } = await sb.rpc('dating_swipe', { p_target: id, p_action: action });
-  if (error) return fail(error);
+  if (error) { if (d) { dQueue.unshift(d); setTimeout(drawStack, 260); } return fail(error); }
+  if (action === 'super' && !(data && data.match)) toast('⭐ Super Like envoyé !');
   if (data && data.match) {
     modal(`<div class="match"><h2>C’est un match !</h2><p class="mut" style="color:#fff">Toi et ${esc(d ? d.first_name : '')} vous êtes plu.</p><div class="pair"><div class="av" style="overflow:hidden">${dMe.photo_url ? `<img class="avimg" src="${esc(dMe.photo_url)}" alt="">` : ''}</div><div class="av" style="overflow:hidden">${d ? `<img class="avimg" src="${esc(d.photo_url)}" alt="">` : ''}</div></div><button class="btn" onclick="V.closeModal();V.openChat('${data.conversation_id}')">💬 Envoyer un message</button><button class="btn ghost" onclick="V.closeModal();V.loadMatchesPub()">Continuer</button></div>`);
   }
@@ -1136,6 +1152,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  dDispo, dPhoto, dRewind, dDelPhoto,
   payInfo, toast, subTotal, previewPay,
   convertVideo,
   noImg: el => { if (el.videoWidth === 0 && el.duration > 0 && !el.parentNode.querySelector('.noimg')) el.insertAdjacentHTML('afterend', '<div class="noimg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:#fff;font-size:14px;opacity:.85">🎞️ Cette vidéo est dans un format que ton appareil ne peut pas afficher (HEVC).</div>'); },

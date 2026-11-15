@@ -124,6 +124,19 @@ Après ta demande, paie le montant et envoie la capture sur WhatsApp. L’abonne
 / mois|/ month|/ mês|/ mes|/ شهر|/ mwezi|/ ወር|/ ay
 Prix|Price|Preço|Precio|السعر|Bei|ዋጋ|Qiymət
 📋 Copier le numéro|📋 Copy number|📋 Copiar o número|📋 Copiar el número|📋 نسخ الرقم|📋 Nakili namba|📋 ቁጥሩን ይቅዱ|📋 Nömrəni kopyala
+💍 Amour|💍 Love|💍 Amor|💍 Amor|💍 حب|💍 Mapenzi|💍 ፍቅር|💍 Sevgi
+🔥 Ce soir|🔥 Tonight|🔥 Esta noite|🔥 Esta noche|🔥 الليلة|🔥 Usiku huu|🔥 ዛሬ ማታ|🔥 Bu axşam
+Dispo ce soir ?|Free tonight?|Disponível esta noite?|¿Libre esta noche?|متاح الليلة؟|Upo huru usiku huu?|ዛሬ ማታ ነፃ ነዎት?|Bu axşam boşsan?
+🟢 Tu es dispo ce soir|🟢 You're free tonight|🟢 Estás disponível esta noite|🟢 Estás libre esta noche|🟢 أنت متاح الليلة|🟢 Uko huru usiku huu|🟢 ዛሬ ማታ ነፃ ነዎት|🟢 Bu axşam boşsan
+Montre aux autres que tu es libre maintenant (6 h)|Show others you're free now (6 h)|Mostra que estás livre agora (6 h)|Muestra que estás libre ahora (6 h)|أظهر للآخرين أنك متاح الآن (6 ساعات)|Waonyeshe wengine uko huru sasa (saa 6)|አሁን ነፃ መሆንዎን ያሳዩ (6 ሰዓት)|İndi boş olduğunu göstər (6 saat)
+Activer|Turn on|Ativar|Activar|تفعيل|Washa|አብራ|Aktivləşdir
+Arrêter|Stop|Parar|Parar|إيقاف|Simamisha|አቁም|Dayandır
+Autres photos (jusqu’à 5)|More photos (up to 5)|Mais fotos (até 5)|Más fotos (hasta 5)|صور أخرى (حتى 5)|Picha zaidi (hadi 5)|ተጨማሪ ፎቶዎች (እስከ 5)|Digər şəkillər (5-ə qədər)
+⭐ T’a super-liké|⭐ Super-liked you|⭐ Deu-te um Super Like|⭐ Te dio Super Like|⭐ أعجب بك جداً|⭐ Amekupenda sana|⭐ በጣም ወደደዎት|⭐ Səni super bəyəndi
+💛 T’a liké|💛 Liked you|💛 Gostou de ti|💛 Le gustas|💛 أعجب بك|💛 Amekupenda|💛 ወደደዎት|💛 Səni bəyəndi
+🟢 Dispo ce soir|🟢 Free tonight|🟢 Livre esta noite|🟢 Libre esta noche|🟢 متاح الليلة|🟢 Huru usiku huu|🟢 ዛሬ ማታ ነፃ|🟢 Bu axşam boş
+⭐ Super Like envoyé !|⭐ Super Like sent!|⭐ Super Like enviado!|⭐ ¡Super Like enviado!|⭐ تم إرسال الإعجاب الكبير!|⭐ Super Like imetumwa!|⭐ ሱፐር ላይክ ተልኳል!|⭐ Super Like göndərildi!
+↺ Profil récupéré|↺ Profile restored|↺ Perfil recuperado|↺ Perfil recuperado|↺ تم استرجاع الملف|↺ Wasifu umerudishwa|↺ መገለጫው ተመልሷል|↺ Profil geri qaytarıldı
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)
