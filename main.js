@@ -1235,7 +1235,8 @@ let calcData = [];
 async function payCalc() {
   const d = new Date(), per = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
   sheet('🧮 Gains des créateurs', `<p class="small mut" style="margin-top:0">Cagnotte = bénéfice net du mois × pourcentage. Chaque créateur validé reçoit une part selon ses vues des 30 derniers jours.</p>
-  <div class="row"><div class="field grow"><label>Bénéfice net du mois</label><input id="pcP" type="number" min="0" inputmode="decimal" placeholder="250000" oninput="V.payCalcRun()"></div><div class="field" style="width:100px"><label>Devise</label><select id="pcC" onchange="V.payCalcRun()"><option>FCFA</option><option>₼</option><option>USD</option><option>EUR</option></select></div></div>
+  <div class="row"><div class="field grow"><label>Bénéfice net du mois</label><input id="pcP" type="number" min="0" inputmode="decimal" placeholder="250000" oninput="V.payCalcRun()"></div><div class="field" style="width:100px"><label>Devise</label><select id="pcC" onchange="V.payCalcRun()"><option>FCFA</option><option>USD</option></select></div></div>
+  <div class="field"><label>Taux : 1 USD = … FCFA</label><input id="pcT" type="number" min="1" value="${localStorage.getItem('vibzo_usd') || 560}" oninput="V.payCalcRun()"></div>
   <div class="row"><div class="field grow"><label>Part créateurs (%)</label><input id="pcR" type="number" min="1" max="100" value="20" oninput="V.payCalcRun()"></div><div class="field grow"><label>Plafond par créateur (%)</label><input id="pcX" type="number" min="1" max="100" value="40" oninput="V.payCalcRun()"></div></div>
   <div class="field"><label>Période</label><input id="pcM" value="${per}"></div>
   <div id="pcOut">${loading()}</div>`);
@@ -1247,6 +1248,9 @@ function payCalcRun() {
   const el = $('#pcOut'); if (!el) return;
   if (!calcData.length) { el.innerHTML = '<p class="mut small">Aucun créateur validé avec des vues sur 30 jours pour l’instant.</p>'; return; }
   const profit = +$('#pcP').value || 0, rate = Math.min(100, Math.max(0, +$('#pcR').value || 0)), cap = Math.min(100, Math.max(1, +$('#pcX').value || 40)), cur = $('#pcC').value, min = PAY_MIN[cur] || 0;
+  const fx = +$('#pcT').value || 560; try { localStorage.setItem('vibzo_usd', fx); } catch (e) { }
+  const other = cur === 'FCFA' ? 'USD' : 'FCFA', conv = a => cur === 'FCFA' ? Math.round(a / fx * 100) / 100 : Math.round(a * fx);
+  const both = a => `${money(a, cur)} <span class="mut" style="font-weight:600;font-size:.8em">≈ ${money(conv(a), other)}</span>`;
   const pool = Math.floor(profit * rate / 100), total = calcData.reduce((a, c) => a + +c.views_30d, 0);
   let rows = calcData.map(c => ({ c, raw: pool * +c.views_30d / total }));
   // plafond, puis redistribution du surplus entre les autres (une passe)
@@ -1256,16 +1260,16 @@ function payCalcRun() {
   rows.forEach(r => { r.amt = Math.floor(r.raw); r.ok = r.amt >= min; });
   rows.sort((a, b) => b.amt - a.amt);
   const toPay = rows.filter(r => r.ok).reduce((a, r) => a + r.amt, 0);
-  el.innerHTML = `<div class="card" style="text-align:center;margin:6px 0 10px"><div class="mut small">Cagnotte (${rate} %)</div><div style="font-size:24px;font-weight:800;color:#12a150">${money(pool, cur)}</div><div class="mut small">${fmtN(total)} vues · ${rows.length} créateur(s) · minimum ${money(min, cur)}</div></div>
-  ${rows.map(r => `<div class="mq"><span class="k">${r.ok ? '💰' : '⏸️'}</span><div class="grow"><b style="font-size:14px">@${esc(r.c.username)}</b><div class="mut small">👁️ ${fmtN(r.c.views_30d)} vues (${Math.round(r.c.views_30d / total * 100)} %)${r.capped ? ' · plafonné' : ''} · ${esc(r.c.payout_method || '')} ${esc(r.c.payout_number || '')}</div></div><b style="color:${r.ok ? '#12a150' : '#999'}">${r.ok ? money(r.amt, cur) : 'sous le minimum'}</b></div>`).join('')}
-  <button class="btn" style="margin-top:12px" ${toPay > 0 ? '' : 'disabled'} onclick="V.payCalcSave()">✅ Enregistrer ${money(toPay, cur)} de gains</button>
+  el.innerHTML = `<div class="card" style="text-align:center;margin:6px 0 10px"><div class="mut small">Cagnotte (${rate} %)</div><div style="font-size:24px;font-weight:800;color:#12a150">${both(pool)}</div><div class="mut small">${fmtN(total)} vues · ${rows.length} créateur(s) · minimum ${money(min, cur)}</div></div>
+  ${rows.map(r => `<div class="mq"><span class="k">${r.ok ? '💰' : '⏸️'}</span><div class="grow"><b style="font-size:14px">@${esc(r.c.username)}</b><div class="mut small">👁️ ${fmtN(r.c.views_30d)} vues (${Math.round(r.c.views_30d / total * 100)} %)${r.capped ? ' · plafonné' : ''} · ${esc(r.c.payout_method || '')} ${esc(r.c.payout_number || '')}</div></div><b style="color:${r.ok ? '#12a150' : '#999'};text-align:right">${r.ok ? both(r.amt) : 'sous le minimum'}</b></div>`).join('')}
+  <button class="btn" style="margin-top:12px" ${toPay > 0 ? '' : 'disabled'} onclick="V.payCalcSave()">✅ Enregistrer ${money(toPay, cur)} (≈ ${money(conv(toPay), other)}) de gains</button>
   <p class="mut small" style="text-align:center;margin-top:8px">Les montants sous le minimum ne sont pas versés ce mois-ci (frais de transfert trop élevés).</p>`;
-  window.__pc = { rows, cur };
+  window.__pc = { rows, cur, conv, other };
 }
 async function payCalcSave() {
-  const { rows, cur } = window.__pc || {}; if (!rows) return;
+  const { rows, cur, conv, other } = window.__pc || {}; if (!rows) return;
   const per = $('#pcM').value.trim(), list = rows.filter(r => r.ok && r.amt > 0);
-  for (const r of list) { const { error } = await sb.rpc('admin_add_earning', { p_user: r.c.user_id, p_amount: r.amt, p_currency: cur, p_period: per, p_note: `Part des vues ${per} (${$('#pcR').value} %)` }); if (error) return fail(error); }
+  for (const r of list) { const { error } = await sb.rpc('admin_add_earning', { p_user: r.c.user_id, p_amount: r.amt, p_currency: cur, p_period: per, p_note: `Part des vues ${per} (${$('#pcR').value} %) ≈ ${money(conv(r.amt), other)}` }); if (error) return fail(error); }
   closeSheet(); toast(`${list.length} gain(s) enregistrés ✅ Paie-les puis clique « Payé ✓ »`); loadAdminCreators();
 }
 async function crDecide(u, st) { const { error } = await sb.rpc('admin_creator_decide', { p_user: u, p_status: st }); if (error) return fail(error); toast('Enregistré ✅'); loadAdminCreators(); }
