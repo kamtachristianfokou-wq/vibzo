@@ -330,13 +330,21 @@ function renderSlides(first) {
   else { const m = $('#moreSlide'); const html = list.filter(v => !f.querySelector(`.slide[data-id="${v.id}"]`)).map(slideHTML).join('') + end; if (m) m.outerHTML = html; else f.insertAdjacentHTML('beforeend', html); }
   observe();
 }
+/* Vue comptée après 3 secondes de lecture (une par personne, par vidéo et par jour, côté serveur) */
+const viewerKey = (() => { try { let k = localStorage.getItem('vibzo_vk'); if (!k) { k = 'v' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('vibzo_vk', k); } return k; } catch (e) { return 'v' + Math.random().toString(36).slice(2, 14); } })();
+const viewed = new Set();
+function watchView(v, id) {
+  if (!id || viewed.has(id) || v._vw) return; v._vw = true;
+  const h = () => { if (v.currentTime >= 3 && !viewed.has(id)) { viewed.add(id); v.removeEventListener('timeupdate', h); sb.rpc('record_view', { p_video: id, p_key: viewerKey }).then(() => { }, () => { }); } };
+  v.addEventListener('timeupdate', h);
+}
 let io;
 function observe() {
   if (io) io.disconnect();
   io = new IntersectionObserver(es => es.forEach(e => {
     if (e.target.id === 'moreSlide') { if (e.isIntersecting) loadFeed(false); return; }
     const v = e.target.querySelector('video'); if (!v) return;
-    if (e.isIntersecting && S.cur === 'home' && !e.target.classList.contains('paused')) { v.muted = S.muted; v.play().catch(() => { }); } else v.pause();
+    if (e.isIntersecting && S.cur === 'home' && !e.target.classList.contains('paused')) { v.muted = S.muted; v.play().catch(() => { }); watchView(v, e.target.dataset.id); } else v.pause();
   }), { threshold: .6 });
   document.querySelectorAll('#feed .slide').forEach(s => io.observe(s));
 }
@@ -848,9 +856,11 @@ SCREENS.profile = async () => {
   const tab = own ? S.profTab : 'videos';
   $('#s-profile').innerHTML = hdr('@' + esc(p.username), own ? `<button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button><button class="ib" onclick="V.settings()" aria-label="Paramètres">${I.gear}</button>` : `<button class="ib" onclick="V.report('profile','${p.id}')" aria-label="Signaler">🚩</button>`, own ? '' : (S.prev && S.prev !== 'profile' ? S.prev : 'home')) + `
   <div class="ptop"><div class="pav ${p.is_vip ? 'gold' : ''}" style="${p.avatar_url ? '' : gbg(gfor(p.username))}">${p.avatar_url ? `<img class="avimg" src="${esc(p.avatar_url)}" alt="">` : esc(p.display_name[0].toUpperCase())}${p.is_vip ? '<span class="gb">👑</span>' : ''}</div>
-  <h2 style="margin-top:12px;font-size:19px">${esc(p.display_name)}</h2>${p.bio ? `<p class="mut" style="font-size:14px;margin-top:4px">${esc(p.bio)}</p>` : ''}
+  <h2 style="margin-top:12px;font-size:19px">${esc(p.display_name)}${p.is_creator ? ' <span class="crb">💰 Créateur</span>' : ''}</h2>${p.bio ? `<p class="mut" style="font-size:14px;margin-top:4px">${esc(p.bio)}</p>` : ''}
   <div class="tags" style="justify-content:center"><span>📍 ${esc(p.region || '')} ${esc((C[p.country] || {}).f || '')} ${esc((C[p.country] || {}).n || '')}</span>${p.is_vip ? '<span style="color:#a87800">👑 Gold</span>' : ''}</div>
-  <div class="pstats"><div><b>${fmtN(p.following)}</b><span>Abonnements</span></div><div><b>${fmtN(p.followers)}</b><span>Abonnés</span></div><div><b>${fmtN(p.likes_received)}</b><span>J’aime</span></div></div>
+  ${socials(p)}
+  <div class="pstats"><div><b>${fmtN(p.following)}</b><span>Abonnements</span></div><div><b>${fmtN(p.followers)}</b><span>Abonnés</span></div><div><b>${fmtN(p.likes_received)}</b><span>J’aime</span></div><div><b>${fmtN(p.views || 0)}</b><span>Vues</span></div></div>
+  ${own ? `<button class="crcta" onclick="V.creatorSheet()">💰 <b>Programme Créateurs</b> · gagne de l’argent avec tes vidéos ›</button>` : ''}
   <div class="pbtns">${own ? `<button class="btn sm ghost grow" onclick="V.editProfile()">Modifier le profil</button><button class="btn sm ghost" style="width:auto" onclick="V.go('orders')">📦 Commandes</button>`
       : `<button class="btn sm grow ${p.followed_by_me ? 'ghost' : ''}" onclick="V.toggleFollow('${p.id}',${p.followed_by_me})">${p.followed_by_me ? 'Abonné ✓' : 'Suivre'}</button><button class="btn sm ghost grow" onclick="V.chatWith('${p.id}','dm','',null)">💬 Message</button>`}</div></div>
   ${own ? `<div class="ptabs"><button class="${tab === 'videos' ? 'on' : ''}" onclick="V.profTab('videos')">Mes vidéos</button><button class="${tab === 'saved' ? 'on' : ''}" onclick="V.profTab('saved')">Favoris</button></div>` : '<div class="ptabs"><button class="on">Vidéos</button></div>'}
@@ -866,6 +876,9 @@ SCREENS.profile = async () => {
   S._grid = vids;
   $('#pgridv').innerHTML = vids.length ? vids.map(v => thumb(v)).join('') : `<div class="empty" style="grid-column:1/-1">${own && tab === 'videos' ? 'Publie ta première vidéo avec le bouton ＋' : 'Rien ici pour le moment.'}</div>`;
 };
+const SOC = { instagram: ['Instagram', 'https://instagram.com/', '#E1306C', '📸'], tiktok: ['TikTok', 'https://www.tiktok.com/@', '#111', '🎵'], youtube: ['YouTube', 'https://www.youtube.com/@', '#FF0000', '▶️'] };
+const socials = p => { const l = Object.keys(SOC).filter(k => p[k]); return l.length ? `<div class="socs">${l.map(k => `<a href="${SOC[k][1]}${encodeURIComponent(p[k])}" target="_blank" rel="noopener" style="background:${SOC[k][2]}">${SOC[k][3]} ${SOC[k][0]}</a>`).join('')}</div>` : ''; };
+const cleanHandle = v => (v || '').trim().replace(/^https?:\/\/[^/]+\/(@)?/i, '').replace(/^@/, '').split(/[/?#]/)[0] || null;
 function openProfile(id) { closeSheet(); go('profile', { user: id === uid() ? null : id }); if (id === uid()) S.viewUser = null; }
 async function toggleFollow(id, on) {
   if (!requireAuth('Connecte-toi pour suivre des créateurs.')) return;
@@ -881,19 +894,49 @@ function editProfile() {
   <div class="field"><label>Pays</label><select id="ec" onchange="document.getElementById('er').innerHTML=V.regionOpts(this.value)">${Object.entries(C).map(([k, x]) => `<option value="${k}" ${k === m.country ? 'selected' : ''}>${x.f} ${x.n}</option>`).join('')}</select></div>
   <div class="field"><label>Région</label><select id="er">${regionOpts(m.country, m.region)}</select></div>
   <div class="field"><label>Téléphone</label><input id="et" type="tel" value="${esc(m.phone || '')}" placeholder="${esc(c.tel)} …"></div>
+  <div class="lbl">Lier mes autres réseaux</div><p class="mut small" style="margin:-4px 0 8px">Ton nom d’utilisateur (ou le lien de ton profil). Tes abonnés pourront te suivre partout.</p>
+  <div class="field"><label>📸 Instagram</label><input id="eig" maxlength="80" value="${esc(m.instagram || '')}" placeholder="ton.compte"></div>
+  <div class="field"><label>🎵 TikTok</label><input id="ett" maxlength="80" value="${esc(m.tiktok || '')}" placeholder="toncompte"></div>
+  <div class="field"><label>▶️ YouTube</label><input id="eyt" maxlength="80" value="${esc(m.youtube || '')}" placeholder="TaChaine"></div>
   <button class="btn" id="eBtn" onclick="V.saveProfile()">Enregistrer</button>`);
 }
 const regionOpts = (cc, sel) => C[cc].r.map(r => `<option ${r === sel ? 'selected' : ''}>${esc(r)}</option>`).join('');
 async function saveProfile() {
   const btn = $('#eBtn'); busy(btn, true);
   try {
-    const row = { display_name: $('#en').value.trim() || S.me.display_name, username: $('#eu').value.trim().toLowerCase(), bio: $('#eb').value.trim(), country: $('#ec').value, region: $('#er').value, phone: $('#et').value.trim() || null };
+    const row = { display_name: $('#en').value.trim() || S.me.display_name, username: $('#eu').value.trim().toLowerCase(), bio: $('#eb').value.trim(), country: $('#ec').value, region: $('#er').value, phone: $('#et').value.trim() || null, instagram: cleanHandle($('#eig').value), tiktok: cleanHandle($('#ett').value), youtube: cleanHandle($('#eyt').value) };
+    if (row.instagram && !/^[A-Za-z0-9_.]{1,30}$/.test(row.instagram)) throw new Error('Nom Instagram invalide');
+    if (row.tiktok && !/^[A-Za-z0-9_.]{1,30}$/.test(row.tiktok)) throw new Error('Nom TikTok invalide');
+    if (row.youtube && !/^[A-Za-z0-9_.-]{1,40}$/.test(row.youtube)) throw new Error('Nom de chaîne YouTube invalide');
     if (!/^[a-z0-9_.]{3,24}$/.test(row.username)) throw new Error('Nom d’utilisateur : 3 à 24 caractères (lettres, chiffres, . et _)');
     const f = $('#ei').files[0]; if (f) row.avatar_url = await uploadImage(f);
     const { data, error } = await sb.from('profiles').update(row).eq('id', uid()).select().single();
     if (error) throw (/duplicate|unique/i.test(error.message) ? new Error('Ce nom d’utilisateur est déjà pris') : error);
     S.me = data; closeSheet(); toast('Profil mis à jour ✅'); go('profile');
   } catch (e) { fail(e); } finally { busy(btn, false); }
+}
+async function creatorSheet() {
+  if (!requireAuth()) return;
+  sheet('💰 Programme Créateurs', loading());
+  const { data: s, error } = await sb.rpc('creator_stats'); if (error) return fail(error);
+  const t = s.thresholds, cur = C[S.me.country].cur;
+  const bar = (lbl, v, max) => { const p = Math.min(100, Math.round(v / max * 100)); return `<div class="cbar"><div class="row"><span class="grow">${lbl}</span><b>${fmtN(v)} / ${fmtN(max)}</b></div><div class="track"><i style="width:${p}%;${p >= 100 ? 'background:#12a150' : ''}"></i></div></div>`; };
+  const st = { pending: ['⏳ Candidature en cours d’examen', 'warn'], approved: ['✅ Tu fais partie du Programme Créateurs', 'ok2'], rejected: ['Candidature refusée. Continue à publier et réessaie plus tard.', 'bad'], suspended: ['⛔ Compte créateur suspendu. Contacte Vibzo.', 'bad'] }[s.status];
+  $('#sheet .sh-b').innerHTML = `<div class="hero" style="margin:0;text-align:center"><div style="font-size:42px">💰</div><h2>Gagne de l’argent avec tes vidéos</h2><p class="small" style="margin-top:6px">Chaque mois, Vibzo partage une partie de ses revenus entre les créateurs du programme, selon les <b>vues</b> de leurs vidéos.</p></div>
+  <div class="pstats" style="margin:14px 0"><div><b>${fmtN(s.views_30d)}</b><span>Vues (30 j)</span></div><div><b>${fmtN(s.followers)}</b><span>Abonnés</span></div><div><b>${fmtN(s.likes)}</b><span>J’aime</span></div></div>
+  ${st ? `<div class="safety ${st[1]}" style="margin-bottom:10px"><span>${st[0]}</span></div>` : ''}
+  ${s.status === 'approved' ? `<div class="card" style="text-align:center"><div class="mut small">Gains à recevoir</div><div style="font-size:26px;font-weight:800;color:#12a150">${money(s.due, cur)}</div><div class="mut small">Total gagné : ${money(s.earned, cur)} · paiement chaque mois sur ton Mobile Money ou compte bancaire</div></div>` : `
+  <div class="lbl">Conditions pour rejoindre</div>${bar('👥 Abonnés', s.followers, t.followers)}${bar('👁️ Vues sur 30 jours', s.views_30d, t.views_30d)}${bar('🎬 Vidéos publiées', s.videos, t.videos)}
+  <div class="perks" style="margin-top:10px"><div>🔞 <span>Avoir 18 ans ou plus</span></div><div>🎥 <span>Publier tes propres vidéos (pas de copie d’autres créateurs)</span></div><div>🤝 <span>Respecter les règles de la communauté</span></div></div>
+  ${s.status === 'pending' ? '' : s.eligible ? `<div class="lbl">Où recevoir tes gains ?</div><div class="field"><select id="crm">${['MTN Mobile Money', 'Orange Money', 'Wave', 'M-Pesa', 'Airtel Money', 'Moov Money', 'Virement bancaire (IBAN)', 'm10 / Birbank'].map(x => `<option>${x}</option>`).join('')}</select></div><div class="field"><input id="crn" maxlength="60" placeholder="Numéro ou IBAN"></div><label class="check"><input type="checkbox" id="cr18"> J’ai 18 ans ou plus et je publie mes propres vidéos.</label><button class="btn gold" id="crBtn" onclick="V.creatorApply()">💰 Rejoindre le Programme Créateurs</button>`
+      : `<p class="small mut" style="text-align:center;margin-top:12px">Continue à publier : dès que tu atteins les 3 objectifs, tu pourras envoyer ta candidature ici. 🚀</p>`}`}
+  <div class="lbl">Astuces pour grandir</div><div class="perks"><div>🔗 <span>Lie ton Instagram, TikTok et YouTube (Modifier le profil) et partage tes vidéos Vibzo</span></div><div>⏱️ <span>Publie régulièrement, 1 vidéo par jour si possible</span></div><div>#️⃣ <span>Utilise des hashtags et réponds aux commentaires</span></div></div>`;
+}
+async function creatorApply() {
+  const n = $('#crn').value.trim(); if (n.length < 4) return toast('Indique ton numéro ou ton IBAN'); if (!$('#cr18').checked) return toast('Coche la case pour continuer');
+  const btn = $('#crBtn'); busy(btn, true);
+  const { error } = await sb.rpc('creator_apply', { p_method: $('#crm').value, p_number: n }); busy(btn, false); if (error) return fail(error);
+  toast('Candidature envoyée ✅'); creatorSheet();
 }
 function settings() {
   const vip = S.me.vip_until && new Date(S.me.vip_until) > new Date();
@@ -902,6 +945,7 @@ function settings() {
   <button onclick="V.gold()"><span class="e">👑</span>Vibzo Gold<span class="r">${vip ? 'Actif jusqu’au ' + new Date(S.me.vip_until).toLocaleDateString('fr-FR') : 'Découvrir'} ›</span></button>
   <button onclick="V.closeSheet();${S.myShop ? 'V.myShopSheet()' : 'V.shopForm()'}"><span class="e">🏪</span>Ma boutique<span class="r">${S.myShop ? (ST[S.myShop.status] || [''])[0] : 'Ouvrir'} ›</span></button>
   <button onclick="V.myCV()"><span class="e">📄</span>Mon profil candidat<span class="r">›</span></button>
+  <button onclick="V.creatorSheet()"><span class="e">💰</span>Programme Créateurs<span class="r">›</span></button>
   <button onclick="V.langSheet()"><span class="e">🌐</span>Langue<span class="r">${LANGS[getLang()]} ›</span></button>
   <button onclick="V.installApp()"><span class="e">📲</span>Installer l’application<span class="r">›</span></button>
   <button onclick="window.open('privacy.html','_blank')"><span class="e">🔒</span>Confidentialité<span class="r">›</span></button>
@@ -1160,12 +1204,14 @@ SCREENS.admin = async () => {
   (offers.data || []).forEach(o => S.offers.set(o.id, o));
   $('#adm').innerHTML = `<div class="stats">${[['Utilisateurs', s.users], ['Nouveaux (7 j)', s.users_7d], ['Vidéos', s.videos], ['Membres Gold', s.vip], ['Profils rencontre', s.dating], ['Matchs', s.matches], ['Demandes d’abonnement', s.requests], ['Boutiques actives', s.shops_active], ['Boutiques en attente', s.shops_pending], ['Offres en ligne', s.offers_open], ['Offres à valider', s.offers_pending], ['Commandes', s.orders], ['Signalements ouverts', s.reports_open]].map(([l, v]) => `<div class="stat"><b>${fmtN(v)}</b><span>${l}</span></div>`).join('')}</div>
   <div class="lbl">Utilisateurs par pays</div><div class="tags">${Object.entries(s.by_country || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${(C[k] || {}).f || ''} ${esc((C[k] || {}).n || k)} : ${n}</span>`).join('')}</div>
+  <div class="lbl">💰 Programme Créateurs (vues sur 30 jours)</div><div id="admCr">${loading()}</div>
   <div class="lbl">Aperçu de la page de paiement (ce que voient les membres)</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('A')">🇦🇿 Azerbaïdjan</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('C')">🌍 Afrique</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('form')">👑 Formulaire Gold</button></div>
   <div class="lbl">Demandes d’abonnement (${(subs.data || []).length})</div>${(subs.data || []).map(r => `<div class="mq"><span class="k">${r.plan === 'gold' ? '👑' : '🏪'}</span><div class="grow"><b style="font-size:14px">${r.plan === 'gold' ? 'Gold' : 'Vendeur'} · ${r.months} mois</b><div class="mut small">@${esc(r.username)} · ${esc((C[r.country] || {}).n || '')} · ${esc(r.payment)}${r.phone ? ' · ' + esc(r.phone) : ''} · ${ago(r.created_at)}</div></div><div class="acts"><button class="ok" onclick="V.chatWith('${r.user_id}','dm','Abonnement ${r.plan === 'gold' ? 'Gold' : 'Vendeur'}',null)">💬</button><button class="ok" onclick="V.activateReq('${r.id}')">Activer</button></div></div>`).join('') || '<p class="mut small">Aucune demande.</p>'}
   <div class="lbl">Activer Gold manuellement (paiement reçu)</div><div class="row"><input id="vu" placeholder="nom d’utilisateur"><input id="vd" type="number" value="30" style="width:80px"><button class="btn sm" style="width:auto" onclick="V.setVip()">OK</button></div>
   <div class="lbl">Offres à valider (${(offers.data || []).length})</div>${(offers.data || []).map(o => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(o.title)}</b><div class="mut small">${esc(o.company)} · ${esc((C[o.country] || {}).n || '')} · par ${esc(o.poster_name)}</div><button class="mut small" onclick="V.offerDetail('${o.id}')" style="text-decoration:underline">Lire</button></div><div class="acts"><button class="ok" onclick="V.modOffer('${o.id}','open')">Publier</button><button class="ko" onclick="V.modOffer('${o.id}','rejected')">Refuser</button></div></div>`).join('') || '<p class="mut small">Rien à valider.</p>'}
   <div class="lbl">Boutiques</div>${(shops.data || []).map(sh => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(sh.name)}</b> ${pill(sh.status)}<div class="mut small">${esc((C[sh.country] || {}).n || '')} · ${esc(sh.platform)}${sh.whatsapp ? ' · ' + esc(sh.whatsapp) : ''}${sh.paid_until ? ' · payé jusqu’au ' + new Date(sh.paid_until).toLocaleDateString('fr-FR') : ''}</div></div><div class="acts"><button class="ok" onclick="V.modShop('${sh.id}','active')">+30 j</button>${sh.status !== 'suspended' ? `<button class="ko" onclick="V.modShop('${sh.id}','suspended')">Suspendre</button>` : ''}</div></div>`).join('') || '<p class="mut small">Aucune boutique.</p>'}
   <div class="lbl">Signalements (${(reports.data || []).length})</div>${(reports.data || []).map(r => `<div class="mq"><span class="k">🚩</span><div class="grow"><b style="font-size:14px">${esc(r.reason)}</b><div class="mut small">${esc(r.target_type)} · ${ago(r.created_at)}</div></div><div class="acts">${r.target_type === 'video' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','hide')">Masquer</button>` : r.target_type === 'comment' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','delc')">Supprimer</button>` : r.target_type === 'profile' ? `<button class="ok" onclick="V.openProfile('${esc(r.target_id)}')">Voir</button>` : ''}<button class="ok" onclick="V.modReport('${r.id}','','ok')">Classer</button></div></div>`).join('') || '<p class="mut small">Aucun signalement 🎉</p>'}`;
+  loadAdminCreators();
 };
 async function modOffer(id, st) { closeSheet(); const { error } = await sb.from('job_offers').update({ status: st }).eq('id', id); if (error) return fail(error); toast(st === 'open' ? 'Offre publiée' : 'Offre refusée'); go('admin'); }
 async function modShop(id, st) {
@@ -1177,6 +1223,19 @@ async function modReport(id, target, action) {
   if (action === 'delc') { const { error } = await sb.from('comments').delete().eq('id', target); if (error) return fail(error); }
   const { error } = await sb.from('reports').update({ status: 'resolved' }).eq('id', id); if (error) return fail(error); toast('Signalement traité'); go('admin');
 }
+async function loadAdminCreators() {
+  const el = $('#admCr'); if (!el) return;
+  const { data, error } = await sb.rpc('admin_creators'); if (error) { el.innerHTML = `<p class="mut small">${esc(errMsg(error))}</p>`; return; }
+  const stl = { pending: '⏳ Candidature', approved: '✅ Créateur', rejected: 'Refusé', suspended: '⛔ Suspendu' };
+  el.innerHTML = (data || []).length ? data.slice(0, 30).map(c => `<div class="mq"><span class="k">${c.status === 'approved' ? '💰' : '🎬'}</span><div class="grow"><b style="font-size:14px">@${esc(c.username)}</b> ${c.status ? `<span class="pill">${stl[c.status]}</span>` : ''}<div class="mut small">${(C[c.country] || {}).f || ''} · 👁️ ${fmtN(c.views_30d)} vues · 👥 ${fmtN(c.followers)} · 🎬 ${c.videos}${c.payout_method ? ` · ${esc(c.payout_method)} : <b>${esc(c.payout_number)}</b>` : ''}${+c.due ? ` · <b style="color:#12a150">À payer : ${money(c.due, '')}</b>` : ''}</div></div><div class="acts">${c.status === 'pending' ? `<button class="ok" onclick="V.crDecide('${c.user_id}','approved')">Valider</button><button onclick="V.crDecide('${c.user_id}','rejected')">Refuser</button>` : ''}${c.status === 'approved' ? `<button class="ok" onclick="V.crEarn('${c.user_id}','${esc(c.username)}')">+ Gain</button>${+c.due ? `<button onclick="V.crPaid('${c.user_id}')">Payé ✓</button>` : ''}` : ''}</div></div>`).join('') : '<p class="mut small">Aucun créateur pour l’instant.</p>';
+}
+async function crDecide(u, st) { const { error } = await sb.rpc('admin_creator_decide', { p_user: u, p_status: st }); if (error) return fail(error); toast('Enregistré ✅'); loadAdminCreators(); }
+function crEarn(u, name) {
+  const d = new Date(), per = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  sheet('Ajouter un gain', `<b>@${esc(name)}</b><div class="row"><div class="field grow"><label>Montant</label><input id="gea" type="number" min="1" inputmode="decimal"></div><div class="field" style="width:110px"><label>Devise</label><select id="gec"><option>FCFA</option><option>₼</option><option>USD</option><option>EUR</option></select></div></div><div class="field"><label>Période</label><input id="gep" value="${per}"></div><div class="field"><label>Note</label><input id="gen" maxlength="120" placeholder="Ex : part des vues de novembre"></div><button class="btn" onclick="V.crEarnSave('${u}')">Enregistrer</button>`);
+}
+async function crEarnSave(u) { const a = +$('#gea').value; if (!(a > 0)) return toast('Montant invalide'); const { error } = await sb.rpc('admin_add_earning', { p_user: u, p_amount: a, p_currency: $('#gec').value, p_period: $('#gep').value.trim(), p_note: $('#gen').value.trim() }); if (error) return fail(error); closeSheet(); toast('Gain ajouté ✅'); loadAdminCreators(); }
+async function crPaid(u) { const { error } = await sb.rpc('admin_mark_paid', { p_user: u }); if (error) return fail(error); toast('Marqué comme payé ✅'); loadAdminCreators(); }
 async function activateReq(id) { const { data, error } = await sb.rpc('admin_activate_request', { p_request: id }); if (error) return fail(error); toast('Activé jusqu’au ' + new Date(data).toLocaleDateString('fr-FR')); go('admin'); }
 async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d = +$('#vd').value || 30; if (!u) return; const { data, error } = await sb.rpc('admin_set_vip', { p_username: u, p_days: d }); if (error) return fail(error); toast('Gold actif jusqu’au ' + new Date(data).toLocaleDateString('fr-FR')); }
 
@@ -1184,6 +1243,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  creatorSheet, creatorApply, crDecide, crEarn, crEarnSave, crPaid,
   dDispo, dPhoto, dRewind, dDelPhoto,
   payInfo, toast, subTotal, previewPay,
   convertVideo,

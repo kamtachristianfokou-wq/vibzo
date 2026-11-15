@@ -149,6 +149,15 @@ Je recrute|I'm hiring|Estou a recrutar|Estoy contratando|أنا أوظّف|Ninaa
 💻 En télétravail, pour le monde entier|💻 Remote, for the whole world|💻 Em teletrabalho, para o mundo inteiro|💻 En remoto, para todo el mundo|💻 عن بُعد، للعالم كله|💻 Kwa mbali, duniani kote|💻 ርቀት ሥራ፣ ለመላው ዓለም|💻 Uzaqdan, bütün dünya üçün
 Compétences recherchées (séparées par des virgules)|Required skills (comma-separated)|Competências procuradas (separadas por vírgulas)|Competencias buscadas (separadas por comas)|المهارات المطلوبة (مفصولة بفواصل)|Ujuzi unaohitajika (tenganisha kwa koma)|የሚፈለጉ ክህሎቶች (በኮማ ይለዩ)|Tələb olunan bacarıqlar (vergüllə)
 🌍 Monde entier|🌍 Whole world|🌍 Mundo inteiro|🌍 Todo el mundo|🌍 العالم كله|🌍 Dunia nzima|🌍 መላው ዓለም|🌍 Bütün dünya
+Programme Créateurs|Creator Program|Programa de Criadores|Programa de Creadores|برنامج صُنّاع المحتوى|Mpango wa Watayarishi|የፈጣሪዎች ፕሮግራም|Yaradıcılar Proqramı
+Gagne de l’argent avec tes vidéos|Earn money with your videos|Ganha dinheiro com os teus vídeos|Gana dinero con tus videos|اربح المال من فيديوهاتك|Pata pesa kwa video zako|በቪዲዮዎችዎ ገንዘብ ያግኙ|Videolarınla pul qazan
+Conditions pour rejoindre|Requirements to join|Condições para aderir|Requisitos para unirte|شروط الانضمام|Masharti ya kujiunga|የመቀላቀል መስፈርቶች|Qoşulma şərtləri
+Où recevoir tes gains ?|Where should we pay you?|Onde receber os teus ganhos?|¿Dónde recibir tus ganancias?|أين تستلم أرباحك؟|Upokee mapato wapi?|ገቢዎን የት ይቀበላሉ?|Qazancını harada alırsan?
+💰 Rejoindre le Programme Créateurs|💰 Join the Creator Program|💰 Aderir ao Programa de Criadores|💰 Unirme al Programa de Creadores|💰 انضم إلى برنامج صُنّاع المحتوى|💰 Jiunge na Mpango wa Watayarishi|💰 የፈጣሪዎች ፕሮግራምን ይቀላቀሉ|💰 Yaradıcılar Proqramına qoşul
+Astuces pour grandir|Tips to grow|Dicas para crescer|Consejos para crecer|نصائح للنمو|Vidokezo vya kukua|ለማደግ ምክሮች|İnkişaf üçün məsləhətlər
+Lier mes autres réseaux|Link my other networks|Ligar as minhas outras redes|Vincular mis otras redes|ربط شبكاتي الأخرى|Unganisha mitandao yangu mingine|ሌሎች አውታረ መረቦቼን አገናኝ|Digər şəbəkələrimi bağla
+Vues|Views|Visualizações|Vistas|المشاهدات|Mitazamo|እይታዎች|Baxışlar
+Vues (30 j)|Views (30 d)|Visualizações (30 d)|Vistas (30 d)|المشاهدات (30 يومًا)|Mitazamo (siku 30)|እይታዎች (30 ቀን)|Baxışlar (30 gün)
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)
