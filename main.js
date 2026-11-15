@@ -1204,7 +1204,7 @@ SCREENS.admin = async () => {
   (offers.data || []).forEach(o => S.offers.set(o.id, o));
   $('#adm').innerHTML = `<div class="stats">${[['Utilisateurs', s.users], ['Nouveaux (7 j)', s.users_7d], ['Vidéos', s.videos], ['Membres Gold', s.vip], ['Profils rencontre', s.dating], ['Matchs', s.matches], ['Demandes d’abonnement', s.requests], ['Boutiques actives', s.shops_active], ['Boutiques en attente', s.shops_pending], ['Offres en ligne', s.offers_open], ['Offres à valider', s.offers_pending], ['Commandes', s.orders], ['Signalements ouverts', s.reports_open]].map(([l, v]) => `<div class="stat"><b>${fmtN(v)}</b><span>${l}</span></div>`).join('')}</div>
   <div class="lbl">Utilisateurs par pays</div><div class="tags">${Object.entries(s.by_country || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${(C[k] || {}).f || ''} ${esc((C[k] || {}).n || k)} : ${n}</span>`).join('')}</div>
-  <div class="lbl">💰 Programme Créateurs (vues sur 30 jours)</div><div id="admCr">${loading()}</div>
+  <div class="lbl">💰 Programme Créateurs (vues sur 30 jours)</div><button class="btn sm gold" style="margin-bottom:8px" onclick="V.payCalc()">🧮 Calculer les gains du mois</button><div id="admCr">${loading()}</div>
   <div class="lbl">Aperçu de la page de paiement (ce que voient les membres)</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('A')">🇦🇿 Azerbaïdjan</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('C')">🌍 Afrique</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('form')">👑 Formulaire Gold</button></div>
   <div class="lbl">Demandes d’abonnement (${(subs.data || []).length})</div>${(subs.data || []).map(r => `<div class="mq"><span class="k">${r.plan === 'gold' ? '👑' : '🏪'}</span><div class="grow"><b style="font-size:14px">${r.plan === 'gold' ? 'Gold' : 'Vendeur'} · ${r.months} mois</b><div class="mut small">@${esc(r.username)} · ${esc((C[r.country] || {}).n || '')} · ${esc(r.payment)}${r.phone ? ' · ' + esc(r.phone) : ''} · ${ago(r.created_at)}</div></div><div class="acts"><button class="ok" onclick="V.chatWith('${r.user_id}','dm','Abonnement ${r.plan === 'gold' ? 'Gold' : 'Vendeur'}',null)">💬</button><button class="ok" onclick="V.activateReq('${r.id}')">Activer</button></div></div>`).join('') || '<p class="mut small">Aucune demande.</p>'}
   <div class="lbl">Activer Gold manuellement (paiement reçu)</div><div class="row"><input id="vu" placeholder="nom d’utilisateur"><input id="vd" type="number" value="30" style="width:80px"><button class="btn sm" style="width:auto" onclick="V.setVip()">OK</button></div>
@@ -1229,6 +1229,45 @@ async function loadAdminCreators() {
   const stl = { pending: '⏳ Candidature', approved: '✅ Créateur', rejected: 'Refusé', suspended: '⛔ Suspendu' };
   el.innerHTML = (data || []).length ? data.slice(0, 30).map(c => `<div class="mq"><span class="k">${c.status === 'approved' ? '💰' : '🎬'}</span><div class="grow"><b style="font-size:14px">@${esc(c.username)}</b> ${c.status ? `<span class="pill">${stl[c.status]}</span>` : ''}<div class="mut small">${(C[c.country] || {}).f || ''} · 👁️ ${fmtN(c.views_30d)} vues · 👥 ${fmtN(c.followers)} · 🎬 ${c.videos}${c.payout_method ? ` · ${esc(c.payout_method)} : <b>${esc(c.payout_number)}</b>` : ''}${+c.due ? ` · <b style="color:#12a150">À payer : ${money(c.due, '')}</b>` : ''}</div></div><div class="acts">${c.status === 'pending' ? `<button class="ok" onclick="V.crDecide('${c.user_id}','approved')">Valider</button><button onclick="V.crDecide('${c.user_id}','rejected')">Refuser</button>` : ''}${c.status === 'approved' ? `<button class="ok" onclick="V.crEarn('${c.user_id}','${esc(c.username)}')">+ Gain</button>${+c.due ? `<button onclick="V.crPaid('${c.user_id}')">Payé ✓</button>` : ''}` : ''}</div></div>`).join('') : '<p class="mut small">Aucun créateur pour l’instant.</p>';
 }
+/* Calculateur : cagnotte = bénéfice net × % ; part = cagnotte × vues du créateur ÷ vues totales (créateurs validés) */
+const PAY_MIN = { FCFA: 5000, '₼': 10, USD: 10, EUR: 10 };
+let calcData = [];
+async function payCalc() {
+  const d = new Date(), per = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  sheet('🧮 Gains des créateurs', `<p class="small mut" style="margin-top:0">Cagnotte = bénéfice net du mois × pourcentage. Chaque créateur validé reçoit une part selon ses vues des 30 derniers jours.</p>
+  <div class="row"><div class="field grow"><label>Bénéfice net du mois</label><input id="pcP" type="number" min="0" inputmode="decimal" placeholder="250000" oninput="V.payCalcRun()"></div><div class="field" style="width:100px"><label>Devise</label><select id="pcC" onchange="V.payCalcRun()"><option>FCFA</option><option>₼</option><option>USD</option><option>EUR</option></select></div></div>
+  <div class="row"><div class="field grow"><label>Part créateurs (%)</label><input id="pcR" type="number" min="1" max="100" value="20" oninput="V.payCalcRun()"></div><div class="field grow"><label>Plafond par créateur (%)</label><input id="pcX" type="number" min="1" max="100" value="40" oninput="V.payCalcRun()"></div></div>
+  <div class="field"><label>Période</label><input id="pcM" value="${per}"></div>
+  <div id="pcOut">${loading()}</div>`);
+  const { data, error } = await sb.rpc('admin_creators'); if (error) return fail(error);
+  calcData = (data || []).filter(c => c.status === 'approved' && +c.views_30d > 0);
+  payCalcRun();
+}
+function payCalcRun() {
+  const el = $('#pcOut'); if (!el) return;
+  if (!calcData.length) { el.innerHTML = '<p class="mut small">Aucun créateur validé avec des vues sur 30 jours pour l’instant.</p>'; return; }
+  const profit = +$('#pcP').value || 0, rate = Math.min(100, Math.max(0, +$('#pcR').value || 0)), cap = Math.min(100, Math.max(1, +$('#pcX').value || 40)), cur = $('#pcC').value, min = PAY_MIN[cur] || 0;
+  const pool = Math.floor(profit * rate / 100), total = calcData.reduce((a, c) => a + +c.views_30d, 0);
+  let rows = calcData.map(c => ({ c, raw: pool * +c.views_30d / total }));
+  // plafond, puis redistribution du surplus entre les autres (une passe)
+  const capAmt = pool * cap / 100; let extra = 0; rows.forEach(r => { if (r.raw > capAmt) { extra += r.raw - capAmt; r.raw = capAmt; r.capped = true; } });
+  const freeViews = rows.filter(r => !r.capped).reduce((a, r) => a + +r.c.views_30d, 0);
+  if (extra && freeViews) rows.forEach(r => { if (!r.capped) r.raw = Math.min(capAmt, r.raw + extra * +r.c.views_30d / freeViews); });
+  rows.forEach(r => { r.amt = Math.floor(r.raw); r.ok = r.amt >= min; });
+  rows.sort((a, b) => b.amt - a.amt);
+  const toPay = rows.filter(r => r.ok).reduce((a, r) => a + r.amt, 0);
+  el.innerHTML = `<div class="card" style="text-align:center;margin:6px 0 10px"><div class="mut small">Cagnotte (${rate} %)</div><div style="font-size:24px;font-weight:800;color:#12a150">${money(pool, cur)}</div><div class="mut small">${fmtN(total)} vues · ${rows.length} créateur(s) · minimum ${money(min, cur)}</div></div>
+  ${rows.map(r => `<div class="mq"><span class="k">${r.ok ? '💰' : '⏸️'}</span><div class="grow"><b style="font-size:14px">@${esc(r.c.username)}</b><div class="mut small">👁️ ${fmtN(r.c.views_30d)} vues (${Math.round(r.c.views_30d / total * 100)} %)${r.capped ? ' · plafonné' : ''} · ${esc(r.c.payout_method || '')} ${esc(r.c.payout_number || '')}</div></div><b style="color:${r.ok ? '#12a150' : '#999'}">${r.ok ? money(r.amt, cur) : 'sous le minimum'}</b></div>`).join('')}
+  <button class="btn" style="margin-top:12px" ${toPay > 0 ? '' : 'disabled'} onclick="V.payCalcSave()">✅ Enregistrer ${money(toPay, cur)} de gains</button>
+  <p class="mut small" style="text-align:center;margin-top:8px">Les montants sous le minimum ne sont pas versés ce mois-ci (frais de transfert trop élevés).</p>`;
+  window.__pc = { rows, cur };
+}
+async function payCalcSave() {
+  const { rows, cur } = window.__pc || {}; if (!rows) return;
+  const per = $('#pcM').value.trim(), list = rows.filter(r => r.ok && r.amt > 0);
+  for (const r of list) { const { error } = await sb.rpc('admin_add_earning', { p_user: r.c.user_id, p_amount: r.amt, p_currency: cur, p_period: per, p_note: `Part des vues ${per} (${$('#pcR').value} %)` }); if (error) return fail(error); }
+  closeSheet(); toast(`${list.length} gain(s) enregistrés ✅ Paie-les puis clique « Payé ✓ »`); loadAdminCreators();
+}
 async function crDecide(u, st) { const { error } = await sb.rpc('admin_creator_decide', { p_user: u, p_status: st }); if (error) return fail(error); toast('Enregistré ✅'); loadAdminCreators(); }
 function crEarn(u, name) {
   const d = new Date(), per = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
@@ -1243,6 +1282,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  payCalc, payCalcRun, payCalcSave,
   creatorSheet, creatorApply, crDecide, crEarn, crEarnSave, crPaid,
   dDispo, dPhoto, dRewind, dDelPhoto,
   payInfo, toast, subTotal, previewPay,
