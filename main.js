@@ -2,7 +2,7 @@
 // VIBZO : application (version réelle)
 // =====================================================================
 import { C, ZONES, SECTORS, CONTRACTS, REMOTE, REPORT_REASONS, money } from './data.js';
-import { SUPPORT_WHATSAPP, ANDROID_APK_URL, PAYMENT_INFO } from './config.js';
+import { SUPPORT_WHATSAPP, ANDROID_APK_URL, PAYMENT_INFO, SUB_PRICES } from './config.js';
 import { getClient, isConfigured } from './supa.js';
 import { initI18n, LANGS, langFor, ALSO, getLang } from './i18n.js';
 
@@ -885,12 +885,16 @@ const isVip = () => !!(S.me && (S.me.role === 'admin' || (S.me.vip_until && new 
 const PAYZ = { O: ['Orange Money', 'MTN MoMo', 'Wave', 'Moov Money'], C: ['Orange Money', 'MTN MoMo', 'Airtel Money', 'Moov Money'], E: ['M-Pesa', 'Airtel Money', 'MTN MoMo'], A: ['m10', 'Birbank', 'Carte bancaire'] };
 const INTENT = { serieux: ['💍', 'Relation sérieuse'], libre: ['🔥', 'Sans lendemain'], les_deux: ['✨', 'Ouvert(e) aux deux'] };
 let dScope = 'city', dIntent = null, dAge = 'all', dQueue = [], dMe = null;
+const subPrice = () => { const cc = (S.me && S.me.country) || S.loc.country; const p = SUB_PRICES[C[cc].z] || SUB_PRICES.default; return { ...p, local: C[cc].cur !== 'FCFA' && p.cur === 'FCFA' }; };
+const subTotal = m => { const p = subPrice(); return money(p.amount * m, p.cur) + (p.local ? ' (ou l’équivalent en monnaie locale)' : ''); };
 function goldBlock(plan = 'gold') {
-  const zone = C[(S.me && S.me.country) || S.loc.country].z;
-  return `<div class="field"><label>Durée</label><select id="gMonths"><option value="1">1 mois</option><option value="3">3 mois</option><option value="12">12 mois</option></select></div>
+  const zone = C[(S.me && S.me.country) || S.loc.country].z, p = subPrice();
+  return `<div class="card" style="text-align:center;margin:12px 0;background:#f2f9ff"><div class="mut small">Prix</div><div style="font-size:26px;font-weight:800;color:#1e9be8">${money(p.amount, p.cur)} <span style="font-size:14px;font-weight:600">/ mois</span></div></div>
+  <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value)"><option value="1">1 mois</option><option value="3">3 mois</option><option value="12">12 mois</option></select></div>
+  <p class="small" style="text-align:center;margin:-4px 0 10px">Total : <b id="gTot">${subTotal(1)}</b></p>
   <div class="field"><label>Comment veux-tu payer ?</label><select id="gPay">${[...PAYZ[zone], 'Espèces', 'Autre'].map(p => `<option>${p}</option>`).join('')}</select></div>
   <button class="btn gold" id="gBtn" onclick="V.requestSub('${plan}')">${plan === 'gold' ? '👑 Demander l’activation Gold' : '🏪 Demander l’activation Vendeur'}</button>
-  <p class="mut small" style="margin-top:8px;text-align:center">L’équipe Vibzo te contacte dans la messagerie avec le prix de ton pays et les instructions de paiement. L’abonnement est activé dès réception.</p>`;
+  <p class="mut small" style="margin-top:8px;text-align:center">Après ta demande, paie le montant et envoie la capture sur WhatsApp. L’abonnement est activé dès réception.</p>`;
 }
 function goldHero() {
   return `<div class="hero" style="margin:0"><div class="cr">👑</div><h2>Vibzo Gold</h2><div class="perks"><div>💘 <span><b>Rencontres</b> : relation sérieuse ou sans lendemain, entre adultes, par ville, région ou pays</span></div><div>✨ <span>Badge Gold sur ton profil et tes vidéos</span></div><div>🛡️ <span>Profils 18+, signalement et blocage en un clic</span></div></div></div>`;
@@ -906,11 +910,11 @@ async function requestSub(plan) {
 function payInfo(plan, months, pay) {
   const cc = (S.me && S.me.country) || S.loc.country, zone = C[cc].z, pi = PAYMENT_INFO[zone];
   const label = plan === 'gold' ? 'Vibzo Gold' : 'Vendeur';
-  const msg = `Bonjour Vibzo 👋 Je viens de demander l’abonnement ${label} (${months} mois) depuis ${C[cc].n}. Utilisateur : @${S.me ? S.me.username : ''}. Paiement : ${pay}. Merci de m’indiquer le montant.`;
+  const msg = `Bonjour Vibzo 👋 Je viens de demander l’abonnement ${label} (${months} mois) depuis ${C[cc].n}. Utilisateur : @${S.me ? S.me.username : ''}. Montant : ${subTotal(months)}. Paiement : ${pay}.`;
   const wa = SUPPORT_WHATSAPP ? `<a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Écrire à Vibzo sur WhatsApp</a>` : '';
   const bank = pi ? `<div class="card" style="text-align:left;margin-top:12px;background:#f2f9ff"><b>Virement bancaire</b><div class="small" style="margin-top:6px">Banque : <b>${esc(pi.bank)}</b><br>Bénéficiaire : <b>${esc(pi.holder)}</b><br>IBAN : <b style="user-select:all">${esc(pi.iban)}</b></div><button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${pi.iban}').then(()=>V.toast('IBAN copié ✅'))">📋 Copier l’IBAN</button></div>` : '';
   modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center;max-height:90vh;overflow:auto"><div style="font-size:40px">✅</div><h3>Demande envoyée</h3>
-  <p class="mut small" style="margin-top:6px">1. Écris-nous sur WhatsApp : on te donne le montant pour ton pays.<br>2. Paie (${esc(pay)}${pi ? ' ou virement' : ''}) et envoie la capture du paiement.<br>3. Ton abonnement ${label} est activé dès réception.</p>${wa}${bank}
+  <div style="font-size:22px;font-weight:800;color:#1e9be8;margin-top:6px">${esc(subTotal(months))}</div><p class="mut small" style="margin-top:6px">1. Paie ce montant (${esc(pay)}${pi ? ' ou virement' : ''}).<br>2. Envoie la capture du paiement sur WhatsApp.<br>3. Ton abonnement ${label} est activé dès réception.</p>${wa}${bank}
   <button class="btn ghost" style="margin-top:10px" onclick="V.closeModal()">Fermer</button></div>`);
 }
 function gold() {
@@ -1125,7 +1129,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
-  payInfo, toast,
+  payInfo, toast, subTotal,
   convertVideo,
   noImg: el => { if (el.videoWidth === 0 && el.duration > 0 && !el.parentNode.querySelector('.noimg')) el.insertAdjacentHTML('afterend', '<div class="noimg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:#fff;font-size:14px;opacity:.85">🎞️ Cette vidéo est dans un format que ton appareil ne peut pas afficher (HEVC).</div>'); },
   googleAuth, setupRegions, saveSetup,

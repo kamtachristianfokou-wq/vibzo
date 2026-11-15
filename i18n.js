@@ -120,6 +120,9 @@ Demande envoyée|Request sent|Pedido enviado|Solicitud enviada|تم إرسال �
 Virement bancaire|Bank transfer|Transferência bancária|Transferencia bancaria|تحويل بنكي|Uhamisho wa benki|የባንክ ዝውውር|Bank köçürməsi
 📋 Copier l’IBAN|📋 Copy IBAN|📋 Copiar o IBAN|📋 Copiar el IBAN|📋 نسخ IBAN|📋 Nakili IBAN|📋 IBAN ይቅዱ|📋 IBAN-ı kopyala
 Fermer|Close|Fechar|Cerrar|إغلاق|Funga|ዝጋ|Bağla
+Après ta demande, paie le montant et envoie la capture sur WhatsApp. L’abonnement est activé dès réception.|After your request, pay the amount and send the screenshot on WhatsApp. Your subscription is activated on receipt.|Depois do pedido, paga o valor e envia a captura pelo WhatsApp. A assinatura é ativada após a receção.|Tras tu solicitud, paga el importe y envía la captura por WhatsApp. La suscripción se activa al recibirla.|بعد طلبك، ادفع المبلغ وأرسل لقطة الشاشة عبر واتساب. يتم التفعيل عند الاستلام.|Baada ya ombi, lipa kiasi na tuma picha ya malipo kwa WhatsApp. Usajili unawashwa tukipokea.|ከጥያቄዎ በኋላ መጠኑን ይክፈሉ እና ቅጽበታዊ ገጽ እይታውን በWhatsApp ይላኩ።|Sorğudan sonra məbləği ödə və ekran görüntüsünü WhatsApp-a göndər. Abunə alındıqdan sonra aktivləşir.
+/ mois|/ month|/ mês|/ mes|/ شهر|/ mwezi|/ ወር|/ ay
+Prix|Price|Preço|Precio|السعر|Bei|ዋጋ|Qiymət
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)

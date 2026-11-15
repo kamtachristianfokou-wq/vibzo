@@ -17,3 +17,9 @@ export const PAYMENT_INFO = {
 
 // Lien de téléchargement direct de l'application Android (APK), vide tant qu'il n'existe pas
 export const ANDROID_APK_URL = '';
+
+// Prix des abonnements (Gold et Vendeur), par mois
+export const SUB_PRICES = {
+  A: { amount: 20, cur: '₼' },      // Azerbaïdjan : 20 manats
+  default: { amount: 1000, cur: 'FCFA' }, // Afrique : 1 000 XAF
+};
