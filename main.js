@@ -88,7 +88,7 @@ const S = {
   loc: { country: 'CM', region: null, zone: false, world: true },
   feed: [], feedOffset: 0, feedDone: false, feedLoading: false, override: null,
   vids: new Map(), prods: new Map(), offers: new Map(), cands: new Map(), orders: new Map(),
-  jobTab: 'offres', jobSector: 'all', profTab: 'videos', viewUser: null, chatId: null, chatSub: null, chatInfo: null, unread: 0,
+  jobTab: 'pourtoi', jobSector: 'all', profTab: 'videos', viewUser: null, chatId: null, chatSub: null, chatInfo: null, unread: 0,
 };
 const uid = () => S.session && S.session.user && S.session.user.id;
 const LOC_KEY = 'vibzo_loc2';
@@ -582,10 +582,11 @@ async function publish() {
    ===================================================================== */
 SCREENS.jobs = async () => {
   const t = S.jobTab;
-  $('#s-jobs').innerHTML = hdr('Emplois', locBtn()) + `<div class="pad"><div class="seg"><button class="${t === 'offres' ? 'on' : ''}" onclick="V.jobTab('offres')">📋 Offres</button><button class="${t === 'cands' ? 'on' : ''}" onclick="V.jobTab('cands')">🙋 Candidats</button><button class="${t === 'mine' ? 'on' : ''}" onclick="V.jobTab('mine')">⭐ Mes annonces</button></div>
-  ${t !== 'mine' ? `<div class="row" style="margin-top:10px"><select onchange="V.jobSector(this.value)" style="flex:1"><option value="all">Tous les secteurs</option>${SECTORS.map(s => `<option ${S.jobSector === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>` : ''}
+  $('#s-jobs').innerHTML = hdr('Emplois', locBtn()) + `<div class="pad"><div class="seg"><button class="${t === 'pourtoi' ? 'on' : ''}" onclick="V.jobTab('pourtoi')">✨ Pour toi</button><button class="${t === 'offres' ? 'on' : ''}" onclick="V.jobTab('offres')">📋 Offres</button><button class="${t === 'cands' ? 'on' : ''}" onclick="V.jobTab('cands')">🙋 Candidats</button><button class="${t === 'mine' ? 'on' : ''}" onclick="V.jobTab('mine')">⭐ Mes annonces</button></div>
+  ${t !== 'mine' && t !== 'pourtoi' ? `<div class="row" style="margin-top:10px"><select onchange="V.jobSector(this.value)" style="flex:1"><option value="all">Tous les secteurs</option>${SECTORS.map(s => `<option ${S.jobSector === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>` : ''}
   <div class="row" style="margin-top:10px"><button class="btn sm" onclick="V.postJob()">＋ Publier une offre</button><button class="btn sm ghost" onclick="V.myCV()">📄 Mon profil candidat</button></div>
   <div class="list" id="jlist">${loading()}</div></div>`;
+  if (t === 'pourtoi') return renderForYou();
   if (t === 'offres') {
     let q = inScope(sb.from('offers_view').select('*').eq('status', 'open'));
     if (S.jobSector !== 'all') q = q.eq('sector', S.jobSector);
@@ -606,15 +607,43 @@ const ST = { pending: ['En vérification', 'warn'], open: ['En ligne', 'ok2'], c
 const pill = s => `<span class="pill ${(ST[s] || [])[1] || ''}">${(ST[s] || [s])[0]}</span>`;
 function jobCard(o, mine) {
   S.offers.set(o.id, o);
-  return `<div class="card job"><div class="row"><div class="grow" onclick="V.offerDetail('${o.id}')"><div class="t">${esc(o.title)}</div><div class="co">${esc(o.company)}</div></div>${mine ? pill(o.status) : `<span class="mut small">${ago(o.created_at)}</span>`}</div>
-  <div class="tags"><span>📍 ${esc(o.region || '')}${o.region ? ', ' : ''}${esc((C[o.country] || {}).n || '')}</span><span>${esc(o.contract)}</span><span>${esc(o.remote)}</span>${o.salary ? `<span class="g">${money(o.salary, o.currency)} / mois</span>` : ''}<span>${esc(o.sector)}</span></div>
-  <div class="jact">${mine ? `<button class="btn sm" onclick="V.offerApps('${o.id}')">👥 Candidatures (${o.application_count})</button>${o.status === 'open' ? `<button class="btn sm ghost" onclick="V.closeOffer('${o.id}')">Fermer</button>` : ''}`
+  return `<div class="card job">${o.score ? matchBar(o.score, o.reasons) : ''}<div class="row"><div class="grow" onclick="V.offerDetail('${o.id}')"><div class="t">${esc(o.title)}</div><div class="co">${esc(o.company)}</div></div>${mine ? pill(o.status) : `<span class="mut small">${ago(o.created_at)}</span>`}</div>
+  <div class="tags"><span>📍 ${esc(o.region || '')}${o.region ? ', ' : ''}${esc((C[o.country] || {}).n || '')}</span><span>${esc(o.contract)}</span><span>${esc(o.remote)}</span>${o.open_to === 'monde' ? '<span>🌍 Monde entier</span>' : ''}${o.salary ? `<span class="g">${money(o.salary, o.currency)} / mois</span>` : ''}<span>${esc(o.sector)}</span></div>
+  <div class="jact">${mine ? `<button class="btn sm" onclick="V.offerApps('${o.id}')">👥 Candidatures (${o.application_count})</button><button class="btn sm ghost" style="width:auto" onclick="V.offerMatches('${o.id}')">✨ Profils suggérés</button>${o.status === 'open' ? `<button class="btn sm ghost" onclick="V.closeOffer('${o.id}')">Fermer</button>` : ''}`
       : `<button class="btn sm ${o.applied_by_me ? 'ghost' : ''}" ${o.applied_by_me || o.user_id === uid() ? 'disabled' : ''} onclick="V.applyJob('${o.id}')">${o.applied_by_me ? 'Candidature envoyée ✓' : o.user_id === uid() ? 'Ton offre' : 'Postuler'}</button><button class="btn sm ghost" style="width:auto" onclick="V.offerDetail('${o.id}')">Détails</button><button class="dots" onclick="V.report('job','${o.id}')">🚩</button>`}</div></div>`;
 }
 function offerDetail(id) { const o = S.offers.get(id); sheet(esc(o.title), `<div class="co mut">${esc(o.company)} · publié par ${esc(o.poster_name)} ${ago(o.created_at)}</div><div class="tags"><span>📍 ${esc(o.region || '')} ${esc((C[o.country] || {}).n || '')}</span><span>${esc(o.contract)}</span><span>${esc(o.remote)}</span>${o.salary ? `<span class="g">${money(o.salary, o.currency)} / mois</span>` : ''}</div><p style="white-space:pre-wrap;margin-top:14px;line-height:1.5;font-size:14.5px">${esc(o.description || 'Pas de description.')}</p><div class="safety">🛡️<span>Un vrai recruteur ne demande jamais d’argent pour un emploi. Signale toute demande de paiement.</span></div>${o.user_id !== uid() && !o.applied_by_me ? `<button class="btn" onclick="V.applyJob('${o.id}')">Postuler</button>` : ''}`); }
 function candCard(c) {
   S.cands.set(c.user_id, c);
-  return `<div class="card"><div class="row" onclick="V.openProfile('${c.user_id}')">${avatar(c)}<div class="grow"><b>${esc(c.display_name)}</b><div class="mut small">${esc(c.job_title)} · ${c.experience_years} an${c.experience_years > 1 ? 's' : ''} d’expérience</div></div></div>${c.about ? `<p class="small" style="margin-top:8px">${esc(c.about)}</p>` : ''}<div class="tags">${(c.skills || []).map(k => `<span>${esc(k)}</span>`).join('')}<span>📍 ${esc(c.region || (C[c.country] || {}).n || '')}</span><span class="g">Dispo : ${esc(c.availability)}</span></div>${c.user_id === uid() ? '' : `<div class="jact"><button class="btn sm" onclick="V.contactCand('${c.user_id}')">💬 Contacter</button></div>`}</div>`;
+  return `<div class="card">${c.score ? matchBar(c.score, c.reasons, c.offer_title) : ''}<div class="row" onclick="V.openProfile('${c.user_id}')">${avatar(c)}<div class="grow"><b>${esc(c.display_name)}</b><div class="mut small">${esc(c.job_title)} · ${c.experience_years} an${c.experience_years > 1 ? 's' : ''} d’expérience</div></div></div>${c.about ? `<p class="small" style="margin-top:8px">${esc(c.about)}</p>` : ''}<div class="tags">${(c.skills || []).map(k => `<span>${esc(k)}</span>`).join('')}<span>📍 ${esc(c.region || (C[c.country] || {}).n || '')}</span><span class="g">Dispo : ${esc(c.availability)}</span>${c.mobility === 'international' ? '<span>✈️ Mobile à l’international</span>' : c.mobility === 'teletravail' ? '<span>💻 Télétravail</span>' : ''}</div>${c.user_id === uid() ? '' : `<div class="jact"><button class="btn sm" onclick="V.contactCand('${c.user_id}')">💬 Contacter</button></div>`}</div>`;
+}
+const matchBar = (sc, reasons, forOffer) => `<div class="mbar"><div class="mtop"><span class="mpct ${sc >= 70 ? 'hi' : sc >= 50 ? 'mid' : ''}">✨ ${sc} % compatible</span>${forOffer ? `<span class="mut small">pour « ${esc(forOffer)} »</span>` : ''}</div>${(reasons || []).length ? `<div class="mwhy">${reasons.map(r => `<span>✓ ${esc(r)}</span>`).join('')}</div>` : ''}</div>`;
+async function renderForYou() {
+  const el = $('#jlist');
+  if (!uid()) { el.innerHTML = `<div class="card fy"><div style="font-size:40px">✨</div><b>Des offres et des profils choisis pour toi</b><p class="small mut" style="margin-top:6px">Vibzo compare ton métier, tes compétences et ta ville avec les offres et les candidats de ton pays et du monde entier.</p><button class="btn" onclick="V.go('auth')">Se connecter</button></div>`; return; }
+  const [cv, offers, sugO, sugC] = await Promise.all([
+    sb.from('candidates').select('user_id').eq('user_id', uid()).maybeSingle(),
+    sb.from('job_offers').select('id').eq('user_id', uid()).in('status', ['open', 'pending']).limit(1),
+    sb.rpc('job_suggestions', { p_limit: 20 }),
+    sb.rpc('candidate_suggestions', { p_offer: null, p_limit: 20 }),
+  ]);
+  const hasCV = !!(cv.data), hasOffers = !!(offers.data && offers.data.length);
+  const so = (sugO.data || []), sc = (sugC.data || []).sort((a, b) => b.score - a.score).slice(0, 20);
+  let h = '';
+  h += `<div class="lbl">🎯 Offres pour toi${hasCV ? ` (${so.length})` : ''}</div>`;
+  h += !hasCV ? `<div class="card fy"><b>Tu cherches un travail ?</b><p class="small mut" style="margin-top:4px">Crée ton profil candidat : Vibzo te propose automatiquement les offres qui te correspondent, dans ton pays et partout dans le monde.</p><button class="btn" onclick="V.myCV()">📄 Créer mon profil candidat</button></div>`
+    : so.length ? so.map(o => jobCard(o)).join('') : `<div class="card fy"><p class="small">Pas encore d’offre compatible. Ajoute des compétences à ton profil ou choisis « partout dans le monde » / « télétravail » pour élargir.</p><button class="btn ghost" onclick="V.myCV()">Modifier mon profil candidat</button></div>`;
+  h += `<div class="lbl" style="margin-top:16px">🙋 Profils pour tes offres${hasOffers ? ` (${sc.length})` : ''}</div>`;
+  h += !hasOffers ? `<div class="card fy"><b>Tu recrutes ?</b><p class="small mut" style="margin-top:4px">Publie une offre : Vibzo te suggère automatiquement les meilleurs candidats, près de chez toi ou dans le monde entier.</p><button class="btn" onclick="V.postJob()">＋ Publier une offre</button></div>`
+    : sc.length ? sc.map(candCard).join('') : `<div class="card fy"><p class="small">Pas encore de candidat compatible. Ouvre ton offre au « monde entier » ou au télétravail pour en trouver plus.</p></div>`;
+  el.innerHTML = h;
+}
+async function offerMatches(id) {
+  const o = S.offers.get(id);
+  sheet('✨ Profils suggérés', `<b>${esc(o.title)}</b><div class="mut small">Classés par compatibilité avec ton offre</div><div class="list" id="omx">${loading()}</div>`);
+  const { data, error } = await sb.rpc('candidate_suggestions', { p_offer: id, p_limit: 30 }); if (error) return fail(error);
+  const list = (data || []).sort((a, b) => b.score - a.score).slice(0, 30);
+  $('#omx').innerHTML = list.length ? list.map(c => candCard({ ...c, offer_title: null })).join('') : '<p class="mut small">Aucun candidat compatible pour l’instant. Ouvre l’offre au monde entier ou au télétravail pour élargir la recherche.</p>';
 }
 function applyJob(id) {
   if (!requireAuth('Connecte-toi pour postuler.')) return;
@@ -639,6 +668,8 @@ function postJob() {
   <div class="row"><div class="field grow"><label>Secteur</label><select id="js">${SECTORS.map(s => `<option>${s}</option>`).join('')}</select></div><div class="field grow"><label>Contrat</label><select id="jk">${CONTRACTS.map(s => `<option>${s}</option>`).join('')}</select></div></div>
   <div class="row"><div class="field grow"><label>Mode</label><select id="jt">${REMOTE.map(s => `<option>${s}</option>`).join('')}</select></div><div class="field grow"><label>Salaire / mois (${esc(c.cur)})</label><input id="jsal" type="number" inputmode="numeric" min="0" placeholder="Facultatif"></div></div>
   <div class="field"><label>Région</label><select id="jr">${c.r.map(r => `<option ${r === S.me.region ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+  <div class="field"><label>Compétences recherchées (séparées par des virgules)</label><input id="jsk" maxlength="200" placeholder="Excel, anglais, permis B"></div>
+  <div class="field"><label>Je recrute</label><select id="jo"><option value="pays">📍 Dans mon pays (${esc(c.n)})</option><option value="monde">🌍 Partout dans le monde</option></select></div>
   <div class="field"><label>Description du poste</label><textarea id="jd" rows="5" maxlength="2000" placeholder="Missions, profil recherché, horaires, comment postuler…"></textarea></div>
   <div class="safety">🛡️<span>Les offres sont vérifiées par l’équipe Vibzo avant publication. Il est interdit de demander de l’argent aux candidats.</span></div>
   <button class="btn" id="jBtn" onclick="V.savePost()">Envoyer pour publication</button>`);
@@ -647,9 +678,9 @@ async function savePost() {
   const title = $('#jp').value.trim(), company = $('#jc').value.trim(); if (title.length < 2 || company.length < 2) return toast('Renseigne le poste et l’entreprise');
   const btn = $('#jBtn'); busy(btn, true);
   const sal = $('#jsal').value;
-  const { error } = await sb.from('job_offers').insert({ user_id: uid(), title, company, sector: $('#js').value, contract: $('#jk').value, remote: $('#jt').value, salary: sal ? Number(sal) : null, currency: C[S.me.country].cur, description: $('#jd').value.trim(), country: S.me.country, region: $('#jr').value });
+  const { error } = await sb.from('job_offers').insert({ user_id: uid(), title, company, sector: $('#js').value, contract: $('#jk').value, remote: $('#jt').value, salary: sal ? Number(sal) : null, currency: C[S.me.country].cur, description: $('#jd').value.trim(), country: S.me.country, region: $('#jr').value, skills: $('#jsk').value.split(',').map(x => x.trim()).filter(Boolean).slice(0, 12), open_to: $('#jo').value });
   busy(btn, false); if (error) return fail(error);
-  closeSheet(); toast('Offre envoyée ✅ Elle sera en ligne après vérification.'); S.jobTab = 'mine'; go('jobs');
+  closeSheet(); toast('Offre envoyée ✅ Voici déjà les profils qui lui correspondent.'); S.jobTab = 'pourtoi'; go('jobs');
 }
 async function myCV() {
   if (!requireAuth('Connecte-toi pour créer ton profil candidat.')) return;
@@ -660,6 +691,7 @@ async function myCV() {
   <div class="field"><label>Compétences (séparées par des virgules)</label><input id="ck" value="${esc(c ? (c.skills || []).join(', ') : '')}" placeholder="Excel, anglais, vente"></div>
   <div class="field"><label>Disponibilité</label><select id="cdp">${['Immédiate', 'Sous 2 semaines', 'Sous 1 mois', 'En poste, à l’écoute'].map(s => `<option ${c && c.availability === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
   <div class="field"><label>Région</label><select id="cr">${cc.r.map(r => `<option ${(c ? c.region : S.me.region) === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+  <div class="field"><label>Je cherche un travail</label><select id="cmob"><option value="pays" ${!c || c.mobility === 'pays' ? 'selected' : ''}>📍 Dans mon pays (${esc(cc.n)})</option><option value="international" ${c && c.mobility === 'international' ? 'selected' : ''}>🌍 Partout dans le monde (je peux partir)</option><option value="teletravail" ${c && c.mobility === 'teletravail' ? 'selected' : ''}>💻 En télétravail, pour le monde entier</option></select></div>
   <div class="field"><label>À propos de toi</label><textarea id="ca" rows="3" maxlength="600">${esc(c ? c.about : '')}</textarea></div>
   <label class="check"><input type="checkbox" id="cv" ${!c || c.visible ? 'checked' : ''}> Visible par les recruteurs</label>
   <button class="btn" id="cvBtn" onclick="V.saveCV()">Enregistrer</button>`);
@@ -667,9 +699,9 @@ async function myCV() {
 async function saveCV() {
   const m = $('#cm').value.trim(); if (m.length < 2) return toast('Indique le métier recherché');
   const btn = $('#cvBtn'); busy(btn, true);
-  const row = { user_id: uid(), job_title: m, sector: $('#cs2').value, experience_years: Math.max(0, Math.min(60, +$('#ce').value || 0)), skills: $('#ck').value.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12), availability: $('#cdp').value, about: $('#ca').value.trim(), country: S.me.country, region: $('#cr').value, visible: $('#cv').checked, updated_at: new Date().toISOString() };
+  const row = { user_id: uid(), job_title: m, sector: $('#cs2').value, experience_years: Math.max(0, Math.min(60, +$('#ce').value || 0)), skills: $('#ck').value.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12), availability: $('#cdp').value, about: $('#ca').value.trim(), country: S.me.country, region: $('#cr').value, visible: $('#cv').checked, mobility: $('#cmob').value, updated_at: new Date().toISOString() };
   const { error } = await sb.from('candidates').upsert(row); busy(btn, false); if (error) return fail(error);
-  closeSheet(); toast('Profil candidat enregistré ✅'); if (S.cur === 'jobs') { S.jobTab = 'cands'; go('jobs'); }
+  closeSheet(); toast('Profil candidat enregistré ✅ Voici les offres qui te correspondent.'); S.jobTab = 'pourtoi'; go('jobs');
 }
 async function offerApps(id) {
   const o = S.offers.get(id);
@@ -1160,7 +1192,7 @@ window.V = {
   S, go, closeSheet, closeModal, openLoc, setLoc, applyLoc, authTab, authRegions, submitAuth, forgot, logout,
   setTab, toggleMute, tapVid, like, save, follow, openComments, addComment, delComment, shareVid, vidMore, delVideo, doDelVideo, report, sendReport,
   searchDebounced, openGrid, pickVid, publish,
-  jobTab: t => { S.jobTab = t; go('jobs'); }, jobSector: s => { S.jobSector = s; go('jobs'); }, offerDetail, applyJob, sendApp, contactCand, postJob, savePost, myCV, saveCV, offerApps, closeOffer, chatWith,
+  jobTab: t => { S.jobTab = t; go('jobs'); }, jobSector: s => { S.jobSector = s; go('jobs'); }, offerDetail, applyJob, sendApp, contactCand, postJob, savePost, myCV, saveCV, offerApps, closeOffer, chatWith, offerMatches,
   openProduct, orderForm, placeOrder, shopForm, saveShop, myShopSheet, addProd, toggleProd, delProd, orderTab: t => { orderTab = t; go('orders'); }, setOrder,
   openProfile, toggleFollow, editProfile, saveProfile, regionOpts, settings, gold, profTab: t => { S.profTab = t; go('profile'); },
   deleteAccount, doDeleteAccount, installApp, langSheet, setLang, requestSub, datingForm, saveDating, deleteDating, doDeleteDating, dSet, dSwipe, dMore, dBlock, dSafety, loadMatchesPub: () => loadMatches(), openMsgs, openChat, sendMsg, chatMore, activateReq, modOffer, modShop, modReport, setVip,

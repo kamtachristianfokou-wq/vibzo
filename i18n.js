@@ -137,6 +137,18 @@ Autres photos (jusqu’à 5)|More photos (up to 5)|Mais fotos (até 5)|Más foto
 🟢 Dispo ce soir|🟢 Free tonight|🟢 Livre esta noite|🟢 Libre esta noche|🟢 متاح الليلة|🟢 Huru usiku huu|🟢 ዛሬ ማታ ነፃ|🟢 Bu axşam boş
 ⭐ Super Like envoyé !|⭐ Super Like sent!|⭐ Super Like enviado!|⭐ ¡Super Like enviado!|⭐ تم إرسال الإعجاب الكبير!|⭐ Super Like imetumwa!|⭐ ሱፐር ላይክ ተልኳል!|⭐ Super Like göndərildi!
 ↺ Profil récupéré|↺ Profile restored|↺ Perfil recuperado|↺ Perfil recuperado|↺ تم استرجاع الملف|↺ Wasifu umerudishwa|↺ መገለጫው ተመልሷል|↺ Profil geri qaytarıldı
+✨ Pour toi|✨ For you|✨ Para ti|✨ Para ti|✨ لك|✨ Kwa ajili yako|✨ ለእርስዎ|✨ Sənin üçün
+✨ Profils suggérés|✨ Suggested profiles|✨ Perfis sugeridos|✨ Perfiles sugeridos|✨ ملفات مقترحة|✨ Wasifu uliopendekezwa|✨ የተጠቆሙ መገለጫዎች|✨ Təklif olunan profillər
+Tu cherches un travail ?|Looking for a job?|Procuras trabalho?|¿Buscas trabajo?|تبحث عن عمل؟|Unatafuta kazi?|ሥራ እየፈለጉ ነው?|İş axtarırsan?
+Tu recrutes ?|Hiring?|Estás a recrutar?|¿Contratas?|هل توظّف؟|Unaajiri?|እየቀጠሩ ነው?|İşçi axtarırsan?
+📄 Créer mon profil candidat|📄 Create my candidate profile|📄 Criar o meu perfil de candidato|📄 Crear mi perfil de candidato|📄 أنشئ ملفي كمرشح|📄 Unda wasifu wangu wa mwombaji|📄 የእጩ መገለጫዬን ፍጠር|📄 Namizəd profilimi yarat
+Je cherche un travail|I'm looking for work|Procuro trabalho|Busco trabajo|أبحث عن عمل|Natafuta kazi|ሥራ እፈልጋለሁ|İş axtarıram
+Je recrute|I'm hiring|Estou a recrutar|Estoy contratando|أنا أوظّف|Ninaajiri|እቀጥራለሁ|İşçi götürürəm
+🌍 Partout dans le monde|🌍 Anywhere in the world|🌍 Em qualquer parte do mundo|🌍 En cualquier parte del mundo|🌍 في أي مكان في العالم|🌍 Popote duniani|🌍 በዓለም ዙሪያ|🌍 Dünyanın hər yerində
+🌍 Partout dans le monde (je peux partir)|🌍 Anywhere in the world (I can relocate)|🌍 Em qualquer parte do mundo (posso mudar-me)|🌍 En cualquier parte del mundo (puedo mudarme)|🌍 في أي مكان في العالم (يمكنني الانتقال)|🌍 Popote duniani (naweza kuhamia)|🌍 በዓለም ዙሪያ (መዛወር እችላለሁ)|🌍 Dünyanın hər yerində (köçə bilərəm)
+💻 En télétravail, pour le monde entier|💻 Remote, for the whole world|💻 Em teletrabalho, para o mundo inteiro|💻 En remoto, para todo el mundo|💻 عن بُعد، للعالم كله|💻 Kwa mbali, duniani kote|💻 ርቀት ሥራ፣ ለመላው ዓለም|💻 Uzaqdan, bütün dünya üçün
+Compétences recherchées (séparées par des virgules)|Required skills (comma-separated)|Competências procuradas (separadas por vírgulas)|Competencias buscadas (separadas por comas)|المهارات المطلوبة (مفصولة بفواصل)|Ujuzi unaohitajika (tenganisha kwa koma)|የሚፈለጉ ክህሎቶች (በኮማ ይለዩ)|Tələb olunan bacarıqlar (vergüllə)
+🌍 Monde entier|🌍 Whole world|🌍 Mundo inteiro|🌍 Todo el mundo|🌍 العالم كله|🌍 Dunia nzima|🌍 መላው ዓለም|🌍 Bütün dünya
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)
