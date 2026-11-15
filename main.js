@@ -885,7 +885,7 @@ const isVip = () => !!(S.me && (S.me.role === 'admin' || (S.me.vip_until && new 
 const PAYZ = { O: ['Orange Money', 'MTN MoMo', 'Wave', 'Moov Money'], C: ['Orange Money', 'MTN MoMo', 'Airtel Money', 'Moov Money'], E: ['M-Pesa', 'Airtel Money', 'MTN MoMo'], A: ['m10', 'Birbank', 'Carte bancaire'] };
 const INTENT = { serieux: ['💍', 'Relation sérieuse'], libre: ['🔥', 'Sans lendemain'], les_deux: ['✨', 'Ouvert(e) aux deux'] };
 let dScope = 'city', dIntent = null, dAge = 'all', dQueue = [], dMe = null;
-const subPrice = () => { const cc = (S.me && S.me.country) || S.loc.country; const p = SUB_PRICES[C[cc].z] || SUB_PRICES.default; return { ...p, local: C[cc].cur !== 'FCFA' && p.cur === 'FCFA' }; };
+const subPrice = () => { const cc = payPreviewCc || (S.me && S.me.country) || S.loc.country; const p = SUB_PRICES[C[cc].z] || SUB_PRICES.default; return { ...p, local: C[cc].cur !== 'FCFA' && p.cur === 'FCFA' }; };
 const subTotal = m => { const p = subPrice(); return money(p.amount * m, p.cur) + (p.local ? ' (ou l’équivalent en monnaie locale)' : ''); };
 function goldBlock(plan = 'gold') {
   const zone = C[(S.me && S.me.country) || S.loc.country].z, p = subPrice();
@@ -907,8 +907,13 @@ async function requestSub(plan) {
   closeSheet(); if (S.cur === 'dating') go('dating');
   payInfo(plan, +$('#gMonths')?.value || 1, $('#gPay')?.value || '');
 }
+let payPreviewCc = null;
+function previewPay(z) {
+  if (z === 'form') { sheet('👑 Vibzo Gold (aperçu)', goldHero() + goldBlock('gold').replace('V.requestSub(', 'V.toast(\'Aperçu : demande non envoyée\');void(')); return; }
+  payPreviewCc = z === 'A' ? 'AZ' : 'CM'; payInfo('gold', 1, z === 'A' ? 'm10' : 'MTN MoMo'); payPreviewCc = null;
+}
 function payInfo(plan, months, pay) {
-  const cc = (S.me && S.me.country) || S.loc.country, zone = C[cc].z, pi = PAYMENT_INFO[zone];
+  const cc = payPreviewCc || (S.me && S.me.country) || S.loc.country, zone = C[cc].z, pi = PAYMENT_INFO[zone];
   const label = plan === 'gold' ? 'Vibzo Gold' : 'Vendeur';
   const msg = `Bonjour Vibzo 👋 Je viens de demander l’abonnement ${label} (${months} mois) depuis ${C[cc].n}. Utilisateur : @${S.me ? S.me.username : ''}. Montant : ${subTotal(months)}. Paiement : ${pay}.`;
   const wa = SUPPORT_WHATSAPP ? `<a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Écrire à Vibzo sur WhatsApp</a>` : '';
@@ -1107,6 +1112,7 @@ SCREENS.admin = async () => {
   (offers.data || []).forEach(o => S.offers.set(o.id, o));
   $('#adm').innerHTML = `<div class="stats">${[['Utilisateurs', s.users], ['Nouveaux (7 j)', s.users_7d], ['Vidéos', s.videos], ['Membres Gold', s.vip], ['Profils rencontre', s.dating], ['Matchs', s.matches], ['Demandes d’abonnement', s.requests], ['Boutiques actives', s.shops_active], ['Boutiques en attente', s.shops_pending], ['Offres en ligne', s.offers_open], ['Offres à valider', s.offers_pending], ['Commandes', s.orders], ['Signalements ouverts', s.reports_open]].map(([l, v]) => `<div class="stat"><b>${fmtN(v)}</b><span>${l}</span></div>`).join('')}</div>
   <div class="lbl">Utilisateurs par pays</div><div class="tags">${Object.entries(s.by_country || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${(C[k] || {}).f || ''} ${esc((C[k] || {}).n || k)} : ${n}</span>`).join('')}</div>
+  <div class="lbl">Aperçu de la page de paiement (ce que voient les membres)</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('A')">🇦🇿 Azerbaïdjan</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('C')">🌍 Afrique</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('form')">👑 Formulaire Gold</button></div>
   <div class="lbl">Demandes d’abonnement (${(subs.data || []).length})</div>${(subs.data || []).map(r => `<div class="mq"><span class="k">${r.plan === 'gold' ? '👑' : '🏪'}</span><div class="grow"><b style="font-size:14px">${r.plan === 'gold' ? 'Gold' : 'Vendeur'} · ${r.months} mois</b><div class="mut small">@${esc(r.username)} · ${esc((C[r.country] || {}).n || '')} · ${esc(r.payment)}${r.phone ? ' · ' + esc(r.phone) : ''} · ${ago(r.created_at)}</div></div><div class="acts"><button class="ok" onclick="V.chatWith('${r.user_id}','dm','Abonnement ${r.plan === 'gold' ? 'Gold' : 'Vendeur'}',null)">💬</button><button class="ok" onclick="V.activateReq('${r.id}')">Activer</button></div></div>`).join('') || '<p class="mut small">Aucune demande.</p>'}
   <div class="lbl">Activer Gold manuellement (paiement reçu)</div><div class="row"><input id="vu" placeholder="nom d’utilisateur"><input id="vd" type="number" value="30" style="width:80px"><button class="btn sm" style="width:auto" onclick="V.setVip()">OK</button></div>
   <div class="lbl">Offres à valider (${(offers.data || []).length})</div>${(offers.data || []).map(o => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(o.title)}</b><div class="mut small">${esc(o.company)} · ${esc((C[o.country] || {}).n || '')} · par ${esc(o.poster_name)}</div><button class="mut small" onclick="V.offerDetail('${o.id}')" style="text-decoration:underline">Lire</button></div><div class="acts"><button class="ok" onclick="V.modOffer('${o.id}','open')">Publier</button><button class="ko" onclick="V.modOffer('${o.id}','rejected')">Refuser</button></div></div>`).join('') || '<p class="mut small">Rien à valider.</p>'}
@@ -1130,7 +1136,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
-  payInfo, toast, subTotal,
+  payInfo, toast, subTotal, previewPay,
   convertVideo,
   noImg: el => { if (el.videoWidth === 0 && el.duration > 0 && !el.parentNode.querySelector('.noimg')) el.insertAdjacentHTML('afterend', '<div class="noimg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:#fff;font-size:14px;opacity:.85">🎞️ Cette vidéo est dans un format que ton appareil ne peut pas afficher (HEVC).</div>'); },
   googleAuth, setupRegions, saveSetup,
