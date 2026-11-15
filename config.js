@@ -13,6 +13,9 @@ export const SUPPORT_WHATSAPP = '994515201787';
 // Coordonnées de paiement affichées après une demande d'abonnement (par zone : O, C, E, A)
 export const PAYMENT_INFO = {
   A: { bank: 'Bank Respublika', holder: 'KAMTA FOKOU CHRISTIAN', iban: 'AZ46BRES41015AZ0012121865005' },
+  C: { momo: 'MTN Mobile Money (Cameroun)', number: '+237673740713' },
+  O: { momo: 'MTN Mobile Money (Cameroun)', number: '+237673740713' },
+  E: { momo: 'MTN Mobile Money (Cameroun)', number: '+237673740713' },
 };
 
 // Lien de téléchargement direct de l'application Android (APK), vide tant qu'il n'existe pas
