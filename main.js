@@ -2,7 +2,7 @@
 // VIBZO : application (version réelle)
 // =====================================================================
 import { C, ZONES, SECTORS, CONTRACTS, REMOTE, REPORT_REASONS, money } from './data.js';
-import { SUPPORT_WHATSAPP, ANDROID_APK_URL, PAYMENT_INFO, SUB_PRICES } from './config.js';
+import { SUPPORT_WHATSAPP, ANDROID_APK_URL, PAYMENT_INFO, SUB_PRICES, SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import { getClient, isConfigured } from './supa.js';
 import { initI18n, LANGS, langFor, ALSO, getLang } from './i18n.js';
 
@@ -1068,6 +1068,7 @@ function goldHero() {
 async function requestSub(plan) {
   if (!requireAuth()) return;
   const btn = $('#gBtn'); busy(btn, true);
+  if (await autoPay(plan === 'gold' ? 'gold' : 'seller', +$('#gMonths').value)) return;
   const { error } = await sb.from('subscription_requests').insert({ user_id: uid(), plan, months: +$('#gMonths').value, payment: $('#gPay').value });
   busy(btn, false); if (error) return fail(error);
   closeSheet(); if (S.cur === 'dating') go('dating');
@@ -1324,6 +1325,39 @@ const coinCur = () => myCc() === 'AZ' ? '₼' : 'FCFA';
 const toUsd = (n, cur) => '≈ ' + (cur === '₼' ? n / 1.7 : n / (+localStorage.getItem('vibzo_usd') || 560)).toFixed(2) + ' USD';
 let W = null, packSel = 500, giftBusy = false;
 async function loadWallet() { const { data, error } = await sb.rpc('my_wallet'); if (error) throw error; W = data; return W; }
+/* Paiement automatique (Notch Pay : MTN MoMo, Orange Money, carte). Si le service n'est pas encore activé
+   ou indisponible, l'appli bascule sur le paiement manuel (WhatsApp + Mobile Money / IBAN). */
+const PAY_FN = `${SUPABASE_URL}/functions/v1/notchpay`;
+async function autoPay(kind, qty) {
+  if (C[myCc()].z === 'A' || window.__VIBZO_FAKE__ && !window.__AUTOPAY__) return false;
+  try {
+    const { data: { session } } = await sb.auth.getSession(); if (!session) return false;
+    const r = await fetch(PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', kind, qty, return_url: location.origin + location.pathname }) });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && d.url) { toast('🔒 Redirection vers le paiement sécurisé…'); setTimeout(() => { location.href = d.url; }, 400); return true; }
+    if (d.error && d.error !== 'not_configured') toast('⚠️ Paiement automatique indisponible : paiement manuel proposé');
+  } catch (e) { }
+  return false;
+}
+async function checkPayReturn() {
+  const id = new URLSearchParams(location.search).get('pay'); if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
+  history.replaceState(null, '', location.pathname + location.hash);
+  modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">⏳</div><h3>Vérification du paiement…</h3><p class="mut small">Valide la demande sur ton téléphone si ce n’est pas encore fait.</p></div>`);
+  for (let i = 0; i < 20; i++) {
+    let d = {};
+    try { const r = await fetch(PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }, body: JSON.stringify({ action: 'verify', id }) }); d = await r.json(); } catch (e) { }
+    if (d.status === 'complete') {
+      await loadMe().catch(() => { });
+      const t = d.kind === 'coins' ? [`💰`, `${d.qty} pièces ajoutées !`, 'Offre des cadeaux à tes créateurs préférés.'] : d.kind === 'gold' ? ['👑', 'Vibzo Gold activé !', 'L’espace rencontres est ouvert.'] : ['🏪', 'Boutique activée !', 'Tes produits sont visibles par tous.'];
+      modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:48px">${t[0]}</div><h3>Paiement reçu ✅</h3><p style="font-weight:700;margin-top:6px">${t[1]}</p><p class="mut small">${t[2]}</p><button class="btn" style="margin-top:12px" onclick="V.closeModal();${d.kind === 'gold' ? "V.go('dating')" : d.kind === 'coins' ? 'V.walletSheet()' : "V.go('profile')"}">Continuer</button></div>`);
+      return;
+    }
+    if (d.status === 'failed' || d.status === 'unknown') { closeModal(); toast('❌ Paiement annulé ou refusé. Tu peux réessayer.'); return; }
+    if (d.error === 'not_configured') break;
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  closeModal(); toast('⏳ Paiement en cours de confirmation : tu recevras une notification.');
+}
 async function giftSheet(id) {
   if (!requireAuth('Connecte-toi pour offrir un cadeau.')) return;
   const v = S.vids.get(id); if (!v) return; if (v.user_id === uid()) { toast('Tes fans peuvent t’offrir des cadeaux ici 🎁'); walletSheet(); return; }
@@ -1355,6 +1389,7 @@ function buyCoins() {
 }
 async function reqCoins() {
   const btn = $('#cBtn'), pay = $('#cPay').value; busy(btn, true);
+  if (await autoPay('coins', packSel)) return;
   const { data, error } = await sb.rpc('request_coins', { p_coins: packSel, p_payment: pay }); busy(btn, false);
   if (error) return fail(error);
   closeSheet();
@@ -1533,6 +1568,7 @@ async function start() {
   try { sb = await getClient(); } catch (e) { $('#s-home').innerHTML = `<div class="setup"><h2>Connexion impossible</h2><p class="mut">Vérifie ta connexion internet puis recharge la page.</p></div>`; return; }
   const { data } = await sb.auth.getSession(); S.session = data.session;
   await loadMe().catch(fail);
+  checkPayReturn();
   if (S.me && !localStorage.getItem(LOC_KEY)) { S.loc = worldLoc(S.me.country); saveLoc(); }
   applyLang();
   sb.auth.onAuthStateChange(async (ev, session) => {
