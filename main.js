@@ -312,6 +312,7 @@ function slideHTML(v) {
     <div onclick="V.openProfile('${v.user_id}')" style="position:relative">${avatar(v, 46).replace('class="av"', 'class="av" style="border:2px solid #fff"')}${mine || v.following ? '' : `<button class="fol" onclick="event.stopPropagation();V.follow('${v.user_id}',this)" aria-label="Suivre">+</button>`}</div>
     <button class="rb ${v.liked_by_me ? 'on' : ''}" id="lk${v.id}" onclick="V.like('${v.id}')">${I.heart}<span>${fmtN(v.like_count)}</span></button>
     <button class="rb" onclick="V.openComments('${v.id}')">${I.comment}<span id="cc${v.id}">${fmtN(v.comment_count)}</span></button>
+    <button class="rb gift" id="gf${v.id}" onclick="V.giftSheet('${v.id}')"><i class="gi">🎁</i><span>${v.gift_coins ? fmtN(v.gift_coins) : 'Cadeau'}</span></button>
     <button class="rb ${v.saved_by_me ? 'on2' : ''}" id="sv${v.id}" onclick="V.save('${v.id}')">${I.bookmark}<span>${v.saved_by_me ? 'Enregistré' : 'Enregistrer'}</span></button>
     <button class="rb ${v.reposted_by_me ? 'on3' : ''}" id="sh${v.id}" onclick="V.shareVid('${v.id}')">${I.share}<span>${v.share_count || v.repost_count ? fmtN((v.share_count || 0) + (v.repost_count || 0)) : 'Partager'}</span></button>
     <button class="rb" onclick="V.vidMore('${v.id}')" style="font-size:22px">⋯</button>
@@ -1033,6 +1034,7 @@ function settings() {
   <button onclick="V.closeSheet();${S.myShop ? 'V.myShopSheet()' : 'V.shopForm()'}"><span class="e">🏪</span>Ma boutique<span class="r">${S.myShop ? (ST[S.myShop.status] || [''])[0] : 'Ouvrir'} ›</span></button>
   <button onclick="V.myCV()"><span class="e">📄</span>Mon profil candidat<span class="r">›</span></button>
   <button onclick="V.creatorSheet()"><span class="e">💰</span>Programme Créateurs<span class="r">›</span></button>
+  <button onclick="V.walletSheet()"><span class="e">💰</span>Mon portefeuille<span class="r">pièces et gains ›</span></button>
   <button onclick="V.inviteSheet()"><span class="e">🎁</span>Inviter des amis<span class="r">3 amis = 7 j de Gold ›</span></button>
   <button onclick="V.langSheet()"><span class="e">🌐</span>Langue<span class="r">${LANGS[getLang()]} ›</span></button>
   <button onclick="V.installApp()"><span class="e">📲</span>Installer l’application<span class="r">›</span></button>
@@ -1277,7 +1279,7 @@ async function refreshUnread() {
 /* =====================================================================
    NOTIFICATIONS ET PARRAINAGE
    ===================================================================== */
-const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''] };
+const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''] };
 async function refreshNotifs() {
   if (!uid()) return;
   const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false);
@@ -1291,7 +1293,7 @@ async function openNotifs() {
   if (data.some(n => !n.read)) { await sb.from('notifications').update({ read: true }).eq('read', false); S.notifs = 0; const b = $('#bellBtn'); if (b) b.innerHTML = I.bell; }
 }
 async function openNotif(type, vid, actor) {
-  closeSheet();
+  closeSheet(); if (type === 'wallet') { walletSheet(); return; }
   if (vid) { const { data } = await sb.from('videos_feed').select('*').eq('id', vid).maybeSingle(); if (data) { S.override = { list: [data], start: vid }; go('home', { keepOverride: true }); if (type === 'comment' || type === 'reply' || type === 'mention' || type === 'comment_like') setTimeout(() => openComments(vid), 400); return; } }
   if (actor) openProfile(actor);
 }
@@ -1312,6 +1314,96 @@ async function inviteSheet() {
 }
 
 /* =====================================================================
+   CADEAUX VIRTUELS ET PORTEFEUILLE (1 pièce = 10 FCFA ; le créateur reçoit 80 %)
+   ===================================================================== */
+const GIFTS = [['rose', '🌹', 'Rose', 1], ['coeur', '❤️', 'Cœur', 5], ['feu', '🔥', 'Feu', 10], ['lion', '🦁', 'Lion', 50], ['couronne', '👑', 'Couronne', 100], ['fusee', '🚀', 'Fusée', 500], ['chateau', '🏰', 'Château', 1000]];
+const COIN_PACKS = [[100, 1000, 3, ''], [500, 5000, 15, ''], [1050, 10000, 30, '+5 % offerts'], [5500, 50000, 150, '+10 % offerts']];
+const OUT_METHODS = { O: ['Orange Money', 'Wave', 'MTN MoMo', 'Moov Money', 'Virement bancaire'], C: ['MTN MoMo', 'Orange Money', 'Airtel Money', 'Moov Money', 'Virement bancaire'], E: ['M-Pesa', 'Airtel Money', 'MTN MoMo', 'Virement bancaire'], A: ['Virement bancaire (IBAN)', 'm10', 'Birbank'] };
+const myCc = () => (S.me && S.me.country) || S.loc.country;
+const coinCur = () => myCc() === 'AZ' ? '₼' : 'FCFA';
+const toUsd = (n, cur) => '≈ ' + (cur === '₼' ? n / 1.7 : n / (+localStorage.getItem('vibzo_usd') || 560)).toFixed(2) + ' USD';
+let W = null, packSel = 500, giftBusy = false;
+async function loadWallet() { const { data, error } = await sb.rpc('my_wallet'); if (error) throw error; W = data; return W; }
+async function giftSheet(id) {
+  if (!requireAuth('Connecte-toi pour offrir un cadeau.')) return;
+  const v = S.vids.get(id); if (!v) return; if (v.user_id === uid()) { toast('Tes fans peuvent t’offrir des cadeaux ici 🎁'); walletSheet(); return; }
+  sheet(`🎁 Offrir un cadeau à @${esc(v.username)}`, `<div class="gbal"><span>🪙 <b id="gBal">…</b> pièces</span><button class="btn sm gold" style="width:auto" onclick="V.buyCoins()">＋ Recharger</button></div><div id="gTop"></div>
+  <div class="ggrid">${GIFTS.map(g => `<button onclick="V.sendGift('${id}','${g[0]}')"><span class="ge">${g[1]}</span><b>${g[2]}</b><small>🪙 ${fmtN(g[3])}</small></button>`).join('')}</div>
+  <p class="mut small" style="text-align:center;margin-top:12px">💚 80 % de la valeur va directement au créateur, qui peut la retirer en Mobile Money.</p>`);
+  const [w, top] = await Promise.all([loadWallet().catch(() => null), sb.rpc('video_top_gifters', { p_video: id })]);
+  if (w && $('#gBal')) $('#gBal').textContent = fmtN(w.coins);
+  if (top.data && top.data.length && $('#gTop')) $('#gTop').innerHTML = `<div class="gtop">🏆 ${top.data.map((t, i) => `<span>${['🥇', '🥈', '🥉'][i]} @${esc(t.username)} · 🪙 ${fmtN(t.coins)}</span>`).join('')}</div>`;
+}
+async function sendGift(id, g) {
+  if (giftBusy) return; const G = GIFTS.find(x => x[0] === g); if (!G) return;
+  if (W && W.coins < G[3]) { toast('Pas assez de pièces : recharge ton solde 🪙'); buyCoins(); return; }
+  giftBusy = true; const { data, error } = await sb.rpc('send_gift', { p_video: id, p_gift: g }); giftBusy = false;
+  if (error) { if (/insuffisant/i.test(error.message)) { toast('Pas assez de pièces : recharge ton solde 🪙'); buyCoins(); return; } return fail(error); }
+  if (W) W.coins = data; if ($('#gBal')) $('#gBal').textContent = fmtN(data);
+  const v = S.vids.get(id); v.gift_coins = (v.gift_coins || 0) + G[3]; const gb = $('#gf' + id); if (gb) gb.querySelector('span').textContent = fmtN(v.gift_coins);
+  giftFly(G[1], G[3]); toast(`${G[1]} ${G[2]} envoyé à @${v.username} !`);
+}
+function giftFly(e, n) { const d = document.createElement('div'); d.className = 'gfly' + (n >= 100 ? ' big' : ''); d.textContent = e; document.body.appendChild(d); setTimeout(() => d.remove(), 1800); }
+function pickPack(n, el) { packSel = n; document.querySelectorAll('.pack').forEach(x => x.classList.toggle('on', x === el)); }
+function buyCoins() {
+  if (!requireAuth()) return; const cur = coinCur(), zone = C[myCc()].z; packSel = 500;
+  sheet('🪙 Acheter des pièces', `<p class="mut small" style="margin-bottom:10px">Les pièces servent à offrir des cadeaux aux créateurs que tu aimes. 1 pièce = ${cur === '₼' ? '0,03 ₼' : '10 FCFA'}.</p>
+  <div class="packs">${COIN_PACKS.map(p => `<button class="pack ${p[0] === 500 ? 'on' : ''}" onclick="V.pickPack(${p[0]},this)"><b>🪙 ${p[0].toLocaleString('fr-FR')}</b>${p[3] ? `<i>${p[3]}</i>` : ''}<span>${money(cur === '₼' ? p[2] : p[1], cur)}</span></button>`).join('')}</div>
+  <div class="field"><label>Comment veux-tu payer ?</label><select id="cPay">${[...PAYZ[zone], 'Autre'].map(x => `<option>${x}</option>`).join('')}</select></div>
+  <button class="btn gold" id="cBtn" onclick="V.reqCoins()">Continuer</button>
+  <p class="mut small" style="margin-top:8px;text-align:center">Après ta demande, paie et envoie la capture sur WhatsApp : les pièces arrivent dès réception.</p>`);
+}
+async function reqCoins() {
+  const btn = $('#cBtn'), pay = $('#cPay').value; busy(btn, true);
+  const { data, error } = await sb.rpc('request_coins', { p_coins: packSel, p_payment: pay }); busy(btn, false);
+  if (error) return fail(error);
+  closeSheet();
+  const cc = myCc(), pi = PAYMENT_INFO[C[cc].z], amount = money(data.price, data.currency);
+  const msg = `Bonjour Vibzo 👋 Je viens de demander ${data.coins} pièces depuis ${C[cc].n}. Utilisateur : @${S.me.username}. Montant : ${amount}. Paiement : ${pay}.`;
+  modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center;max-height:90vh;overflow:auto"><div style="font-size:40px">🪙</div><h3>Demande envoyée</h3>
+  <div style="font-size:22px;font-weight:800;color:#1e9be8;margin-top:6px">${esc(amount)}</div><div class="mut small">pour ${data.coins.toLocaleString('fr-FR')} pièces</div>
+  <p class="mut small" style="margin-top:6px">1. Paie ce montant (${esc(pay)}).<br>2. Envoie la capture du paiement sur WhatsApp.<br>3. Tes pièces sont ajoutées dès réception.</p>
+  ${pi && pi.momo ? `<div class="card" style="text-align:left;margin-top:12px;background:#fffbe6"><b>Mobile Money</b><div class="small" style="margin-top:6px">${esc(pi.momo)}<br>Numéro : <b style="user-select:all">${esc(pi.number)}</b></div><button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${pi.number}').then(()=>V.toast('Numéro copié ✅'))">📋 Copier le numéro</button></div>` : ''}
+  ${SUPPORT_WHATSAPP ? `<a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Envoyer la preuve sur WhatsApp</a>` : ''}
+  ${pi && pi.iban ? `<div class="card" style="text-align:left;margin-top:12px;background:#f2f9ff"><b>Virement bancaire</b><div class="small" style="margin-top:6px">Banque : <b>${esc(pi.bank)}</b><br>Bénéficiaire : <b>${esc(pi.holder)}</b><br>IBAN : <b style="user-select:all">${esc(pi.iban)}</b></div><button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${pi.iban}').then(()=>V.toast('IBAN copié ✅'))">📋 Copier l’IBAN</button></div>` : ''}
+  <button class="btn ghost" style="margin-top:10px" onclick="V.closeModal()">Fermer</button></div>`);
+}
+async function walletSheet() {
+  if (!requireAuth()) return;
+  sheet('💰 Mon portefeuille', `<div id="wal">${loading()}</div>`);
+  const [w, hist, outs] = await Promise.all([loadWallet(), sb.rpc('my_gift_history'), sb.from('withdrawals').select('*').order('created_at', { ascending: false }).limit(10)]).catch(e => { fail(e); return []; });
+  if (!w) return;
+  const cur = w.currency, val = n => cur === '₼' ? +(n * w.rate).toFixed(2) : Math.round(n * w.rate), zone = C[myCc()].z, need = Math.max(0, w.min_out - w.earned);
+  const G = Object.fromEntries(GIFTS.map(g => [g[0], g]));
+  $('#wal').innerHTML = `<div class="wcards"><div class="wcard"><div class="mut small">🪙 Pièces à offrir</div><b>${fmtN(w.coins)}</b>${w.pending_buy ? `<div class="mut small">⏳ ${w.pending_buy} achat(s) en attente</div>` : ''}<button class="btn sm gold" onclick="V.buyCoins()">＋ Recharger</button></div>
+  <div class="wcard earn"><div class="mut small">💎 Gains des cadeaux</div><b>${money(val(w.earned), cur)}</b><div class="mut small">${fmtN(w.earned)} pièces reçues · ${toUsd(val(w.earned), cur)}</div></div></div>
+  ${w.pending_out ? `<div class="safety">⏳<span>Retrait en cours : <b>${money(val(w.pending_out), cur)}</b>. L’équipe Vibzo t’envoie le paiement sous 72 h.</span></div>` : ''}
+  ${w.earned >= w.min_out ? `<div class="card" style="margin:12px 0"><b>Retirer ${money(val(w.earned), cur)}</b>
+    <div class="field" style="margin-top:8px"><label>Recevoir sur</label><select id="wM">${OUT_METHODS[zone].map(x => `<option>${x}</option>`).join('')}</select></div>
+    <div class="field"><label>Numéro Mobile Money ou IBAN</label><input id="wN" placeholder="${zone === 'A' ? 'AZ00…' : '+237 6…'}" value="${esc((S.me && S.me.phone) || '')}"></div>
+    <button class="btn" id="wBtn" onclick="V.withdraw()">💸 Demander le retrait</button></div>`
+    : `<div class="card" style="margin:12px 0;text-align:center"><div class="mut small">Retrait possible à partir de ${w.min_out} pièces reçues (${money(val(w.min_out), cur)})</div><div class="rbar"><i style="width:${Math.min(100, w.earned / w.min_out * 100)}%"></i></div><div class="mut small">Encore ${fmtN(need)} pièces · publie des vidéos et fais des directs pour recevoir des cadeaux 🎁</div></div>`}
+  <p class="mut small">Tu reçois 80 % de la valeur de chaque cadeau (1 pièce reçue = ${cur === '₼' ? '0,024 ₼' : '8 FCFA'}).</p>
+  ${(outs.data || []).length ? `<div class="lbl">Mes retraits</div>${outs.data.map(o => `<div class="whist"><span>${o.status === 'paid' ? '✅' : o.status === 'pending' ? '⏳' : '❌'} ${money(o.amount, o.currency)} · ${esc(o.method)}</span><span class="mut small">${ago(o.created_at)}</span></div>`).join('')}` : ''}
+  ${(hist.data || []).length ? `<div class="lbl">Historique des cadeaux</div>${hist.data.map(h => `<div class="whist"><span>${(G[h.gift] || ['', '🎁'])[1]} ${h.kind === 'recu' ? `de @${esc(h.other)}` : `à @${esc(h.other)}`}</span><span class="${h.kind === 'recu' ? 'plus' : 'mut'}">${h.kind === 'recu' ? '+' : '−'}${fmtN(h.coins)} 🪙</span></div>`).join('')}` : ''}`;
+}
+async function withdraw() {
+  const btn = $('#wBtn'); busy(btn, true);
+  const { data, error } = await sb.rpc('request_withdrawal', { p_method: $('#wM').value, p_number: $('#wN').value }); busy(btn, false);
+  if (error) return fail(error);
+  toast(`💸 Retrait de ${money(data.amount, data.currency)} demandé`); walletSheet();
+}
+async function loadAdminWallet() {
+  const el = $('#admW'); if (!el) return;
+  const { data, error } = await sb.rpc('admin_wallet_queue'); if (error) { el.innerHTML = `<p class="mut small">${esc(errMsg(error))}</p>`; return; }
+  el.innerHTML = `<div class="mut small" style="margin-bottom:6px">30 derniers jours : ${fmtN(data.sold_30d)} pièces vendues · ${fmtN(data.gifts_30d)} pièces offertes en cadeaux (ta part : 20 %)</div>
+  ${data.buys.map(b => `<div class="mq"><span class="k">🪙</span><div class="grow"><b style="font-size:14px">${b.coins.toLocaleString('fr-FR')} pièces · ${money(b.price, b.currency)}</b><div class="mut small">@${esc(b.username)} · ${esc((C[b.country] || {}).n || '')} · ${esc(b.payment)}${b.phone ? ' · ' + esc(b.phone) : ''} · ${ago(b.created_at)}</div></div><div class="acts"><button class="ok" onclick="V.coinDecide('${b.id}',true)">Payé ✓</button><button class="ko" onclick="V.coinDecide('${b.id}',false)">Refuser</button></div></div>`).join('') || '<p class="mut small">Aucun achat de pièces en attente.</p>'}
+  ${data.outs.map(o => `<div class="mq"><span class="k">💸</span><div class="grow"><b style="font-size:14px">À payer : ${money(o.amount, o.currency)}</b><div class="mut small">@${esc(o.username)} · ${esc((C[o.country] || {}).n || '')} · ${esc(o.method)} : <b style="user-select:all">${esc(o.number)}</b> · ${fmtN(o.coins)} pièces · ${ago(o.created_at)}</div></div><div class="acts"><button class="ok" onclick="V.outDecide('${o.id}',true)">Envoyé ✓</button><button class="ko" onclick="V.outDecide('${o.id}',false)">Refuser</button></div></div>`).join('') || '<p class="mut small">Aucun retrait à payer.</p>'}`;
+}
+async function coinDecide(id, ok) { const { error } = await sb.rpc('admin_coin_decide', { p_id: id, p_ok: ok }); if (error) return fail(error); toast(ok ? 'Pièces créditées ✅' : 'Demande refusée'); loadAdminWallet(); }
+async function outDecide(id, paid) { const { error } = await sb.rpc('admin_withdrawal_decide', { p_id: id, p_paid: paid }); if (error) return fail(error); toast(paid ? 'Retrait marqué comme payé ✅' : 'Retrait refusé, pièces rendues'); loadAdminWallet(); }
+
+/* =====================================================================
    BACK-OFFICE
    ===================================================================== */
 SCREENS.admin = async () => {
@@ -1329,6 +1421,7 @@ SCREENS.admin = async () => {
   (offers.data || []).forEach(o => S.offers.set(o.id, o));
   $('#adm').innerHTML = `<div class="stats">${[['Utilisateurs', s.users], ['Nouveaux (7 j)', s.users_7d], ['Vidéos', s.videos], ['Membres Gold', s.vip], ['Profils rencontre', s.dating], ['Matchs', s.matches], ['Demandes d’abonnement', s.requests], ['Boutiques actives', s.shops_active], ['Boutiques en attente', s.shops_pending], ['Offres en ligne', s.offers_open], ['Offres à valider', s.offers_pending], ['Commandes', s.orders], ['Signalements ouverts', s.reports_open]].map(([l, v]) => `<div class="stat"><b>${fmtN(v)}</b><span>${l}</span></div>`).join('')}</div>
   <div class="lbl">Utilisateurs par pays</div><div class="tags">${Object.entries(s.by_country || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${(C[k] || {}).f || ''} ${esc((C[k] || {}).n || k)} : ${n}</span>`).join('')}</div>
+  <div class="lbl">🎁 Cadeaux : pièces à valider et retraits à payer</div><div id="admW">${loading()}</div>
   <div class="lbl">💰 Programme Créateurs (vues sur 30 jours)</div><button class="btn sm gold" style="margin-bottom:8px" onclick="V.payCalc()">🧮 Calculer les gains du mois</button><div id="admCr">${loading()}</div>
   <div class="lbl">Aperçu de la page de paiement (ce que voient les membres)</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('A')">🇦🇿 Azerbaïdjan</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('C')">🌍 Afrique</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('form')">👑 Formulaire Gold</button></div>
   <div class="lbl">Demandes d’abonnement (${(subs.data || []).length})</div>${(subs.data || []).map(r => `<div class="mq"><span class="k">${r.plan === 'gold' ? '👑' : '🏪'}</span><div class="grow"><b style="font-size:14px">${r.plan === 'gold' ? 'Gold' : 'Vendeur'} · ${r.months} mois</b><div class="mut small">@${esc(r.username)} · ${esc((C[r.country] || {}).n || '')} · ${esc(r.payment)}${r.phone ? ' · ' + esc(r.phone) : ''} · ${ago(r.created_at)}</div></div><div class="acts"><button class="ok" onclick="V.chatWith('${r.user_id}','dm','Abonnement ${r.plan === 'gold' ? 'Gold' : 'Vendeur'}',null)">💬</button><button class="ok" onclick="V.activateReq('${r.id}')">Activer</button></div></div>`).join('') || '<p class="mut small">Aucune demande.</p>'}
@@ -1336,7 +1429,7 @@ SCREENS.admin = async () => {
   <div class="lbl">Offres à valider (${(offers.data || []).length})</div>${(offers.data || []).map(o => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(o.title)}</b><div class="mut small">${esc(o.company)} · ${esc((C[o.country] || {}).n || '')} · par ${esc(o.poster_name)}</div><button class="mut small" onclick="V.offerDetail('${o.id}')" style="text-decoration:underline">Lire</button></div><div class="acts"><button class="ok" onclick="V.modOffer('${o.id}','open')">Publier</button><button class="ko" onclick="V.modOffer('${o.id}','rejected')">Refuser</button></div></div>`).join('') || '<p class="mut small">Rien à valider.</p>'}
   <div class="lbl">Boutiques</div>${(shops.data || []).map(sh => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(sh.name)}</b> ${pill(sh.status)}<div class="mut small">${esc((C[sh.country] || {}).n || '')} · ${esc(sh.platform)}${sh.whatsapp ? ' · ' + esc(sh.whatsapp) : ''}${sh.paid_until ? ' · payé jusqu’au ' + new Date(sh.paid_until).toLocaleDateString('fr-FR') : ''}</div></div><div class="acts"><button class="ok" onclick="V.modShop('${sh.id}','active')">+30 j</button>${sh.status !== 'suspended' ? `<button class="ko" onclick="V.modShop('${sh.id}','suspended')">Suspendre</button>` : ''}</div></div>`).join('') || '<p class="mut small">Aucune boutique.</p>'}
   <div class="lbl">Signalements (${(reports.data || []).length})</div>${(reports.data || []).map(r => `<div class="mq"><span class="k">🚩</span><div class="grow"><b style="font-size:14px">${esc(r.reason)}</b><div class="mut small">${esc(r.target_type)} · ${ago(r.created_at)}</div></div><div class="acts">${r.target_type === 'video' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','hide')">Masquer</button>` : r.target_type === 'comment' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','delc')">Supprimer</button>` : r.target_type === 'profile' ? `<button class="ok" onclick="V.openProfile('${esc(r.target_id)}')">Voir</button>` : ''}<button class="ok" onclick="V.modReport('${r.id}','','ok')">Classer</button></div></div>`).join('') || '<p class="mut small">Aucun signalement 🎉</p>'}`;
-  loadAdminCreators();
+  loadAdminCreators(); loadAdminWallet();
 };
 async function modOffer(id, st) { closeSheet(); const { error } = await sb.from('job_offers').update({ status: st }).eq('id', id); if (error) return fail(error); toast(st === 'open' ? 'Offre publiée' : 'Offre refusée'); go('admin'); }
 async function modShop(id, st) {
@@ -1411,6 +1504,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  giftSheet, sendGift, buyCoins, pickPack, reqCoins, walletSheet, withdraw, coinDecide, outDecide,
   holdStart, holdEnd, seek, openTag, openUser, openSound, notInterested, speedVid, shared, copyShare, nativeShare, repost, replyC, cancelReply, likeComment, showReplies, openNotifs, openNotif, inviteSheet, refreshNotifs,
   payCalc, payCalcRun, payCalcSave,
   creatorSheet, creatorApply, crDecide, crEarn, crEarnSave, crPaid,
