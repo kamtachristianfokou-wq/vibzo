@@ -408,3 +408,13 @@ a{color:var(--vio)}
 .wcard .btn{margin-top:6px}
 .whist{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(128,128,128,.12);font-size:13.5px}
 .whist .plus{color:#12a150;font-weight:700}
+/* ===== lancement v28 ===== */
+#instBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--navh,64px) + 10px);width:min(94vw,440px);z-index:900;background:#0b2540;color:#fff;border-radius:16px;padding:10px 10px 10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#instBar>span{font-size:24px}#instBar small{display:block;opacity:.75;font-size:12px}#instBar .btn{width:auto;padding:8px 14px}
+#instBar .x{background:none;border:0;color:#fff;opacity:.6;font-size:16px;cursor:pointer;padding:4px}
+.welcome .wl{text-align:left;display:flex;flex-direction:column;gap:9px;margin:14px 0 16px;font-size:13.5px}
+.welcome .wl div{display:flex;gap:10px;align-items:flex-start}.welcome .wl div>span{flex:1}
+.card.start{margin:12px 0;text-align:left}
+.card.start .rbar{margin:8px 0}
+.card.start button{display:block;width:100%;text-align:left;background:none;border:0;padding:7px 2px;font-size:14px;color:inherit;cursor:pointer;border-bottom:1px solid rgba(128,128,128,.12)}
+.card.start button.ok{opacity:.55;text-decoration:line-through}

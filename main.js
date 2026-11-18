@@ -69,6 +69,37 @@ async function installApp() {
   ${ANDROID_APK_URL ? `<a class="btn" style="text-decoration:none" href="${ANDROID_APK_URL}">⬇️ Télécharger l’app Android (APK)</a><p class="mut small" style="margin-top:8px">Si Android le demande, autorise l’installation depuis ton navigateur.</p>` : ''}`);
 }
 
+/* ---------- bannière d'installation (une fois tous les 3 jours, jamais si déjà installée) ---------- */
+function maybeInstallBanner() {
+  try {
+    if (isStandalone() || $('#instBar')) return;
+    const last = +localStorage.getItem('vibzo_inst_hide') || 0; if (Date.now() - last < 3 * 864e5) return;
+    const b = document.createElement('div'); b.id = 'instBar';
+    b.innerHTML = `<span>📲</span><div class="grow"><b>Installe Vibzo</b><small>Plus rapide, comme une vraie application</small></div><button class="btn sm" onclick="V.installApp();V.hideInstall()">Installer</button><button class="x" aria-label="Fermer" onclick="V.hideInstall()">✕</button>`;
+    document.body.appendChild(b);
+  } catch (e) { }
+}
+function hideInstall() { try { localStorage.setItem('vibzo_inst_hide', Date.now()); } catch (e) { } const b = $('#instBar'); if (b) b.remove(); }
+setTimeout(maybeInstallBanner, 25000);
+
+/* ---------- accueil des nouveaux visiteurs ---------- */
+function welcome() {
+  try { if (localStorage.getItem('vibzo_welcomed') || uid() || new URLSearchParams(location.search).get('pay')) return; localStorage.setItem('vibzo_welcomed', '1'); } catch (e) { return; }
+  const ref = pendingRef();
+  modal(`<div class="card welcome" style="max-width:360px;width:100%;background:#fff;text-align:center">
+  <div style="font-size:42px">👋</div><h3>Bienvenue sur Vibzo</h3>${ref ? `<p class="small" style="margin-top:4px">Ton ami <b>@${esc(ref)}</b> t’invite !</p>` : ''}
+  <div class="wl"><div>🎬<span><b>Vidéos courtes</b> de ton pays et du monde entier</span></div><div>💰<span><b>Gagne de l’argent</b> : cadeaux de tes fans, payés en Mobile Money</span></div><div>💼<span><b>Emplois</b> : l’appli te propose les offres faites pour toi</span></div><div>🛍️<span><b>Boutiques</b> : achète et vends près de chez toi</span></div><div>💘<span><b>Rencontres</b> entre adultes (Gold)</span></div></div>
+  <button class="btn" onclick="V.closeModal();V.go('auth')">Créer mon compte gratuit</button>
+  <button class="btn ghost" style="margin-top:8px" onclick="V.closeModal()">Regarder d’abord</button></div>`);
+}
+
+/* ---------- premiers pas (profil) ---------- */
+function startChecklist(p) {
+  const steps = [[!!p.avatar_url, '📸 Ajoute ta photo de profil', 'V.editProfile()'], [p.videos > 0, '🎬 Publie ta première vidéo', "V.go('create')"], [p.following > 0, '👥 Suis 3 créateurs', "V.go('home')"], [!!(p.instagram || p.tiktok || p.youtube), '🔗 Lie ton TikTok / Instagram', 'V.editProfile()'], [false, '🎁 Invite tes amis (3 amis = 7 jours de Gold)', 'V.inviteSheet()']];
+  const done = steps.filter(x => x[0]).length; if (done >= 4) return '';
+  return `<div class="card start"><div class="row"><b class="grow">🚀 Pour bien commencer</b><span class="mut small">${done}/${steps.length}</span></div><div class="rbar"><i style="width:${done / steps.length * 100}%"></i></div>${steps.map(x => `<button class="${x[0] ? 'ok' : ''}" onclick="${x[2]}">${x[0] ? '✅' : '⬜'} ${x[1]}</button>`).join('')}</div>`;
+}
+
 /* ---------- langue ---------- */
 const savedLang = () => { try { return localStorage.getItem('vibzo_lang'); } catch (e) { return null; } };
 function applyLang() { initI18n(savedLang() || (S.me && S.me.lang) || langFor((S.me && S.me.country) || S.loc.country)); }
@@ -951,6 +982,7 @@ SCREENS.profile = async () => {
   <div class="tags" style="justify-content:center"><span>📍 ${esc(p.region || '')} ${esc((C[p.country] || {}).f || '')} ${esc((C[p.country] || {}).n || '')}</span>${p.is_vip ? '<span style="color:#a87800">👑 Gold</span>' : ''}</div>
   ${socials(p)}
   <div class="pstats"><div><b>${fmtN(p.following)}</b><span>Abonnements</span></div><div><b>${fmtN(p.followers)}</b><span>Abonnés</span></div><div><b>${fmtN(p.likes_received)}</b><span>J’aime</span></div><div><b>${fmtN(p.views || 0)}</b><span>Vues</span></div></div>
+  ${own ? startChecklist(p) : ''}
   ${own ? `<button class="crcta" onclick="V.creatorSheet()">💰 <b>Programme Créateurs</b> · gagne de l’argent avec tes vidéos ›</button>` : ''}
   <div class="pbtns">${own ? `<button class="btn sm ghost grow" onclick="V.editProfile()">Modifier le profil</button><button class="btn sm ghost" style="width:auto" onclick="V.go('orders')">📦 Commandes</button>`
       : `<button class="btn sm grow ${p.followed_by_me ? 'ghost' : ''}" onclick="V.toggleFollow('${p.id}',${p.followed_by_me})">${p.followed_by_me ? 'Abonné ✓' : 'Suivre'}</button><button class="btn sm ghost grow" onclick="V.chatWith('${p.id}','dm','',null)">💬 Message</button>`}</div></div>
@@ -1618,6 +1650,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  hideInstall,
   mfaSheet, mfaEnable, mfaOff, mfaLogin,
   giftSheet, sendGift, buyCoins, pickPack, reqCoins, walletSheet, withdraw, coinDecide, outDecide,
   holdStart, holdEnd, seek, openTag, openUser, openSound, notInterested, speedVid, shared, copyShare, nativeShare, repost, replyC, cancelReply, likeComment, showReplies, openNotifs, openNotif, inviteSheet, refreshNotifs,
@@ -1648,7 +1681,7 @@ async function start() {
   try { sb = await getClient(); } catch (e) { $('#s-home').innerHTML = `<div class="setup"><h2>Connexion impossible</h2><p class="mut">Vérifie ta connexion internet puis recharge la page.</p></div>`; return; }
   const { data } = await sb.auth.getSession(); S.session = data.session;
   await loadMe().catch(fail);
-  checkPayReturn(); checkMfa();
+  checkPayReturn(); checkMfa(); setTimeout(welcome, 1500);
   if (S.me && !localStorage.getItem(LOC_KEY)) { S.loc = worldLoc(S.me.country); saveLoc(); }
   applyLang();
   sb.auth.onAuthStateChange(async (ev, session) => {
