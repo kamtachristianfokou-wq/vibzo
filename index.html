@@ -27,7 +27,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=34">
+<link rel="stylesheet" href="style.css?v=35">
 </head>
 <body>
 <div id="app">
@@ -48,9 +48,31 @@
   <div id="modal"></div>
   <div id="toast" role="status" aria-live="polite"></div>
 </div>
-<script type="module" src="main.js?v=34"></script>
+<script type="module" src="main.js?v=35"></script>
 <script>
-  if ('serviceWorker' in navigator && window.isSecureContext && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+  /* Mise à jour automatique : la nouvelle version est vérifiée à l'ouverture, au retour sur l'app et toutes les 30 min.
+     Quand elle est prête, l'app se recharge toute seule si la personne n'est pas en train de faire quelque chose ;
+     sinon un bandeau « Mettre à jour » s'affiche. */
+  if ('serviceWorker' in navigator && window.isSecureContext && /^https?:$/.test(location.protocol)) {
+    const hadSW = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+      const check = () => reg.update().catch(() => {});
+      setInterval(check, 30 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+    }).catch(() => {});
+    let reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadSW || reloading) return;
+      const busy = () => document.querySelector('#modal.on, #sheet.on, #welcomeV') || document.querySelector('#s-create.on') || (window.V && window.V.isBusy && window.V.isBusy());
+      const go = () => { reloading = true; location.reload(); };
+      if (!busy()) return go();
+      if (document.getElementById('updBar')) return;
+      const b = document.createElement('div'); b.id = 'updBar';
+      b.innerHTML = '<span>✨ Nouvelle version de Vibzo</span><button>Mettre à jour</button>';
+      b.querySelector('button').onclick = go; document.body.appendChild(b);
+      const t = setInterval(() => { if (!busy()) { clearInterval(t); go(); } }, 5000);
+    });
+  }
 </script>
 </body>
 </html>

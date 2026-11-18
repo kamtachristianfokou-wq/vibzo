@@ -1778,6 +1778,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  isBusy: () => dlBusy || giftBusy || mfaBusy,
   wvSound, wvClose,
   downloadVid,
   giveCoins,
