@@ -508,8 +508,99 @@ async function repost(id) {
 }
 function vidMore(id) {
   const v = S.vids.get(id); const mine = v.user_id === uid();
-  sheet('Options', `<div class="slist" style="margin:0">${mine ? `<button onclick="V.delVideo('${id}')"><span class="e">🗑️</span>Supprimer ma vidéo</button>` : `<button onclick="V.notInterested('${id}')"><span class="e">🚫</span>Pas intéressé</button><button onclick="V.report('video','${id}')"><span class="e">🚩</span>Signaler la vidéo</button><button onclick="V.openProfile('${v.user_id}')"><span class="e">👤</span>Voir le profil</button>`}<button onclick="V.closeSheet();V.speedVid('${id}')"><span class="e">⏩</span>Vitesse de lecture</button><button onclick="V.shareVid('${id}');V.closeSheet()"><span class="e">🔗</span>Partager</button></div>`);
+  sheet('Options', `<div class="slist" style="margin:0"><button onclick="V.downloadVid('${id}')"><span class="e">⬇️</span>Enregistrer / partager la vidéo</button>${mine ? `<button onclick="V.delVideo('${id}')"><span class="e">🗑️</span>Supprimer ma vidéo</button>` : `<button onclick="V.notInterested('${id}')"><span class="e">🚫</span>Pas intéressé</button><button onclick="V.report('video','${id}')"><span class="e">🚩</span>Signaler la vidéo</button><button onclick="V.openProfile('${v.user_id}')"><span class="e">👤</span>Voir le profil</button>`}<button onclick="V.closeSheet();V.speedVid('${id}')"><span class="e">⏩</span>Vitesse de lecture</button><button onclick="V.shareVid('${id}');V.closeSheet()"><span class="e">🔗</span>Partager</button></div>`);
 }
+/* ---------- Téléchargement avec la signature Vibzo (comme TikTok) ----------
+   La vidéo est rejouée dans un canevas avec le logo Vibzo + @créateur qui changent de coin,
+   puis un écran de fin de 3 s (logo, barre animée, « @créateur » dans une barre de recherche).
+   Partagée sur WhatsApp ou Instagram, chaque vidéo fait connaître Vibzo et son créateur. */
+let dlBusy = false, logoImg = null, logoP = null;
+const loadLogo = () => logoP || (logoP = new Promise(r => { const i = new Image(); i.onload = () => { logoImg = i; r(i); }; i.onerror = () => r(null); i.src = 'icon-192.png'; }));
+function drawOutro(ctx, W, H, t, user) {
+  // t de 0 à 1 sur la durée de l'écran de fin
+  const u = Math.min(W, H) / 720, e = k => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
+  ctx.fillStyle = '#0b0f1a'; ctx.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2 - 60 * u, s = e(t / 0.25);
+  return loadLogo().then(img => {
+    ctx.save(); ctx.globalAlpha = s; ctx.translate(cx, cy); ctx.scale(0.6 + 0.4 * s, 0.6 + 0.4 * s);
+    const L = 150 * u; if (img) ctx.drawImage(img, -L / 2, -L / 2 - 20 * u, L, L);
+    ctx.fillStyle = '#fff'; ctx.font = `800 ${58 * u}px 'Plus Jakarta Sans',sans-serif`; ctx.textAlign = 'center'; ctx.fillText('Vibzo', 0, L / 2 + 50 * u);
+    ctx.restore();
+    const bw = 420 * u, bh = 56 * u, bx = cx - bw / 2, by = cy + 170 * u;
+    if (t < 0.45) { // barre lumineuse qui balaie
+      const k = e((t - 0.15) / 0.3), g = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+      g.addColorStop(0, '#2ee6d6'); g.addColorStop(Math.max(0.01, k * 0.6), '#ffffff'); g.addColorStop(Math.min(0.99, 0.6 + k * 0.4), '#1e9be8'); g.addColorStop(1, '#0b0f1a');
+      ctx.globalAlpha = Math.min(1, t / 0.15); ctx.fillStyle = g; ctx.fillRect(bx, by + bh / 2 - 12 * u, bw * Math.max(0.05, k), 24 * u); ctx.globalAlpha = 1;
+    } else { // barre de recherche avec @créateur
+      const a = e((t - 0.45) / 0.15); ctx.globalAlpha = a;
+      ctx.fillStyle = '#2ee6d6'; roundRect(ctx, bx - 3 * u, by - 3 * u, bw, bh, 12 * u); ctx.fill();
+      ctx.fillStyle = '#1e9be8'; roundRect(ctx, bx + 3 * u, by + 3 * u, bw, bh, 12 * u); ctx.fill();
+      ctx.fillStyle = '#fff'; roundRect(ctx, bx, by, bw, bh, 12 * u); ctx.fill();
+      ctx.fillStyle = '#0b2540'; ctx.font = `600 ${24 * u}px 'Plus Jakarta Sans',sans-serif`; ctx.textAlign = 'left';
+      ctx.fillText('🔍  @' + user, bx + 20 * u, by + bh / 2 + 8 * u);
+      ctx.fillStyle = '#9fb3c8'; ctx.font = `500 ${22 * u}px 'Plus Jakarta Sans',sans-serif`; ctx.textAlign = 'center';
+      ctx.fillText('vibzo.fun', cx, by + bh + 52 * u); ctx.globalAlpha = 1;
+    }
+  });
+}
+function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+async function downloadVid(id) {
+  closeSheet(); const v = S.vids.get(id); if (!v || dlBusy) return;
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { window.open(v.video_url, '_blank'); return; }
+  dlBusy = true; let cancel = false; window.__dlCancel = () => { cancel = true; };
+  modal(`<div class="card" style="max-width:320px;width:100%;background:#fff;text-align:center"><div style="font-size:36px">🎬</div><h3>Préparation de la vidéo…</h3><p class="mut small">Ajout de la signature Vibzo. Garde l’écran allumé.</p><div class="rbar"><i id="dlBar" style="width:0"></i></div><div class="mut small" id="dlPct">0 %</div><button class="btn ghost" style="margin-top:10px" onclick="window.__dlCancel()">Annuler</button></div>`);
+  const user = v.username, end = () => { dlBusy = false; };
+  try {
+    const vid = document.createElement('video'); vid.crossOrigin = 'anonymous'; vid.playsInline = true; vid.preload = 'auto'; vid.src = v.video_url;
+    await new Promise((ok, ko) => { vid.onloadedmetadata = ok; vid.onerror = () => ko(new Error('Vidéo illisible')); });
+    let W = vid.videoWidth || 720, H = vid.videoHeight || 1280; const k = Math.min(1, 1280 / Math.max(W, H)); W = Math.round(W * k / 2) * 2; H = Math.round(H * k / 2) * 2;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+    await loadLogo(); try { await document.fonts.load(`800 40px 'Plus Jakarta Sans'`); } catch (e) { }
+    const stream = cv.captureStream(30);
+    let ac = null; try { ac = new AudioContext(); const src = ac.createMediaElementSource(vid), dest = ac.createMediaStreamDestination(); src.connect(dest); dest.stream.getAudioTracks().forEach(t => stream.addTrack(t)); } catch (e) { vid.muted = true; }
+    const mime = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4_000_000 } : undefined), chunks = [];
+    rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+    const done = new Promise(r => { rec.onstop = r; });
+    const u = Math.min(W, H) / 720, dur = vid.duration || 15;
+    const mark = () => { // logo + @créateur, qui change de coin à mi-vidéo
+      const late = vid.currentTime > dur / 2, x = late ? W - 24 * u : 24 * u, y = late ? H - 120 * u : 70 * u;
+      ctx.save(); ctx.globalAlpha = 0.85; ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 6 * u; ctx.textAlign = late ? 'right' : 'left';
+      const L = 40 * u; if (logoImg) ctx.drawImage(logoImg, late ? x - L : x, y - L + 6 * u, L, L);
+      ctx.fillStyle = '#fff'; ctx.font = `800 ${30 * u}px 'Plus Jakarta Sans',sans-serif`; ctx.fillText('Vibzo', late ? x - L - 8 * u : x + L + 8 * u, y);
+      ctx.font = `600 ${20 * u}px 'Plus Jakarta Sans',sans-serif`; ctx.fillText('@' + user, x, y + 30 * u); ctx.restore();
+    };
+    rec.start(500); if (ac && ac.state === 'suspended') await ac.resume();
+    await vid.play();
+    await new Promise((r, ko) => {
+      const step = () => { try {
+        if (cancel) { vid.pause(); return r(); }
+        ctx.drawImage(vid, 0, 0, W, H); mark();
+        const p = Math.min(1, vid.currentTime / dur) * 0.85; const b = $('#dlBar'); if (b) { b.style.width = (p * 100) + '%'; $('#dlPct').textContent = Math.round(p * 100) + ' %'; }
+        if (vid.ended) return r();
+        (vid.requestVideoFrameCallback ? vid.requestVideoFrameCallback(step) : requestAnimationFrame(step));
+      } catch (e) { vid.pause(); ko(e); } };
+      vid.onended = () => setTimeout(r, 50); step();
+    });
+    if (!cancel) { // écran de fin : 3 secondes
+      const t0 = performance.now();
+      await new Promise(r => { const f = async () => { const t = (performance.now() - t0) / 3000; await drawOutro(ctx, W, H, Math.min(1, t), user); const b = $('#dlBar'); if (b) { b.style.width = (85 + 15 * Math.min(1, t)) + '%'; $('#dlPct').textContent = Math.round(85 + 15 * Math.min(1, t)) + ' %'; } if (t >= 1 || cancel) r(); else requestAnimationFrame(f); }; f(); });
+    }
+    rec.stop(); await done; try { ac && ac.close(); } catch (e) { }
+    if (cancel) { closeModal(); toast('Annulé'); return end(); }
+    let blob = new Blob(chunks, { type: (mime || 'video/webm').split(';')[0] });
+    if (!/avc1/.test(mime)) { $('#dlPct').textContent = 'Conversion en MP4…'; try { blob = await convertVideo(new File([blob], 'v.webm', { type: blob.type })); } catch (e) { } }
+    const ext = /mp4/.test(blob.type) ? 'mp4' : 'webm', file = new File([blob], `vibzo-${user}-${id.slice(0, 6)}.${ext}`, { type: blob.type });
+    shared(id);
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      modal(`<div class="card" style="max-width:320px;width:100%;background:#fff;text-align:center"><div style="font-size:36px">✅</div><h3>Vidéo prête</h3><p class="mut small">Avec la signature Vibzo et @${esc(user)}.</p><button class="btn" id="dlShare">📤 Partager (WhatsApp, Instagram…)</button><button class="btn ghost" style="margin-top:8px" id="dlSave">⬇️ Enregistrer</button><button class="btn ghost" style="margin-top:8px" onclick="V.closeModal()">Fermer</button></div>`);
+      $('#dlShare').onclick = async () => { try { await navigator.share({ files: [file], text: `Vidéo de @${user} sur Vibzo 🔥 ${location.origin}/?ref=${encodeURIComponent((S.me && S.me.username) || user)}#v=${id}` }); } catch (e) { } };
+      $('#dlSave').onclick = () => saveBlob(file);
+    } else { saveBlob(file); closeModal(); toast('⬇️ Vidéo enregistrée'); }
+  } catch (e) { closeModal(); fail(e); }
+  end();
+}
+function saveBlob(file) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
 async function notInterested(id) {
   closeSheet(); if (!requireAuth('Connecte-toi pour personnaliser ton fil.')) return;
   await sb.from('not_interested').insert({ user_id: uid(), video_id: id });
@@ -1657,6 +1748,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  downloadVid,
   giveCoins,
   hideInstall,
   mfaSheet, mfaEnable, mfaOff, mfaLogin,
