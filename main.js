@@ -1381,13 +1381,15 @@ async function mfaSheet() {
   if (error) { $('#mfaW').innerHTML = `<p class="mut small">${esc(errMsg(error))}</p>`; return; }
   $('#mfaW').innerHTML = `<p class="small"><b>1.</b> Installe <b>Google Authenticator</b> (ou Microsoft Authenticator) sur ton téléphone.</p>
   <p class="small" style="margin-top:6px"><b>2.</b> Dans l’application, appuie sur <b>+</b> puis scanne ce code${matchMedia('(max-width:700px)').matches ? ' (ou copie la clé si tu es sur le même téléphone)' : ''} :</p>
-  <div style="text-align:center;margin:10px 0"><img src="${data.totp.qr_code}" alt="QR code" style="width:190px;height:190px;background:#fff;padding:6px;border-radius:12px;border:1px solid #cfe6f7"></div>
+  <div style="text-align:center;margin:10px 0"><img id="mfaQr" alt="QR code" style="width:190px;height:190px;background:#fff;padding:6px;border-radius:12px;border:1px solid #cfe6f7"></div>
   <div class="field"><label>Clé (si tu ne peux pas scanner)</label><input value="${esc(data.totp.secret)}" readonly onclick="this.select()" style="font-family:monospace;font-size:13px"></div>
   <button class="btn ghost" onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(data.totp.secret)}').then(()=>V.toast('Clé copiée'))">📋 Copier la clé</button>
   <p class="small" style="margin-top:12px"><b>3.</b> Écris le code à 6 chiffres affiché pour <b>Vibzo</b> :</p>
   <input id="mfaN" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="font-size:24px;letter-spacing:8px;text-align:center;margin:8px 0;width:100%;padding:10px;border-radius:12px;border:1px solid #cfe6f7">
   <div class="mut small" id="mfaNE" style="color:#d33;min-height:18px"></div>
   <button class="btn" id="mfaNB" onclick="V.mfaEnable('${data.id}')">🔐 Activer</button>`;
+  const qr = String(data.totp.qr_code || ''), m = qr.match(/^data:image\/svg\+xml;(?:utf-?8,|charset=utf-?8,)([\s\S]*)$/i);
+  $('#mfaQr').src = m ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(m[1]) : qr;
 }
 async function mfaEnable(factorId) {
   const code = ($('#mfaN').value || '').replace(/\D/g, ''); if (code.length !== 6) { $('#mfaNE').textContent = 'Le code a 6 chiffres.'; return; }
