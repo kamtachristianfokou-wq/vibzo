@@ -270,7 +270,7 @@ async function doDeleteAccount() {
     closeModal(); toast('Ton compte a été supprimé'); go('home');
   } catch (e) { fail(e); } finally { busy(btn, false); }
 }
-async function logout() { closeSheet(); await sb.auth.signOut(); S.session = null; S.me = null; S.myShop = null; toast('Déconnecté'); go('home'); }
+async function logout() { closeSheet(); closeModal(); await sb.auth.signOut(); S.session = null; S.me = null; S.myShop = null; toast('Déconnecté'); go('home'); }
 
 /* =====================================================================
    FIL VIDÉO
@@ -1037,6 +1037,7 @@ function settings() {
   <button onclick="V.closeSheet();${S.myShop ? 'V.myShopSheet()' : 'V.shopForm()'}"><span class="e">🏪</span>Ma boutique<span class="r">${S.myShop ? (ST[S.myShop.status] || [''])[0] : 'Ouvrir'} ›</span></button>
   <button onclick="V.myCV()"><span class="e">📄</span>Mon profil candidat<span class="r">›</span></button>
   <button onclick="V.creatorSheet()"><span class="e">💰</span>Programme Créateurs<span class="r">›</span></button>
+  <button onclick="V.mfaSheet()"><span class="e">🔐</span>Validation en 2 étapes<span class="r">${S.mfaOn ? '✅ activée' : 'conseillé ›'}</span></button>
   <button onclick="V.walletSheet()"><span class="e">💰</span>Mon portefeuille<span class="r">pièces et gains ›</span></button>
   <button onclick="V.inviteSheet()"><span class="e">🎁</span>Inviter des amis<span class="r">3 amis = 7 j de Gold ›</span></button>
   <button onclick="V.langSheet()"><span class="e">🌐</span>Langue<span class="r">${LANGS[getLang()]} ›</span></button>
@@ -1328,6 +1329,79 @@ const coinCur = () => myCc() === 'AZ' ? '₼' : 'FCFA';
 const toUsd = (n, cur) => '≈ ' + (cur === '₼' ? n / 1.7 : n / (+localStorage.getItem('vibzo_usd') || 560)).toFixed(2) + ' USD';
 let W = null, packSel = 500, giftBusy = false;
 async function loadWallet() { const { data, error } = await sb.rpc('my_wallet'); if (error) throw error; W = data; return W; }
+/* =====================================================================
+   VALIDATION EN 2 ÉTAPES (codes à 6 chiffres : Google Authenticator, Microsoft Authenticator…)
+   Une fois activée, les pouvoirs admin et les retraits d'argent exigent le code à chaque connexion.
+   ===================================================================== */
+async function mfaFactors() {
+  if (!sb.auth.mfa) return { on: null, pending: [] };
+  const { data } = await sb.auth.mfa.listFactors();
+  const all = (data && data.all) || [];
+  return { on: all.find(f => f.factor_type === 'totp' && f.status === 'verified') || null, pending: all.filter(f => f.status !== 'verified') };
+}
+async function checkMfa() {
+  if (!uid() || !sb.auth.mfa) return;
+  try {
+    const f = await mfaFactors(); S.mfaOn = !!f.on;
+    const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (data && data.nextLevel === 'aal2' && data.currentLevel !== 'aal2') mfaPrompt(f.on.id);
+  } catch (e) { }
+}
+function mfaPrompt(factorId) {
+  modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">🔐</div><h3>Code de sécurité</h3>
+  <p class="mut small">Ouvre ton application d’authentification et écris le code à 6 chiffres de <b>Vibzo</b>.</p>
+  <input id="mfaC" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="font-size:26px;letter-spacing:8px;text-align:center;margin:12px 0;width:100%;padding:10px;border-radius:12px;border:1px solid #cfe6f7" onkeyup="if(this.value.length===6)V.mfaLogin('${factorId}')">
+  <div class="mut small" id="mfaE" style="color:#d33;min-height:18px"></div>
+  <button class="btn" id="mfaB" onclick="V.mfaLogin('${factorId}')">Valider</button>
+  <button class="btn ghost" style="margin-top:8px" onclick="V.logout()">Se déconnecter</button></div>`);
+  setTimeout(() => { const i = $('#mfaC'); if (i) i.focus(); }, 100);
+}
+let mfaBusy = false;
+async function mfaLogin(factorId) {
+  if (mfaBusy) return; const code = ($('#mfaC').value || '').replace(/\D/g, ''); if (code.length !== 6) { $('#mfaE').textContent = 'Le code a 6 chiffres.'; return; }
+  mfaBusy = true; busy($('#mfaB'), true);
+  const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code }); mfaBusy = false; busy($('#mfaB'), false);
+  if (error) { $('#mfaE').textContent = 'Code incorrect ou expiré. Réessaie avec le nouveau code.'; $('#mfaC').value = ''; return; }
+  closeModal(); await loadMe().catch(() => { }); toast('🔐 Connexion sécurisée');
+  if (S.cur === 'admin') go('admin');
+}
+async function mfaSheet() {
+  if (!requireAuth()) return;
+  if (!sb.auth.mfa) { toast('Indisponible ici'); return; }
+  sheet('🔐 Validation en 2 étapes', `<div id="mfaW">${loading()}</div>`);
+  const f = await mfaFactors(); S.mfaOn = !!f.on;
+  if (f.on) {
+    $('#mfaW').innerHTML = `<div class="safety ok2">✅<span><b>Activée.</b> À chaque connexion, Vibzo te demandera le code à 6 chiffres de ton application d’authentification.</span></div>
+    <p class="mut small" style="margin:10px 0">Garde ton téléphone en sécurité. Si tu le perds, contacte Vibzo sur WhatsApp pour récupérer ton compte.</p>
+    <button class="btn ghost" onclick="V.mfaOff('${f.on.id}')">Désactiver</button>`;
+    return;
+  }
+  for (const p of f.pending) { try { await sb.auth.mfa.unenroll({ factorId: p.id }); } catch (e) { } }
+  const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Vibzo ' + new Date().toISOString().slice(0, 16), issuer: 'Vibzo' });
+  if (error) { $('#mfaW').innerHTML = `<p class="mut small">${esc(errMsg(error))}</p>`; return; }
+  $('#mfaW').innerHTML = `<p class="small"><b>1.</b> Installe <b>Google Authenticator</b> (ou Microsoft Authenticator) sur ton téléphone.</p>
+  <p class="small" style="margin-top:6px"><b>2.</b> Dans l’application, appuie sur <b>+</b> puis scanne ce code${matchMedia('(max-width:700px)').matches ? ' (ou copie la clé si tu es sur le même téléphone)' : ''} :</p>
+  <div style="text-align:center;margin:10px 0"><img src="${data.totp.qr_code}" alt="QR code" style="width:190px;height:190px;background:#fff;padding:6px;border-radius:12px;border:1px solid #cfe6f7"></div>
+  <div class="field"><label>Clé (si tu ne peux pas scanner)</label><input value="${esc(data.totp.secret)}" readonly onclick="this.select()" style="font-family:monospace;font-size:13px"></div>
+  <button class="btn ghost" onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(data.totp.secret)}').then(()=>V.toast('Clé copiée'))">📋 Copier la clé</button>
+  <p class="small" style="margin-top:12px"><b>3.</b> Écris le code à 6 chiffres affiché pour <b>Vibzo</b> :</p>
+  <input id="mfaN" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="font-size:24px;letter-spacing:8px;text-align:center;margin:8px 0;width:100%;padding:10px;border-radius:12px;border:1px solid #cfe6f7">
+  <div class="mut small" id="mfaNE" style="color:#d33;min-height:18px"></div>
+  <button class="btn" id="mfaNB" onclick="V.mfaEnable('${data.id}')">🔐 Activer</button>`;
+}
+async function mfaEnable(factorId) {
+  const code = ($('#mfaN').value || '').replace(/\D/g, ''); if (code.length !== 6) { $('#mfaNE').textContent = 'Le code a 6 chiffres.'; return; }
+  busy($('#mfaNB'), true); const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code }); busy($('#mfaNB'), false);
+  if (error) { $('#mfaNE').textContent = 'Code incorrect. Vérifie l’heure de ton téléphone et réessaie avec le nouveau code.'; return; }
+  S.mfaOn = true; closeSheet(); toast('✅ Validation en 2 étapes activée'); await loadMe().catch(() => { }); if (S.cur === 'admin' || S.cur === 'profile') go(S.cur);
+}
+async function mfaOff(factorId) {
+  if (!confirm('Désactiver la validation en 2 étapes ? Ton compte sera moins protégé.')) return;
+  const { error } = await sb.auth.mfa.unenroll({ factorId });
+  if (error) return fail(/aal2|assurance/i.test(error.message) ? new Error('Reconnecte-toi avec ton code avant de désactiver.') : error);
+  S.mfaOn = false; closeSheet(); toast('Validation en 2 étapes désactivée');
+}
+
 /* Paiement automatique (Notch Pay : MTN MoMo, Orange Money, carte). Si le service n'est pas encore activé
    ou indisponible, l'appli bascule sur le paiement manuel (WhatsApp + Mobile Money / IBAN). */
 const PAY_FN = `${SUPABASE_URL}/functions/v1/notchpay`;
@@ -1446,7 +1520,7 @@ async function outDecide(id, paid) { const { error } = await sb.rpc('admin_withd
    ===================================================================== */
 SCREENS.admin = async () => {
   if (!S.me || S.me.role !== 'admin') { $('#s-admin').innerHTML = hdr('Back-office', '', 'profile') + '<div class="empty">Accès réservé.</div>'; return; }
-  $('#s-admin').innerHTML = hdr('Back-office', '', 'profile') + `<div class="pad" id="adm">${loading()}</div>`;
+  $('#s-admin').innerHTML = hdr('Back-office', '', 'profile') + `${S.mfaOn ? '' : `<div class="pad" style="padding-bottom:0"><div class="safety warn">🔐<span><b>Protège ton compte admin :</b> active la validation en 2 étapes. Ensuite, même avec ton mot de passe, un pirate ne pourra rien faire dans le back-office. <button class="btn sm" style="width:auto;margin-top:6px" onclick="V.mfaSheet()">Activer maintenant</button></span></div></div>`}<div class="pad" id="adm">${loading()}</div>`;
   const [st, offers, shops, reports, subs] = await Promise.all([
     sb.rpc('admin_stats'),
     sb.from('offers_view').select('*').eq('status', 'pending').order('created_at').limit(50),
@@ -1542,6 +1616,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  mfaSheet, mfaEnable, mfaOff, mfaLogin,
   giftSheet, sendGift, buyCoins, pickPack, reqCoins, walletSheet, withdraw, coinDecide, outDecide,
   holdStart, holdEnd, seek, openTag, openUser, openSound, notInterested, speedVid, shared, copyShare, nativeShare, repost, replyC, cancelReply, likeComment, showReplies, openNotifs, openNotif, inviteSheet, refreshNotifs,
   payCalc, payCalcRun, payCalcSave,
@@ -1571,13 +1646,13 @@ async function start() {
   try { sb = await getClient(); } catch (e) { $('#s-home').innerHTML = `<div class="setup"><h2>Connexion impossible</h2><p class="mut">Vérifie ta connexion internet puis recharge la page.</p></div>`; return; }
   const { data } = await sb.auth.getSession(); S.session = data.session;
   await loadMe().catch(fail);
-  checkPayReturn();
+  checkPayReturn(); checkMfa();
   if (S.me && !localStorage.getItem(LOC_KEY)) { S.loc = worldLoc(S.me.country); saveLoc(); }
   applyLang();
   sb.auth.onAuthStateChange(async (ev, session) => {
     const was = uid(); S.session = session;
     if (ev === 'PASSWORD_RECOVERY') { const np = prompt('Nouveau mot de passe (8 caractères minimum)'); if (np && np.length >= 8) { const { error } = await sb.auth.updateUser({ password: np }); toast(error ? '⚠️ ' + error.message : 'Mot de passe modifié ✅'); } }
-    if ((session && session.user.id) !== was) { await loadMe().catch(fail); applyLang(); if (session && S.cur === 'auth') { toast('Bienvenue sur Vibzo 👋'); go('home'); } }
+    if ((session && session.user.id) !== was) { await loadMe().catch(fail); applyLang(); if (session) checkMfa(); if (session && S.cur === 'auth') { toast('Bienvenue sur Vibzo 👋'); go('home'); } }
   });
   go('home');
   setInterval(() => { refreshUnread(); refreshNotifs(); }, 30000); refreshUnread();
