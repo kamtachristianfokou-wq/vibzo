@@ -963,11 +963,14 @@ async function chatWith(userId, kind, title, ref) {
 /* =====================================================================
    BOUTIQUES
    ===================================================================== */
+const shopExpired = sh => !!(sh && sh.status === 'active' && sh.paid_until && new Date(sh.paid_until) <= new Date());
+const shopDaysLeft = sh => sh && sh.paid_until ? Math.ceil((new Date(sh.paid_until) - new Date()) / 864e5) : null;
 SCREENS.shop = async () => {
   const sh = S.myShop;
   const banner = !uid() || !sh ? `<div class="sbanner"><div class="big">🛍️</div><div class="grow"><b>Tu as une boutique ?</b><div class="small" style="opacity:.92">Vends tes produits dans tes vidéos, partout dans ta région.</div></div><button class="btn" onclick="V.shopForm()">Ouvrir</button></div>`
     : sh.status === 'pending' ? `<div class="sbanner" style="background:linear-gradient(135deg,#ffd76a,#e0a800);color:#3a2a00"><div class="big">⏳</div><div class="grow"><b>${esc(sh.name)} : en attente d’activation</b><div class="small">L’équipe Vibzo te contacte pour activer ton abonnement Vendeur.</div></div><button class="btn" onclick="V.myShopSheet()">Gérer</button></div>`
       : sh.status === 'suspended' ? `<div class="sbanner" style="background:#d81f45"><div class="big">⛔</div><div class="grow"><b>${esc(sh.name)} : suspendue</b><div class="small">Contacte l’équipe Vibzo.</div></div></div>`
+      : shopExpired(sh) ? `<div class="sbanner" style="background:linear-gradient(135deg,#ffd76a,#e0a800);color:#3a2a00"><div class="big">⏰</div><div class="grow"><b>${esc(sh.name)} : abonnement terminé</b><div class="small">Tes produits ne sont plus visibles. Renouvelle pour les remettre en ligne.</div></div><button class="btn" onclick="V.myShopSheet()">Renouveler</button></div>`
         : `<div class="sbanner"><div class="big">🏪</div><div class="grow"><b>${esc(sh.name)}</b><div class="small" style="opacity:.92">Boutique active${sh.paid_until ? ' jusqu’au ' + new Date(sh.paid_until).toLocaleDateString('fr-FR') : ''}</div></div><button class="btn" onclick="V.myShopSheet()">Gérer</button></div>`;
   $('#s-shop').innerHTML = hdr('Boutiques', `${locBtn()}<button class="ib" onclick="V.go('orders')" aria-label="Commandes">${I.box}</button>`) + banner + `<div class="lbl pad">Produits · ${esc(locLabel())}</div><div class="pgrid" id="pgrid">${loading()}</div>`;
   const { data, error } = await inScope(sb.from('products_view').select('*').eq('active', true)).order('created_at', { ascending: false }).limit(60);
@@ -1022,15 +1025,18 @@ async function saveShop() {
   const name = $('#sn').value.trim(); if (name.length < 2) return toast('Donne un nom à ta boutique');
   const btn = $('#sBtn'); busy(btn, true);
   const row = { name, description: $('#sd').value.trim(), platform: $('#spl').value, external_url: $('#su').value.trim() || null, whatsapp: $('#sw').value.trim() || null, region: $('#sr').value };
+  const isNew = !S.myShop;
   const res = S.myShop ? await sb.from('shops').update(row).eq('id', S.myShop.id).select().single() : await sb.from('shops').insert({ ...row, owner_id: uid(), country: S.me.country }).select().single();
   busy(btn, false); if (res.error) return fail(res.error);
-  S.myShop = res.data; closeSheet(); toast(S.myShop.status === 'pending' ? 'Demande envoyée ✅ L’équipe Vibzo va te contacter.' : 'Boutique enregistrée ✅'); go('shop');
+  S.myShop = res.data; closeSheet(); toast(S.myShop.status === 'pending' ? 'Demande envoyée ✅ L’équipe Vibzo va te contacter.' : isNew ? '🎁 Boutique ouverte : ton 1er mois est offert !' : 'Boutique enregistrée ✅'); go('shop');
 }
 async function myShopSheet() {
   const sh = S.myShop;
   sheet('🏪 ' + esc(sh.name), `<div class="row"><span class="grow">${pill(sh.status)}</span><button class="chip" onclick="V.shopForm()">✏️ Modifier</button></div>
   ${sh.status === 'pending' ? `<p class="small" style="margin-top:10px">Tu peux déjà ajouter tes produits. Ils seront visibles dès l’activation de ta boutique.${SUPPORT_WHATSAPP ? ` <a href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent('Bonjour, je souhaite activer ma boutique Vibzo « ' + sh.name + ' ».')}" target="_blank" rel="noopener">Contacter l’équipe sur WhatsApp</a>` : ''}</p>` : ''}
-  ${sh.status !== 'active' ? `<div class="card" style="margin-top:12px"><b>Activer ma boutique (abonnement Vendeur)</b>${goldBlock('vendeur')}</div>` : ''}<div class="lbl">Mes produits</div><div id="myProds">${loading()}</div>
+  ${sh.status === 'suspended' ? '' : sh.status !== 'active' || shopExpired(sh) ? `<div class="card" style="margin-top:12px"><b>${shopExpired(sh) ? 'Renouveler mon abonnement Vendeur' : 'Activer ma boutique (abonnement Vendeur)'}</b>${goldBlock('vendeur')}</div>`
+    : shopDaysLeft(sh) !== null && shopDaysLeft(sh) <= 7 ? `<div class="card" style="margin-top:12px"><b>Plus que ${shopDaysLeft(sh)} jour(s) : prolonge ton abonnement</b>${goldBlock('vendeur')}</div>`
+    : `<p class="small mut" style="margin-top:10px">✅ Boutique en ligne jusqu’au ${new Date(sh.paid_until).toLocaleDateString('fr-FR')}.</p>`}<div class="lbl">Mes produits</div><div id="myProds">${loading()}</div>
   <div class="lbl">Ajouter un produit</div>
   <div class="field"><input id="pn" maxlength="80" placeholder="Nom du produit"></div>
   <div class="row"><div class="field grow"><input id="pp" type="number" inputmode="decimal" min="0" placeholder="Prix (${esc(C[sh.country].cur)})"></div><div class="field" style="width:110px"><input id="ps" type="number" inputmode="numeric" min="0" placeholder="Stock"></div></div>
@@ -1201,13 +1207,14 @@ const isVip = () => !!(S.me && (S.me.role === 'admin' || (S.me.vip_until && new 
 const PAYZ = { O: ['Orange Money', 'MTN MoMo', 'Wave', 'Moov Money'], C: ['Orange Money', 'MTN MoMo', 'Airtel Money', 'Moov Money'], E: ['M-Pesa', 'Airtel Money', 'MTN MoMo'], A: ['m10', 'Birbank', 'Carte bancaire'] };
 const INTENT = { serieux: ['💍', 'Relation sérieuse'], libre: ['🔥', 'Sans lendemain'], les_deux: ['✨', 'Ouvert(e) aux deux'] };
 let dScope = 'city', dMode = 'amour', dAge = 'all', dQueue = [], dMe = null, dPhotoIdx = 0;
-const subPrice = () => { const cc = payPreviewCc || (S.me && S.me.country) || S.loc.country; const p = SUB_PRICES[C[cc].z] || SUB_PRICES.default; return { ...p, local: C[cc].cur !== 'FCFA' && p.cur === 'FCFA' }; };
-const subTotal = m => { const p = subPrice(); return money(p.amount * m, p.cur) + (p.local ? ' (ou l’équivalent en monnaie locale)' : ''); };
+const subPrice = (plan = 'gold') => { const cc = payPreviewCc || (S.me && S.me.country) || S.loc.country; const t = SUB_PRICES[plan === 'gold' ? 'gold' : 'vendeur']; const p = t[C[cc].z] || t.default; return { ...p, amount: p[1], local: C[cc].cur !== 'FCFA' && p.cur === 'FCFA' }; };
+const subTotal = (m, plan = 'gold') => { const p = subPrice(plan); return money(p[m] || p[1] * m, p.cur) + (p.local ? ' (ou l’équivalent en monnaie locale)' : ''); };
+const subSave = (m, plan = 'gold') => { const p = subPrice(plan); const full = p[1] * m, x = p[m] || full; return full > x ? Math.round((1 - x / full) * 100) : 0; };
 function goldBlock(plan = 'gold') {
-  const zone = C[(S.me && S.me.country) || S.loc.country].z, p = subPrice();
-  return `<div class="card" style="text-align:center;margin:12px 0;background:#f2f9ff"><div class="mut small">Prix</div><div style="font-size:26px;font-weight:800;color:#1e9be8">${money(p.amount, p.cur)} <span style="font-size:14px;font-weight:600">/ mois</span></div></div>
-  <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value)"><option value="1">1 mois</option><option value="3">3 mois</option><option value="12">12 mois</option></select></div>
-  <p class="small" style="text-align:center;margin:-4px 0 10px">Total : <b id="gTot">${subTotal(1)}</b></p>
+  const zone = C[(S.me && S.me.country) || S.loc.country].z, p = subPrice(plan);
+  return `<div class="card" style="text-align:center;margin:12px 0;background:#f2f9ff"><div class="mut small">Prix</div><div style="font-size:26px;font-weight:800;color:#1e9be8">${money(p.amount, p.cur)} <span style="font-size:14px;font-weight:600">/ mois</span></div>${plan !== 'gold' ? '<div class="small" style="margin-top:4px">🎁 1er mois offert à l’ouverture</div>' : ''}</div>
+  <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value,'${plan}')">${[1, 3, 12].map(m => `<option value="${m}">${m === 1 ? '1 mois' : m === 3 ? '3 mois' : '12 mois'} · ${money(p[m], p.cur)}${subSave(m, plan) ? ` (−${subSave(m, plan)} %)` : ''}</option>`).join('')}</select></div>
+  <p class="small" style="text-align:center;margin:-4px 0 10px">Total : <b id="gTot">${subTotal(1, plan)}</b></p>
   <div class="field"><label>Comment veux-tu payer ?</label><select id="gPay">${[...PAYZ[zone], 'Espèces', 'Autre'].map(p => `<option>${p}</option>`).join('')}</select></div>
   <button class="btn gold" id="gBtn" onclick="V.requestSub('${plan}')">${plan === 'gold' ? '👑 Demander l’activation Gold' : '🏪 Demander l’activation Vendeur'}</button>
   <p class="mut small" style="margin-top:8px;text-align:center">Après ta demande, paie le montant et envoie la capture sur WhatsApp. L’abonnement est activé dès réception.</p>`;
@@ -1232,12 +1239,12 @@ function previewPay(z) {
 function payInfo(plan, months, pay) {
   const cc = payPreviewCc || (S.me && S.me.country) || S.loc.country, zone = C[cc].z, pi = PAYMENT_INFO[zone];
   const label = plan === 'gold' ? 'Vibzo Gold' : 'Vendeur';
-  const msg = `Bonjour Vibzo 👋 Je viens de demander l’abonnement ${label} (${months} mois) depuis ${C[cc].n}. Utilisateur : @${S.me ? S.me.username : ''}. Montant : ${subTotal(months)}. Paiement : ${pay}.`;
+  const msg = `Bonjour Vibzo 👋 Je viens de demander l’abonnement ${label} (${months} mois) depuis ${C[cc].n}. Utilisateur : @${S.me ? S.me.username : ''}. Montant : ${subTotal(months, plan)}. Paiement : ${pay}.`;
   const wa = SUPPORT_WHATSAPP ? `<a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Écrire à Vibzo sur WhatsApp</a>` : '';
   const momo = pi && pi.momo ? `<div class="card" style="text-align:left;margin-top:12px;background:#fffbe6"><b>Mobile Money</b><div class="small" style="margin-top:6px">${esc(pi.momo)}<br>Numéro : <b style="user-select:all">${esc(pi.number)}</b></div><button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${pi.number}').then(()=>V.toast('Numéro copié ✅'))">📋 Copier le numéro</button></div>` : '';
   const bank = pi && pi.iban ? `<div class="card" style="text-align:left;margin-top:12px;background:#f2f9ff"><b>Virement bancaire</b><div class="small" style="margin-top:6px">Banque : <b>${esc(pi.bank)}</b><br>Bénéficiaire : <b>${esc(pi.holder)}</b><br>IBAN : <b style="user-select:all">${esc(pi.iban)}</b></div><button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${pi.iban}').then(()=>V.toast('IBAN copié ✅'))">📋 Copier l’IBAN</button></div>` : '';
   modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center;max-height:90vh;overflow:auto"><div style="font-size:40px">✅</div><h3>Demande envoyée</h3>
-  <div style="font-size:22px;font-weight:800;color:#1e9be8;margin-top:6px">${esc(subTotal(months))}</div><p class="mut small" style="margin-top:6px">1. Paie ce montant (${esc(pay)}${pi && pi.iban ? ' ou virement' : ''}).<br>2. Envoie la capture du paiement sur WhatsApp.<br>3. Ton abonnement ${label} est activé dès réception.</p>${momo}${wa}${bank}
+  <div style="font-size:22px;font-weight:800;color:#1e9be8;margin-top:6px">${esc(subTotal(months, plan))}</div><p class="mut small" style="margin-top:6px">1. Paie ce montant (${esc(pay)}${pi && pi.iban ? ' ou virement' : ''}).<br>2. Envoie la capture du paiement sur WhatsApp.<br>3. Ton abonnement ${label} est activé dès réception.</p>${momo}${wa}${bank}
   <button class="btn ghost" style="margin-top:10px" onclick="V.closeModal()">Fermer</button></div>`);
 }
 function gold() {
@@ -1454,8 +1461,8 @@ const pendingRef = () => { try { return localStorage.getItem('vibzo_ref') || '';
 async function applyRefIfAny() { const r = pendingRef(); if (!r || !S.me || r === S.me.username) return; const { data } = await sb.rpc('set_referrer', { p_username: r }); try { localStorage.removeItem('vibzo_ref'); } catch (e) { } if (data) toast('🎁 Bienvenue ! Ton ami a été remercié.'); }
 async function inviteSheet() {
   if (!requireAuth()) return;
-  const url = `${location.origin}${location.pathname}?ref=${encodeURIComponent(S.me.username)}`, msg = `Rejoins-moi sur Vibzo 🔥 vidéos, emplois, boutiques et rencontres près de chez toi : ${url}`;
-  sheet('🎁 Inviter des amis', `<div class="hero" style="margin:0;text-align:center"><div style="font-size:40px">🎁</div><h2>3 amis = 7 jours de Gold</h2><p class="small" style="margin-top:6px">Chaque fois que 3 amis s’inscrivent avec ton lien, tu reçois <b>7 jours de Vibzo Gold</b> gratuits.</p></div>
+  const url = `${location.origin}${location.pathname}?ref=${encodeURIComponent(S.me.username)}`, msg = `Rejoins-moi sur Vibzo 🔥 vidéos, emplois, boutiques et rencontres près de chez toi. Avec mon lien, tu reçois 3 jours de Gold offerts : ${url}`;
+  sheet('🎁 Inviter des amis', `<div class="hero" style="margin:0;text-align:center"><div style="font-size:40px">🎁</div><h2>3 amis = 7 jours de Gold</h2><p class="small" style="margin-top:6px">Chaque fois que 3 amis s’inscrivent avec ton lien, tu reçois <b>7 jours de Vibzo Gold</b> gratuits. Et chaque ami invité reçoit <b>3 jours de Gold</b> en cadeau de bienvenue.</p></div>
   <div class="card" style="text-align:center;margin:12px 0"><div class="mut small">Amis inscrits avec ton lien</div><div style="font-size:28px;font-weight:800;color:#1e9be8" id="refN">…</div><div class="rbar"><i id="refBar" style="width:0"></i></div><div class="mut small" id="refNext"></div></div>
   <div class="field"><input value="${esc(url)}" readonly onclick="this.select()"></div>
   <a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Inviter sur WhatsApp</a>

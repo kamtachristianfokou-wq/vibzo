@@ -23,6 +23,13 @@ export const ANDROID_APK_URL = '';
 
 // Prix des abonnements (Gold et Vendeur), par mois
 export const SUB_PRICES = {
-  A: { amount: 20, cur: '₼' },      // Azerbaïdjan : 20 manats
-  default: { amount: 1000, cur: 'FCFA' }, // Afrique : 1 000 XAF
+  // prix par durée (1, 3 ou 12 mois) — doivent rester identiques à payment_quote() côté serveur
+  gold: {
+    A: { cur: '₼', 1: 20, 3: 50, 12: 180 },               // Azerbaïdjan
+    default: { cur: 'FCFA', 1: 1500, 3: 4000, 12: 12000 }, // Afrique
+  },
+  vendeur: {
+    A: { cur: '₼', 1: 20, 3: 50, 12: 180 },
+    default: { cur: 'FCFA', 1: 2000, 3: 5500, 12: 20000 },
+  },
 };

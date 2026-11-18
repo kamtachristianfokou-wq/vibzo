@@ -177,6 +177,11 @@ Ajout de la signature Vibzo. Garde l’écran allumé.|Adding the Vibzo signatur
 Vidéo prête|Video ready|Vídeo pronto|Video listo|الفيديو جاهز|Video iko tayari|ቪዲዮው ዝግጁ ነው|Video hazırdır
 Partager (WhatsApp, Instagram…)|Share (WhatsApp, Instagram…)|Partilhar (WhatsApp, Instagram…)|Compartir (WhatsApp, Instagram…)|مشاركة (WhatsApp، Instagram…)|Shiriki (WhatsApp, Instagram…)|አጋራ (WhatsApp, Instagram…)|Paylaş (WhatsApp, Instagram…)
 Ignorer|Skip|Saltar|Omitir|تخطَّ|Ruka|ዝለል|Keç
+1er mois offert à l’ouverture|1st month free when you open|1.º mês grátis na abertura|1.er mes gratis al abrir|الشهر الأول مجاني عند الافتتاح|Mwezi wa 1 bure unapofungua|ሲከፍቱ የመጀመሪያው ወር ነፃ|Açılışda 1-ci ay pulsuz
+Tes produits ne sont plus visibles. Renouvelle pour les remettre en ligne.|Your products are no longer visible. Renew to put them back online.|Os teus produtos já não estão visíveis. Renova para os voltar a mostrar.|Tus productos ya no son visibles. Renueva para volver a mostrarlos.|منتجاتك لم تعد ظاهرة. جدّد لإعادتها.|Bidhaa zako hazionekani tena. Huisha ili zirudi mtandaoni.|ምርቶችህ ከአሁን በኋላ አይታዩም። እንደገና ለማሳየት አድስ።|Məhsulların artıq görünmür. Yenidən göstərmək üçün yenilə.
+Renouveler|Renew|Renovar|Renovar|تجديد|Huisha|አድስ|Yenilə
+Renouveler mon abonnement Vendeur|Renew my Seller subscription|Renovar a minha assinatura de Vendedor|Renovar mi suscripción de Vendedor|تجديد اشتراك البائع|Huisha usajili wangu wa Muuzaji|የሻጭ ምዝገባዬን አድስ|Satıcı abunəliyimi yenilə
+Boutique ouverte : ton 1er mois est offert !|Shop open: your 1st month is free!|Loja aberta: o teu 1.º mês é grátis!|Tienda abierta: ¡tu 1.er mes es gratis!|تم فتح المتجر: الشهر الأول مجاني!|Duka limefunguliwa: mwezi wako wa 1 ni bure!|ሱቁ ተከፍቷል፦ የመጀመሪያው ወርህ ነፃ ነው!|Mağaza açıldı: 1-ci ayın pulsuzdur!
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)
