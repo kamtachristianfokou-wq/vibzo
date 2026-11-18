@@ -316,7 +316,7 @@ SCREENS.home = async () => {
   const ov = !!S.override;
   $('#s-home').innerHTML = `<div id="topbar">${ov ? `<button class="ib" onclick="V.go(V.S.prev||'home')" aria-label="Retour">${I.back}</button><div></div><div></div>` :
     `<button class="loc" onclick="V.openLoc()">${esc(locLabel())} ▾</button><div class="tabs"><button class="${S.tab === 'abo' ? 'on' : ''}" onclick="V.setTab('abo')">Abonnements</button><button class="${S.tab === 'pour' ? 'on' : ''}" onclick="V.setTab('pour')">Pour toi</button></div><div class="rt"><button class="ib" onclick="V.go('discover')" aria-label="Rechercher">${I.search}</button><button class="ib" id="bellBtn" onclick="V.openNotifs()" aria-label="Notifications">${I.bell}${S.notifs ? `<span class="badge">${S.notifs > 99 ? '99+' : S.notifs}</span>` : ''}</button><button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button></div>`}</div>
-  <button class="mute" onclick="V.toggleMute()" aria-label="Son">${S.muted || soundBlocked ? '🔇' : '🔊'}</button><div id="feed"></div>`;
+  ${ov ? '' : `<button class="lvpill" id="liveBtn" onclick="V.livesSheet()" aria-label="Lives">LIVE</button>`}<button class="mute" onclick="V.toggleMute()" aria-label="Son">${S.muted || soundBlocked ? '🔇' : '🔊'}</button><div id="feed"></div>`;
   if (ov) { S.feed = S.override.list; S.feedDone = true; renderSlides(true); setTimeout(() => { const el = document.querySelector(`.slide[data-id="${S.override.start}"]`); if (el) $('#feed').scrollTop = el.offsetTop; }, 30); return; }
   if (S.tab === 'abo' && !uid()) { $('#feed').innerHTML = endSlide('👥', 'Abonnements', 'Connecte-toi pour suivre tes créateurs préférés.', `<button class="btn" style="width:auto;padding:12px 22px" onclick="V.go('auth')">Se connecter</button>`); return; }
   S.feed = []; S.feedOffset = 0; S.feedDone = false;
@@ -665,8 +665,8 @@ async function sendReport(type, id, i) {
 let qTimer;
 SCREENS.discover = () => {
   const pre = S.searchQ || ''; S.searchQ = null;
-  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl">Vidéos récentes · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
-  loadTrends(); search();
+  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="livesStrip"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
+  loadTrends(); search(); livesStrip();
 };
 async function loadTrends() {
   const el = $('#trends'); if (!el) return;
@@ -690,7 +690,7 @@ async function search() {
   if (error) return fail(error);
   $('#users').innerHTML = (users.data || []).length ? `<div class="lbl">Personnes</div>` + users.data.map(u => `<button class="mitem" style="padding:8px 0" onclick="V.openProfile('${u.id}')">${avatar(u, 44)}<div class="grow"><div class="n">${esc(u.display_name)}</div><div class="l">@${esc(u.username)} · ${fmtN(u.followers)} abonnés</div></div></button>`).join('') : '';
   $('#dres').innerHTML = vids.length ? vids.map(v => thumb(v, vids)).join('') : `<div class="empty" style="grid-column:1/-1">Aucune vidéo trouvée.</div>`;
-  S._grid = vids; const lb = $('#dlbl'); if (lb) lb.textContent = q ? (q.startsWith('#') || q.startsWith('♪') ? 'Les plus vues' : 'Résultats') : 'Vidéos récentes · ' + locLabel();
+  S._grid = vids; const lb = $('#dlbl'); if (lb) lb.innerHTML = q ? (q.startsWith('#') || q.startsWith('♪') ? 'Les plus vues' : 'Résultats') : '<span>Vidéos récentes</span> · ' + esc(locLabel());
   if (q) loadTrends();
 }
 const thumb = (v) => { S.vids.set(v.id, v); return `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.openGrid('${v.id}')"><video src="${esc(v.video_url)}#t=0.5" muted preload="metadata" playsinline></video><span>${v.view_count ? '▶ ' + fmtN(v.view_count) : '♥ ' + fmtN(v.like_count)}</span></button>`; };
@@ -705,6 +705,7 @@ SCREENS.create = async () => {
   let prods = [];
   if (S.myShop) { const { data } = await sb.from('products').select('id,name,price,currency').eq('shop_id', S.myShop.id).eq('active', true); prods = data || []; }
   $('#s-create').innerHTML = hdr('Nouvelle vidéo', `<span class="loc">📍 ${esc((C[S.me.country] || {}).f || '')} ${esc(S.me.region || '')}</span>`) + `<div class="pad">
+  <button class="golive" onclick="V.goLive()"><span>🔴</span><div><b>Lancer un live</b><small>Filme-toi en direct, reçois des cœurs et des cadeaux</small></div><i>›</i></button>
   <label class="up"><input type="file" accept="video/*" style="display:none" onchange="V.pickVid(this)"><div class="big">📹</div><b>${draft ? 'Changer de vidéo' : 'Choisir une vidéo'}</b><div class="mut small" style="margin-top:4px">Depuis ta galerie ou ta caméra · tous formats · 3 minutes maximum</div></label>
   <div class="prev" id="prev" style="${draft ? '' : 'display:none'};background:#0b2540">${draft ? `<video src="${draft.url}" autoplay loop muted playsinline></video>` : ''}</div>
   <div class="field"><label>Titre à l’écran (facultatif)</label><input id="ct" maxlength="80" placeholder="Ex : Mon premier challenge 🔥"></div>
@@ -856,7 +857,7 @@ function jobCard(o, mine) {
   <div class="jact">${mine ? `<button class="btn sm" onclick="V.offerApps('${o.id}')">👥 Candidatures (${o.application_count})</button><button class="btn sm ghost" style="width:auto" onclick="V.offerMatches('${o.id}')">✨ Profils suggérés</button>${o.status === 'open' ? `<button class="btn sm ghost" onclick="V.closeOffer('${o.id}')">Fermer</button>` : ''}`
       : `<button class="btn sm ${o.applied_by_me ? 'ghost' : ''}" ${o.applied_by_me || o.user_id === uid() ? 'disabled' : ''} onclick="V.applyJob('${o.id}')">${o.applied_by_me ? 'Candidature envoyée ✓' : o.user_id === uid() ? 'Ton offre' : 'Postuler'}</button><button class="btn sm ghost" style="width:auto" onclick="V.offerDetail('${o.id}')">Détails</button><button class="dots" onclick="V.report('job','${o.id}')">🚩</button>`}</div></div>`;
 }
-function offerDetail(id) { const o = S.offers.get(id); sheet(esc(o.title), `<div class="co mut">${esc(o.company)} · publié par ${esc(o.poster_name)} ${ago(o.created_at)}</div><div class="tags"><span>📍 ${esc(o.region || '')} ${esc((C[o.country] || {}).n || '')}</span><span>${esc(o.contract)}</span><span>${esc(o.remote)}</span>${o.salary ? `<span class="g">${money(o.salary, o.currency)} / mois</span>` : ''}</div><p style="white-space:pre-wrap;margin-top:14px;line-height:1.5;font-size:14.5px">${esc(o.description || 'Pas de description.')}</p><div class="safety">🛡️<span>Un vrai recruteur ne demande jamais d’argent pour un emploi. Signale toute demande de paiement.</span></div>${o.user_id !== uid() && !o.applied_by_me ? `<button class="btn" onclick="V.applyJob('${o.id}')">Postuler</button>` : ''}`); }
+function offerDetail(id) { const o = S.offers.get(id); sheet(esc(o.title), `<div class="co mut">${esc(o.company)} · <span>publié par</span> ${esc(o.poster_name)} <span>${ago(o.created_at)}</span></div><div class="tags"><span>📍 ${esc(o.region || '')} ${esc((C[o.country] || {}).n || '')}</span><span>${esc(o.contract)}</span><span>${esc(o.remote)}</span>${o.salary ? `<span class="g">${money(o.salary, o.currency)} / mois</span>` : ''}</div><p style="white-space:pre-wrap;margin-top:14px;line-height:1.5;font-size:14.5px">${esc(o.description || 'Pas de description.')}</p><div class="safety">🛡️<span>Un vrai recruteur ne demande jamais d’argent pour un emploi. Signale toute demande de paiement.</span></div>${o.user_id !== uid() && !o.applied_by_me ? `<button class="btn" onclick="V.applyJob('${o.id}')">Postuler</button>` : ''}<button class="btn ghost" onclick="V.shareThing('j','${o.id}')">📤 Partager l’offre</button>`); }
 function candCard(c) {
   S.cands.set(c.user_id, c);
   return `<div class="card">${c.score ? matchBar(c.score, c.reasons, c.offer_title) : ''}<div class="row" onclick="V.openProfile('${c.user_id}')">${avatar(c)}<div class="grow"><b>${esc(c.display_name)}</b><div class="mut small">${esc(c.job_title)} · ${c.experience_years} an${c.experience_years > 1 ? 's' : ''} d’expérience</div></div></div>${c.about ? `<p class="small" style="margin-top:8px">${esc(c.about)}</p>` : ''}<div class="tags">${(c.skills || []).map(k => `<span>${esc(k)}</span>`).join('')}<span>📍 ${esc(c.region || (C[c.country] || {}).n || '')}</span><span class="g">Dispo : ${esc(c.availability)}</span>${c.mobility === 'international' ? '<span>✈️ Mobile à l’international</span>' : c.mobility === 'teletravail' ? '<span>💻 Télétravail</span>' : ''}</div>${c.user_id === uid() ? '' : `<div class="jact"><button class="btn sm" onclick="V.contactCand('${c.user_id}')">💬 Contacter</button></div>`}</div>`;
@@ -989,7 +990,8 @@ async function openProduct(id) {
   ${p.description ? `<p style="margin-top:12px;font-size:14px;line-height:1.5;white-space:pre-wrap">${esc(p.description)}</p>` : ''}
   ${mine ? '<p class="mut small" style="margin-top:12px">C’est ton produit.</p>' : `<div class="row" style="margin-top:14px"><div class="qty"><button onclick="const e=document.getElementById('pq');e.textContent=Math.max(1,+e.textContent-1)">−</button><span id="pq">1</span><button onclick="const e=document.getElementById('pq');e.textContent=Math.min(99,+e.textContent+1)">+</button></div><button class="btn grow" style="margin:0" onclick="V.orderForm('${p.id}')">Commander</button></div>
   ${wa ? `<a class="btn ghost" href="${wa}" target="_blank" rel="noopener" style="text-decoration:none">💬 Contacter sur WhatsApp</a>` : ''}
-  <button class="btn ghost" onclick="V.report('product','${p.id}')">🚩 Signaler</button>`}`);
+  <button class="btn ghost" onclick="V.report('product','${p.id}')">🚩 Signaler</button>`}
+  <button class="btn ghost" onclick="V.shareThing('p','${p.id}')">📤 Partager ce produit</button>`);
 }
 function orderForm(id) {
   if (!requireAuth('Connecte-toi pour commander.')) return;
@@ -1096,7 +1098,7 @@ SCREENS.profile = async () => {
   const { data: p, error } = await sb.from('profile_stats').select('*').eq('id', id).maybeSingle();
   if (error) throw error; if (!p) { $('#s-profile').innerHTML = hdr('Profil', '', 'home') + '<div class="empty">Profil introuvable.</div>'; return; }
   const tab = own ? S.profTab : 'videos';
-  $('#s-profile').innerHTML = hdr('@' + esc(p.username), own ? `<button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button><button class="ib" onclick="V.settings()" aria-label="Paramètres">${I.gear}</button>` : `<button class="ib" onclick="V.report('profile','${p.id}')" aria-label="Signaler">🚩</button>`, own ? '' : (S.prev && S.prev !== 'profile' ? S.prev : 'home')) + `
+  $('#s-profile').innerHTML = hdr('@' + esc(p.username), own ? `<button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button><button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.settings()" aria-label="Paramètres">${I.gear}</button>` : `<button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.report('profile','${p.id}')" aria-label="Signaler">🚩</button>`, own ? '' : (S.prev && S.prev !== 'profile' ? S.prev : 'home')) + `
   <div class="ptop"><div class="pav ${p.is_vip ? 'gold' : ''}" style="${p.avatar_url ? '' : gbg(gfor(p.username))}">${p.avatar_url ? `<img class="avimg" src="${esc(p.avatar_url)}" alt="">` : esc(p.display_name[0].toUpperCase())}${p.is_vip ? '<span class="gb">👑</span>' : ''}</div>
   <h2 style="margin-top:12px;font-size:19px">${esc(p.display_name)}${p.is_creator ? ' <span class="crb">💰 Créateur</span>' : ''}</h2>${p.bio ? `<p class="mut" style="font-size:14px;margin-top:4px">${esc(p.bio)}</p>` : ''}
   <div class="tags" style="justify-content:center"><span>📍 ${esc(p.region || '')} ${esc((C[p.country] || {}).f || '')} ${esc((C[p.country] || {}).n || '')}</span>${p.is_vip ? '<span style="color:#a87800">👑 Gold</span>' : ''}</div>
@@ -1198,7 +1200,7 @@ function settings() {
   ${S.me.role === 'admin' ? `<button onclick="V.closeSheet();V.go('admin')"><span class="e">🛠️</span>Back-office admin<span class="r">›</span></button>` : ''}
   <button onclick="V.logout()"><span class="e">🚪</span>Se déconnecter</button>
   <button onclick="V.deleteAccount()" style="color:#d81f45"><span class="e">🗑️</span>Supprimer mon compte</button></div>
-  <p class="mut small" style="text-align:center;margin-top:14px">Connecté : ${esc(S.session.user.email || '')}</p>`);
+  <p class="mut small" style="text-align:center;margin-top:14px"><span>Connecté :</span> ${esc(S.session.user.email || '')}</p>`);
 }
 /* =====================================================================
    RENCONTRES (abonnés Gold, 18 ans et plus)
@@ -1437,7 +1439,7 @@ async function refreshUnread() {
 /* =====================================================================
    NOTIFICATIONS ET PARRAINAGE
    ===================================================================== */
-const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''] };
+const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''], match: ['💘', ''], order: ['🛍️', ''], order_status: ['📦', ''], application: ['💼', ''], offer_ok: ['✅', ''], live: ['🔴', ''] };
 async function refreshNotifs() {
   if (!uid()) return;
   const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false);
@@ -1447,11 +1449,17 @@ async function openNotifs() {
   if (!requireAuth('Connecte-toi pour voir tes notifications.')) return;
   sheet('🔔 Notifications', `<div id="nlist">${loading()}</div>`);
   const { data, error } = await sb.from('notifications_view').select('*').order('created_at', { ascending: false }).limit(80); if (error) return fail(error);
-  $('#nlist').innerHTML = data.length ? data.map(n => { const t = NT[n.type] || NT.system; return `<button class="nrow ${n.read ? '' : 'new'}" onclick="V.openNotif('${n.type}','${n.video_id || ''}','${n.actor_id || ''}')">${n.actor_avatar ? `<img class="avimg" src="${esc(n.actor_avatar)}" alt="" style="width:40px;height:40px;border-radius:50%">` : `<span class="nic">${t[0]}</span>`}<div class="grow" style="text-align:left"><div><b>${esc(n.actor_name || 'Vibzo')}</b> ${t[1]} ${n.body ? `<span class="mut">${richText(n.body)}</span>` : ''}</div><div class="mut small">${ago(n.created_at)}</div></div>${n.video_url ? `<video src="${esc(n.video_url)}#t=0.5" muted preload="metadata" playsinline class="nth"></video>` : ''}</button>`; }).join('') : '<div class="empty"><div class="big">🔔</div><p>Pas encore de notification. Publie, commente et suis des créateurs !</p></div>';
+  $('#nlist').innerHTML = data.length ? data.map(n => { const t = NT[n.type] || NT.system; return `<button class="nrow ${n.read ? '' : 'new'}" onclick="V.openNotif('${n.type}','${n.video_id || ''}','${n.actor_id || ''}','${n.ref_id || ''}')">${n.actor_avatar ? `<img class="avimg" src="${esc(n.actor_avatar)}" alt="" style="width:40px;height:40px;border-radius:50%">` : `<span class="nic">${t[0]}</span>`}<div class="grow" style="text-align:left"><div><b>${esc(n.actor_name || 'Vibzo')}</b> ${t[1]} ${n.body ? `<span class="mut">${richText(n.body)}</span>` : ''}</div><div class="mut small">${ago(n.created_at)}</div></div>${n.video_url ? `<video src="${esc(n.video_url)}#t=0.5" muted preload="metadata" playsinline class="nth"></video>` : ''}</button>`; }).join('') : '<div class="empty"><div class="big">🔔</div><p>Pas encore de notification. Publie, commente et suis des créateurs !</p></div>';
   if (data.some(n => !n.read)) { await sb.from('notifications').update({ read: true }).eq('read', false); S.notifs = 0; const b = $('#bellBtn'); if (b) b.innerHTML = I.bell; }
 }
-async function openNotif(type, vid, actor) {
+async function openNotif(type, vid, actor, ref) {
   closeSheet(); if (type === 'wallet') { walletSheet(); return; }
+  if (type === 'match' && ref) return openChat(ref);
+  if (type === 'order') { orderTab = 'sell'; return go('orders'); }
+  if (type === 'order_status') { const { data: o } = ref ? await sb.from('orders').select('buyer_id').eq('id', ref).maybeSingle() : { data: null }; orderTab = o && o.buyer_id !== uid() ? 'sell' : 'buy'; return go('orders'); }
+  if (type === 'application' && ref) return openAppsLink(ref);
+  if (type === 'offer_ok') { S.jobTab = 'mine'; return go('jobs'); }
+  if (type === 'live' && ref) return openLive(ref);
   if (vid) { const { data } = await sb.from('videos_feed').select('*').eq('id', vid).maybeSingle(); if (data) { S.override = { list: [data], start: vid }; go('home', { keepOverride: true }); if (type === 'comment' || type === 'reply' || type === 'mention' || type === 'comment_like') setTimeout(() => openComments(vid), 400); return; } }
   if (actor) openProfile(actor);
 }
@@ -1696,7 +1704,7 @@ SCREENS.admin = async () => {
   <div class="lbl">Offrir des pièces (gagnants d’un défi, créateurs fondateurs)</div><div class="row"><input id="gcu" placeholder="nom d’utilisateur"><input id="gcn" type="number" value="500" min="1" max="10000" style="width:90px"><button class="btn sm" style="width:auto" onclick="V.giveCoins()">Offrir</button></div>
   <div class="lbl">Offres à valider (${(offers.data || []).length})</div>${(offers.data || []).map(o => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(o.title)}</b><div class="mut small">${esc(o.company)} · ${esc((C[o.country] || {}).n || '')} · par ${esc(o.poster_name)}</div><button class="mut small" onclick="V.offerDetail('${o.id}')" style="text-decoration:underline">Lire</button></div><div class="acts"><button class="ok" onclick="V.modOffer('${o.id}','open')">Publier</button><button class="ko" onclick="V.modOffer('${o.id}','rejected')">Refuser</button></div></div>`).join('') || '<p class="mut small">Rien à valider.</p>'}
   <div class="lbl">Boutiques</div>${(shops.data || []).map(sh => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(sh.name)}</b> ${pill(sh.status)}<div class="mut small">${esc((C[sh.country] || {}).n || '')} · ${esc(sh.platform)}${sh.whatsapp ? ' · ' + esc(sh.whatsapp) : ''}${sh.paid_until ? ' · payé jusqu’au ' + new Date(sh.paid_until).toLocaleDateString('fr-FR') : ''}</div></div><div class="acts"><button class="ok" onclick="V.modShop('${sh.id}','active')">+30 j</button>${sh.status !== 'suspended' ? `<button class="ko" onclick="V.modShop('${sh.id}','suspended')">Suspendre</button>` : ''}</div></div>`).join('') || '<p class="mut small">Aucune boutique.</p>'}
-  <div class="lbl">Signalements (${(reports.data || []).length})</div>${(reports.data || []).map(r => `<div class="mq"><span class="k">🚩</span><div class="grow"><b style="font-size:14px">${esc(r.reason)}</b><div class="mut small">${esc(r.target_type)} · ${ago(r.created_at)}</div></div><div class="acts">${r.target_type === 'video' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','hide')">Masquer</button>` : r.target_type === 'comment' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','delc')">Supprimer</button>` : r.target_type === 'profile' ? `<button class="ok" onclick="V.openProfile('${esc(r.target_id)}')">Voir</button>` : ''}<button class="ok" onclick="V.modReport('${r.id}','','ok')">Classer</button></div></div>`).join('') || '<p class="mut small">Aucun signalement 🎉</p>'}`;
+  <div class="lbl">Signalements (${(reports.data || []).length})</div>${(reports.data || []).map(r => `<div class="mq"><span class="k">🚩</span><div class="grow"><b style="font-size:14px">${esc(r.reason)}</b><div class="mut small">${esc(r.target_type)} · ${ago(r.created_at)}</div></div><div class="acts">${r.target_type === 'video' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','hide')">Masquer</button>` : r.target_type === 'comment' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','delc')">Supprimer</button>` : r.target_type === 'profile' ? `<button class="ok" onclick="V.openProfile('${esc(r.target_id)}')">Voir</button>` : r.target_type === 'live' ? `<button class="ok" onclick="V.openLive('${esc(r.target_id)}')">Voir</button><button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','endlive')">Couper le live</button>` : ''}<button class="ok" onclick="V.modReport('${r.id}','','ok')">Classer</button></div></div>`).join('') || '<p class="mut small">Aucun signalement 🎉</p>'}`;
   loadAdminCreators(); loadAdminWallet();
 };
 async function modOffer(id, st) { closeSheet(); const { error } = await sb.from('job_offers').update({ status: st }).eq('id', id); if (error) return fail(error); toast(st === 'open' ? 'Offre publiée' : 'Offre refusée'); go('admin'); }
@@ -1706,6 +1714,7 @@ async function modShop(id, st) {
 }
 async function modReport(id, target, action) {
   if (action === 'hide') { const { error } = await sb.from('videos').update({ status: 'hidden' }).eq('id', target); if (error) return fail(error); }
+  if (action === 'endlive') { const { error } = await sb.rpc('end_live', { p_live: target }); if (error && !/termin/i.test(error.message)) return fail(error); }
   if (action === 'delc') { const { error } = await sb.from('comments').delete().eq('id', target); if (error) return fail(error); }
   const { error } = await sb.from('reports').update({ status: 'resolved' }).eq('id', id); if (error) return fail(error); toast('Signalement traité'); go('admin');
 }
@@ -1777,8 +1786,229 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
 /* =====================================================================
    DÉMARRAGE
    ===================================================================== */
+/* =====================================================================
+   PARTAGE DE TOUT (produits, offres d'emploi, profils, lives) + LIENS DIRECTS
+   ===================================================================== */
+const linkFor = (k, id) => `${location.origin}${location.pathname}${S.me ? `?ref=${encodeURIComponent(S.me.username)}` : ''}#${k}=${id}`;
+function shareText(k, id) {
+  if (k === 'p') { const p = S.prods.get(id); return p ? `🛍️ ${p.name} · ${money(p.price, p.currency)} sur Vibzo` : 'Regarde ce produit sur Vibzo 🛍️'; }
+  if (k === 'j') { const o = S.offers.get(id); return o ? `💼 Offre d’emploi : ${o.title} · ${o.company}` : 'Offre d’emploi sur Vibzo 💼'; }
+  if (k === 'u') { const u = S.shareUser; return u ? `Découvre @${u} sur Vibzo 🔥` : 'Découvre ce créateur sur Vibzo 🔥'; }
+  if (k === 'l') { const l = LV && LV.host; return l ? `🔴 @${l.username} est en direct sur Vibzo, viens vite !` : '🔴 En direct sur Vibzo'; }
+  return 'Vibzo';
+}
+function shareThing(k, id, user) {
+  if (user) S.shareUser = user;
+  const url = linkFor(k, id), txt = shareText(k, id), enc = encodeURIComponent, full = enc(txt + ' ' + url);
+  const T = [['💬', 'WhatsApp', '#25D366', `https://wa.me/?text=${full}`], ['f', 'Facebook', '#1877F2', `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`], ['✈️', 'Telegram', '#2AABEE', `https://t.me/share/url?url=${enc(url)}&text=${enc(txt)}`], ['𝕏', 'X', '#111', `https://twitter.com/intent/tweet?text=${full}`], ['✉️', 'SMS', '#34C759', `sms:?&body=${full}`]];
+  sheet('Partager', `<div class="shgrid">${T.map(t => `<a href="${t[3]}" target="_blank" rel="noopener"><span style="background:${t[2]}">${t[0]}</span>${t[1]}</a>`).join('')}
+  <button onclick="V.copyThing('${k}','${id}')"><span style="background:#8a9bb0">🔗</span>Copier le lien</button>${navigator.share ? `<button onclick="V.nativeThing('${k}','${id}')"><span style="background:#1e9be8">⋯</span>Plus</button>` : ''}</div>`);
+}
+async function copyThing(k, id) { const u = linkFor(k, id); try { await navigator.clipboard.writeText(u); toast('Lien copié 🔗'); } catch (e) { toast(u); } closeSheet(); }
+async function nativeThing(k, id) { try { await navigator.share({ title: 'Vibzo', text: shareText(k, id), url: linkFor(k, id) }); closeSheet(); } catch (e) { } }
+async function ensureOffer(id) {
+  if (S.offers.get(id)) return S.offers.get(id);
+  const { data } = await sb.from('offers_view').select('*').eq('id', id).maybeSingle(); if (data) S.offers.set(id, data); return data;
+}
+async function openOfferLink(id) { const o = await ensureOffer(id); if (!o) return toast('Offre indisponible'); offerDetail(id); }
+async function openAppsLink(id) { const o = await ensureOffer(id); if (!o) return go('jobs'); offerApps(id); }
+async function handleDeepLink() {
+  const m = /^#([pjul])=([0-9a-f-]{36})/i.exec(location.hash); if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  const [, k, id] = m;
+  if (k === 'p') openProduct(id); else if (k === 'j') openOfferLink(id); else if (k === 'u') openProfile(id); else if (k === 'l') openLive(id);
+}
+
+/* =====================================================================
+   LIVE (diffusion en direct, comme TikTok) · LiveKit
+   ===================================================================== */
+const LIVE_FN = `${SUPABASE_URL}/functions/v1/live-token`;
+const LK_SRC = 'https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.js';
+let LV = null;
+function loadLK() {
+  if (window.LivekitClient) return Promise.resolve(window.LivekitClient);
+  return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = LK_SRC; s.onload = () => window.LivekitClient ? ok(window.LivekitClient) : ko(new Error('live')); s.onerror = () => ko(new Error('Connexion au live impossible, vérifie ta connexion')); document.head.appendChild(s); });
+}
+async function liveToken(id) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const h = { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }; if (session) h.Authorization = 'Bearer ' + session.access_token;
+    const r = await fetch(LIVE_FN, { method: 'POST', headers: h, body: JSON.stringify({ live: id }) });
+    return await r.json();
+  } catch (e) { return { error: 'network' }; }
+}
+async function loadLives() { const { data } = await sb.from('lives_now').select('*').order('viewers', { ascending: false }).limit(30); return data || []; }
+const liveCard = l => `<button class="lvc" onclick="V.openLive('${l.id}')" style="${gst(gfor(l.username))}">${l.avatar_url ? `<img src="${esc(l.avatar_url)}" alt="">` : `<b class="lvi">${esc((l.display_name || l.username || '?')[0].toUpperCase())}</b>`}<span class="lvbadge">EN DIRECT</span><span class="lvv">👁 ${fmtN(l.viewers)}</span><div class="lvn">@${esc(l.username)}${l.title ? `<small>${esc(l.title)}</small>` : ''}</div></button>`;
+async function livesSheet() {
+  sheet('🔴 En direct', `<div id="lvList">${loading()}</div><button class="btn" onclick="V.goLive()">🔴 Lancer mon live</button>`);
+  const l = await loadLives();
+  if ($('#lvList')) $('#lvList').innerHTML = l.length ? `<div class="lvgrid">${l.map(liveCard).join('')}</div>` : '<div class="empty"><div class="big">📡</div><p>Personne n’est en direct pour le moment. Sois le premier !</p></div>';
+}
+async function livesStrip() {
+  const el = $('#livesStrip'); if (!el) return;
+  const l = await loadLives(); if (!$('#livesStrip')) return;
+  el.innerHTML = l.length ? `<div class="lbl">🔴 En direct maintenant</div><div class="lvstrip">${l.map(x => `<button onclick="V.openLive('${x.id}')"><div class="lvring">${avatar(x, 58)}</div><span class="lvbadge">LIVE</span><small>@${esc(x.username)}</small></button>`).join('')}</div>` : '';
+  const b = $('#liveBtn'); if (b) { b.classList.toggle('hot', l.length > 0); b.textContent = l.length ? `LIVE · ${l.length}` : 'LIVE'; }
+}
+function goLive() {
+  if (!requireAuth('Connecte-toi pour lancer un live.')) return;
+  sheet('🔴 Lancer un live', `<div class="hero" style="margin:0 0 10px;text-align:center"><div style="font-size:40px">🎥</div><p class="small">Filme-toi en direct : tes abonnés reçoivent une notification, tes fans t’envoient des cœurs et des cadeaux (convertibles en argent).</p></div>
+  <div class="field"><label>Titre du live</label><input id="lvT" maxlength="80" placeholder="Ex : Questions-réponses 🔥"></div>
+  <p class="mut small">Interdit en live : nudité, violence, arnaques, mineurs exposés. Les lives peuvent être signalés et coupés.</p>
+  <button class="btn" id="lvGo" onclick="V.startLive()">🔴 Passer en direct</button>`);
+}
+function liveUI(o) {
+  const old = $('#liveOv'); if (old) old.remove();
+  LV = Object.assign({ likes: 0, pend: 0, lastMsg: 0, t0: Date.now(), gifts: 0, hearts: 0 }, o);
+  const host = o.role === 'host', h = o.host || {};
+  const d = document.createElement('div'); d.id = 'liveOv';
+  d.innerHTML = `<video id="lvVid" autoplay playsinline ${host ? 'muted class="mirror"' : ''}></video><div class="lvwait" id="lvWait">${loading()}<div>${host ? 'Préparation du live…' : 'Connexion au live…'}</div></div>
+  <div class="lvtap" onclick="V.liveTap(event)"></div>
+  <div class="lvtop"><div class="lvhost">${avatar(h, 36)}<div><b>@${esc(h.username || '')}</b>${o.title ? `<small>${esc(o.title)}</small>` : ''}</div></div><span class="lvbadge">EN DIRECT</span><span class="lvcnt" id="lvCnt">👁 0</span><button class="ib" onclick="V.closeLive()" aria-label="Fermer">${I.close}</button></div>
+  <div class="lvstats" id="lvStats">❤️ <b id="lvLikes">0</b> · 🪙 <b id="lvCoins">0</b></div>
+  <button class="lvsnd" id="lvSnd" style="display:none" onclick="V.liveSound()">🔇 Touche pour activer le son</button>
+  <div class="lvchat" id="lvChat"></div>
+  <div class="lvbar">${o.role !== 'guest' ? `<input id="lvMsg" maxlength="150" placeholder="Dis quelque chose…" onkeydown="if(event.key==='Enter')V.liveSend()"><button onclick="V.liveSend()" aria-label="Envoyer">➤</button>` : `<button class="grow lvlogin" onclick="V.closeLive();V.go('auth')">Connecte-toi pour discuter</button>`}
+  ${host ? `<button onclick="V.liveFlip()" aria-label="Retourner la caméra">🔄</button><button onclick="V.liveMic()" id="lvMic" aria-label="Micro">🎙️</button>` : `<button onclick="V.liveGiftSheet()" aria-label="Cadeau">🎁</button><button onclick="V.liveHeart()" aria-label="J’aime">❤️</button>`}
+  <button onclick="V.shareThing('l','${o.id}')" aria-label="Partager">📤</button>${host ? `<button class="lvend" onclick="V.closeLive()">Terminer</button>` : `<button onclick="V.report('live','${o.id}')" aria-label="Signaler">🚩</button>`}</div>`;
+  $('#sheetBg').parentNode.appendChild(d);
+  document.querySelectorAll('#feed video').forEach(v => v.pause());
+}
+function liveSys(t) { liveLine(`<i>${t}</i>`); }
+function liveLine(html) { const c = $('#lvChat'); if (!c) return; c.insertAdjacentHTML('beforeend', `<div>${html}</div>`); while (c.children.length > 40) c.firstChild.remove(); c.scrollTop = c.scrollHeight; }
+function liveCount() { return LV && LV.room ? LV.room.remoteParticipants.size : 0; }
+function liveUpd() {
+  if (!LV) return; LV.peak = Math.max(LV.peak || 0, liveCount()); const c = $('#lvCnt'); if (c) c.textContent = '👁 ' + fmtN(Math.max(LV.role === 'host' ? 0 : 1, liveCount()));
+  const l = $('#lvLikes'); if (l) l.textContent = fmtN(LV.likes); const g = $('#lvCoins'); if (g) g.textContent = fmtN(LV.gifts);
+}
+function lvSendData(m) { try { LV.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(m)), { reliable: m.t !== 'h' }); } catch (e) { } }
+function bindRoom(room, LK) {
+  const E = LK.RoomEvent;
+  room.on(E.ParticipantConnected, p => { liveUpd(); if (LV && LV.role === 'host') liveSys(`👋 @${esc(p.name || 'invité')} a rejoint`); });
+  room.on(E.ParticipantDisconnected, p => { liveUpd(); if (LV && LV.role !== 'host' && LV.host && String(p.identity).startsWith(LV.host.host_id || LV.host.id)) liveOver(); });
+  room.on(E.Disconnected, () => { if (LV && !LV.closing) liveOver(); });
+  room.on(E.AudioPlaybackStatusChanged, () => { const b = $('#lvSnd'); if (b) b.style.display = room.canPlaybackAudio ? 'none' : 'block'; });
+  room.on(E.DataReceived, (payload, p) => {
+    let m; try { m = JSON.parse(new TextDecoder().decode(payload)); } catch (e) { return; }
+    const who = esc((p && p.name) || 'invité');
+    if (m.t === 'c' && typeof m.m === 'string') liveLine(`<b>@${who}</b> ${esc(m.m.slice(0, 150))}`);
+    else if (m.t === 'h') { LV.likes += Math.min(30, +m.n || 1); liveHearts(Math.min(5, +m.n || 1)); liveUpd(); }
+    else if (m.t === 'g') { const G = GIFTS.find(x => x[0] === m.g); if (!G) return; LV.gifts += G[3]; liveLine(`<b class="lvg">@${who} a envoyé ${G[1]} ${G[2]}</b>`); giftFly(G[1], G[3]); liveUpd(); }
+  });
+}
+async function startLive() {
+  const b = $('#lvGo'); if (b) { b.disabled = true; b.textContent = 'Préparation…'; }
+  const reset = () => { if (b) { b.disabled = false; b.textContent = '🔴 Passer en direct'; } };
+  let LK, tracks;
+  try { LK = await loadLK(); } catch (e) { reset(); return fail(e); }
+  try { tracks = await LK.createLocalTracks({ audio: { echoCancellation: true, noiseSuppression: true }, video: { facingMode: 'user', resolution: LK.VideoPresets.h720.resolution } }); }
+  catch (e) { reset(); return toast('⚠️ Autorise la caméra et le micro pour faire un live'); }
+  const title = (($('#lvT') || {}).value || '').trim();
+  const { data: id, error } = await sb.rpc('start_live', { p_title: title });
+  if (error) { tracks.forEach(t => t.stop()); reset(); return fail(error); }
+  closeSheet();
+  liveUI({ id, role: 'host', title, host: S.me });
+  LV.tracks = tracks; LV.facing = 'user';
+  const vt = tracks.find(t => t.kind === 'video'); if (vt) vt.attach($('#lvVid'));
+  const tk = await liveToken(id);
+  if (!tk.token) {
+    await sb.rpc('end_live', { p_live: id }); tracks.forEach(t => t.stop()); LV.closing = true; $('#liveOv').remove(); LV = null;
+    return modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🔴</div><h3>Les lives arrivent très bientôt</h3><p class="mut small">Le serveur vidéo est en cours d’activation. Tu recevras une notification dès que tu pourras passer en direct.</p><button class="btn" onclick="V.closeModal()">OK</button></div>`);
+  }
+  try {
+    const room = new LK.Room({ adaptiveStream: true, dynacast: true }); LV.room = room; bindRoom(room, LK);
+    await room.connect(tk.url, tk.token);
+    for (const t of tracks) await room.localParticipant.publishTrack(t);
+    $('#lvWait').style.display = 'none'; liveSys('🔴 Tu es en direct ! Tes abonnés ont été prévenus.'); liveUpd();
+    LV.ping = setInterval(() => { if (LV) sb.rpc('live_ping', { p_live: LV.id, p_viewers: liveCount() }).then(() => { }, () => { }); }, 15000);
+    sb.rpc('live_ping', { p_live: id, p_viewers: 0 });
+  } catch (e) { fail(e); closeLive(); }
+}
+async function openLive(id) {
+  closeSheet(); if (LV) await closeLive();
+  const { data: l } = await sb.from('lives_now').select('*').eq('id', id).maybeSingle();
+  if (!l) return toast('Ce live est terminé');
+  if (l.host_id === uid()) return toast('C’est ton live 🔴');
+  liveUI({ id, role: uid() ? 'viewer' : 'guest', title: l.title, host: l });
+  const tk = await liveToken(id);
+  if (!LV || LV.id !== id) return;
+  if (!tk.token) { closeLive(); return toast(tk.error === 'not_configured' ? 'Les lives arrivent très bientôt sur Vibzo 🔴' : 'Ce live est terminé'); }
+  try {
+    const LK = await loadLK(); const room = new LK.Room({ adaptiveStream: true }); LV.room = room; bindRoom(room, LK);
+    room.on(LK.RoomEvent.TrackSubscribed, track => {
+      if (track.kind === 'video') { track.attach($('#lvVid')); $('#lvWait').style.display = 'none'; }
+      else { const a = track.attach(); a.style.display = 'none'; $('#liveOv').appendChild(a); }
+    });
+    await room.connect(tk.url, tk.token);
+    room.startAudio().catch(() => { }); const sb2 = $('#lvSnd'); if (sb2 && !room.canPlaybackAudio) sb2.style.display = 'block';
+    LV.likes = l.likes || 0; LV.gifts = l.gift_coins || 0; liveUpd();
+    liveSys(`Bienvenue dans le live de @${esc(l.username)} 👋 Sois respectueux.`);
+    LV.flush = setInterval(liveFlush, 5000);
+  } catch (e) { fail(e); closeLive(); }
+}
+function liveSound() { if (LV && LV.room) LV.room.startAudio().then(() => { const b = $('#lvSnd'); if (b) b.style.display = 'none'; }, () => { }); }
+function liveHearts(n) { const ov = $('#liveOv'); if (!ov) return; for (let i = 0; i < n; i++) { const h = document.createElement('div'); h.className = 'lvheart'; h.textContent = ['❤️', '💖', '💗', '🧡', '💛'][Math.floor(Math.random() * 5)]; h.style.right = (18 + Math.random() * 40) + 'px'; h.style.animationDelay = (i * 120) + 'ms'; ov.appendChild(h); setTimeout(() => h.remove(), 2400); } }
+function liveHeart() {
+  if (!LV || LV.role === 'host') return; if (LV.role === 'guest') return toast('Connecte-toi pour envoyer des cœurs ❤️');
+  LV.likes++; LV.hearts++; LV.pend = (LV.pend || 0) + 1; liveHearts(1); liveUpd();
+  clearTimeout(LV.hT); LV.hT = setTimeout(() => { if (LV && LV.hearts) { lvSendData({ t: 'h', n: LV.hearts }); LV.hearts = 0; } }, 600);
+}
+function liveTap(e) { if (LV && LV.role !== 'host') liveHeart(); }
+function liveFlush() { if (!LV || LV.role !== 'viewer' || !LV.pend) return; const n = Math.min(30, LV.pend); LV.pend -= n; sb.rpc('live_like', { p_live: LV.id, p_n: n }).then(() => { }, () => { }); }
+function liveSend() {
+  const i = $('#lvMsg'); if (!i || !LV || !LV.room) return; const m = i.value.trim(); if (!m) return;
+  if (Date.now() - LV.lastMsg < 1500) return toast('Doucement 🙂'); LV.lastMsg = Date.now();
+  lvSendData({ t: 'c', m: m.slice(0, 150) }); liveLine(`<b>@${esc((S.me && S.me.username) || 'moi')}</b> ${esc(m.slice(0, 150))}`); i.value = '';
+}
+async function liveFlip() {
+  if (!LV || !LV.tracks) return; const vt = LV.tracks.find(t => t.kind === 'video'); if (!vt) return;
+  LV.facing = LV.facing === 'user' ? 'environment' : 'user';
+  try { await vt.restartTrack({ facingMode: LV.facing }); $('#lvVid').classList.toggle('mirror', LV.facing === 'user'); } catch (e) { toast('Impossible de changer de caméra'); }
+}
+async function liveMic() {
+  if (!LV || !LV.tracks) return; const at = LV.tracks.find(t => t.kind === 'audio'); if (!at) return;
+  if (at.isMuted) { await at.unmute(); $('#lvMic').textContent = '🎙️'; toast('Micro activé'); } else { await at.mute(); $('#lvMic').textContent = '🔇'; toast('Micro coupé'); }
+}
+async function liveGiftSheet() {
+  if (!requireAuth('Connecte-toi pour offrir un cadeau.')) return; if (!LV) return;
+  sheet(`🎁 Cadeau pour @${esc(LV.host.username)}`, `<div class="gbal"><span>🪙 <b id="gBal">…</b> pièces</span><button class="btn sm gold" style="width:auto" onclick="V.buyCoins()">＋ Recharger</button></div><div id="gTop"></div>
+  <div class="ggrid">${GIFTS.map(g => `<button onclick="V.sendGiftLive('${g[0]}')"><span class="ge">${g[1]}</span><b>${g[2]}</b><small>🪙 ${fmtN(g[3])}</small></button>`).join('')}</div>`);
+  const [w, top] = await Promise.all([loadWallet().catch(() => null), sb.rpc('live_top_gifters', { p_live: LV.id })]);
+  if (w && $('#gBal')) $('#gBal').textContent = fmtN(w.coins);
+  if (top.data && top.data.length && $('#gTop')) $('#gTop').innerHTML = `<div class="gtop">🏆 ${top.data.map((t, i) => `<span>${['🥇', '🥈', '🥉'][i]} @${esc(t.username)} · 🪙 ${fmtN(t.coins)}</span>`).join('')}</div>`;
+}
+async function sendGiftLive(g) {
+  if (giftBusy || !LV) return; const G = GIFTS.find(x => x[0] === g); if (!G) return;
+  if (W && W.coins < G[3]) { toast('Pas assez de pièces : recharge ton solde 🪙'); buyCoins(); return; }
+  giftBusy = true; const { data, error } = await sb.rpc('send_gift_live', { p_live: LV.id, p_gift: g }); giftBusy = false;
+  if (error) { if (/insuffisant/i.test(error.message)) { toast('Pas assez de pièces : recharge ton solde 🪙'); buyCoins(); return; } return fail(error); }
+  if (W) W.coins = data; if ($('#gBal')) $('#gBal').textContent = fmtN(data);
+  lvSendData({ t: 'g', g }); LV.gifts += G[3]; liveUpd(); closeSheet();
+  giftFly(G[1], G[3]); liveLine(`<b class="lvg">Tu as envoyé ${G[1]} ${G[2]}</b>`);
+}
+function liveOver() {
+  if (!LV || LV.over) return; LV.over = true;
+  const w = $('#lvWait'); if (w) { w.style.display = 'flex'; w.innerHTML = `<div style="font-size:44px">📴</div><b>Le live est terminé</b><button class="btn sm" style="width:auto;margin-top:12px" onclick="V.closeLive()">Fermer</button>`; }
+}
+async function closeLive() {
+  if (!LV) return; const lv = LV; lv.closing = true; LV = null;
+  clearInterval(lv.ping); clearInterval(lv.flush);
+  if (lv.role === 'viewer' && lv.pend) sb.rpc('live_like', { p_live: lv.id, p_n: Math.min(30, lv.pend) }).then(() => { }, () => { });
+  if (lv.room) { try { await lv.room.disconnect(); } catch (e) { } }
+  (lv.tracks || []).forEach(t => { try { t.stop(); } catch (e) { } });
+  const ov = $('#liveOv'); if (ov) ov.remove();
+  if (lv.role === 'host') {
+    await sb.rpc('end_live', { p_live: lv.id }).then(() => { }, () => { });
+    const { data: r } = await sb.from('lives').select('peak_viewers,likes,gift_coins').eq('id', lv.id).maybeSingle();
+    const min = Math.max(1, Math.round((Date.now() - lv.t0) / 60000));
+    modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🎉</div><h3>Live terminé</h3><div class="pstats" style="margin:12px 0"><div><b>${min} min</b><span>Durée</span></div><div><b>${fmtN(Math.max((r && r.peak_viewers) || 0, lv.peak || 0))}</b><span>Spectateurs max</span></div><div><b>${fmtN((r && r.likes) || lv.likes)}</b><span>Cœurs</span></div><div><b>🪙 ${fmtN((r && r.gift_coins) || lv.gifts)}</b><span>Cadeaux</span></div></div><button class="btn" onclick="V.closeModal()">Super !</button></div>`);
+  }
+}
+
 window.V = {
-  isBusy: () => dlBusy || giftBusy || mfaBusy,
+  shareThing, copyThing, nativeThing, openOfferLink, openAppsLink,
+  livesSheet, goLive, startLive, openLive, closeLive, liveTap, liveHeart, liveSend, liveFlip, liveMic, liveGiftSheet, sendGiftLive, liveSound,
+  isBusy: () => dlBusy || giftBusy || mfaBusy || !!LV,
   wvSound, wvClose,
   downloadVid,
   giveCoins,
@@ -1821,7 +2051,7 @@ async function start() {
     if (ev === 'PASSWORD_RECOVERY') { const np = prompt('Nouveau mot de passe (8 caractères minimum)'); if (np && np.length >= 8) { const { error } = await sb.auth.updateUser({ password: np }); toast(error ? '⚠️ ' + error.message : 'Mot de passe modifié ✅'); } }
     if ((session && session.user.id) !== was) { await loadMe().catch(fail); applyLang(); if (session) checkMfa(); if (session && S.cur === 'auth') { toast('Bienvenue sur Vibzo 👋'); go('home'); } }
   });
-  go('home');
-  setInterval(() => { refreshUnread(); refreshNotifs(); }, 30000); refreshUnread();
+  go('home'); handleDeepLink(); window.addEventListener('hashchange', handleDeepLink);
+  setInterval(() => { refreshUnread(); refreshNotifs(); livesStrip(); }, 30000); livesStrip(); refreshUnread();
 }
 start();
