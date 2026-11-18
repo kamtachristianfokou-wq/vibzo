@@ -239,13 +239,16 @@ async function saveSetup() {
   if (error) { $('#sErr').textContent = /duplicate|unique/i.test(errMsg(error)) ? 'Ce nom d’utilisateur est déjà pris, choisis-en un autre.' : errMsg(error); return; }
   Object.assign(S.me, upd); S.loc = worldLoc(cc); saveLoc(); applyLang(); closeModal(); toast('Profil prêt ✅'); applyRefIfAny(); go(S.cur === 'auth' ? 'home' : S.cur);
 }
+// Colonnes publiques du profil (le téléphone est privé : lu via private_phone)
+const PROFILE_COLS = 'id,username,display_name,bio,avatar_url,country,region,role,vip_until,created_at,city,lang,needs_setup,instagram,tiktok,youtube';
 async function loadMe() {
   if (!uid()) { S.me = null; S.myShop = null; return; }
   const [{ data: me }, { data: shop }] = await Promise.all([
-    sb.from('profiles').select('*').eq('id', uid()).maybeSingle(),
+    sb.from('profiles').select(PROFILE_COLS).eq('id', uid()).maybeSingle(),
     sb.from('shops').select('*').eq('owner_id', uid()).maybeSingle(),
   ]);
   S.me = me; S.myShop = shop;
+  if (me) { const { data: ph } = await sb.rpc('private_phone', { p_user: uid() }); me.phone = ph || null; }
   if (me && me.needs_setup) setTimeout(setupProfile, 300);
   else if (me && pendingRef() && Date.now() - new Date(me.created_at).getTime() < 864e5) applyRefIfAny(); else if (me) { try { localStorage.removeItem('vibzo_ref'); } catch (e) { } }
   refreshNotifs();
@@ -998,9 +1001,9 @@ async function saveProfile() {
     if (row.youtube && !/^[A-Za-z0-9_.-]{1,40}$/.test(row.youtube)) throw new Error('Nom de chaîne YouTube invalide');
     if (!/^[a-z0-9_.]{3,24}$/.test(row.username)) throw new Error('Nom d’utilisateur : 3 à 24 caractères (lettres, chiffres, . et _)');
     const f = $('#ei').files[0]; if (f) row.avatar_url = await uploadImage(f);
-    const { data, error } = await sb.from('profiles').update(row).eq('id', uid()).select().single();
+    const { data, error } = await sb.from('profiles').update(row).eq('id', uid()).select(PROFILE_COLS).single();
     if (error) throw (/duplicate|unique/i.test(error.message) ? new Error('Ce nom d’utilisateur est déjà pris') : error);
-    S.me = data; closeSheet(); toast('Profil mis à jour ✅'); go('profile');
+    data.phone = row.phone; S.me = data; closeSheet(); toast('Profil mis à jour ✅'); go('profile');
   } catch (e) { fail(e); } finally { busy(btn, false); }
 }
 async function creatorSheet() {
