@@ -90,13 +90,13 @@ function welcome() {
   const wl = ['fr', 'en', 'pt', 'es', 'ar', 'sw', 'am', 'az'].includes(getLang()) ? getLang() : 'fr';
   el.innerHTML = `<video id="wvid" src="welcome-${wl}.mp4" poster="welcome-${wl}.jpg" playsinline muted ${lite ? 'preload="none"' : 'autoplay preload="auto"'}></video>
   <button class="wv-snd" id="wvSnd" aria-label="Son" onclick="V.wvSound()">🔇</button><button class="wv-skip" onclick="V.wvClose()">Ignorer ✕</button>
-  ${lite ? '<button class="wv-play" onclick="document.getElementById(\'wvid\').play();this.remove()">▶</button>' : ''}
+  ${lite ? '<button class="wv-play" onclick="const v=document.getElementById(\'wvid\');v.muted=false;v.play();document.getElementById(\'wvSnd\').textContent=\'🔊\';this.remove()">▶</button>' : ''}
   <div class="wv-bot">${ref ? `<p>Ton ami <b>@${esc(ref)}</b> t’invite !</p>` : ''}<div class="wv-row"><button class="btn" onclick="V.wvClose();V.go('auth')">Créer mon compte gratuit</button><button class="btn ghost" onclick="V.wvClose()">Regarder d’abord</button></div></div>`;
   document.body.appendChild(el);
   const v = $('#wvid'); v.onended = () => el.classList.add('done'); setTimeout(() => el.classList.add('done'), 2500);
-  const p = v.play && !lite ? v.play() : null; if (p && p.catch) p.catch(() => { });
+  if (!lite) { v.muted = S.muted; $('#wvSnd').textContent = v.muted ? '🔇' : '🔊'; const p = v.play(); if (p && p.catch) p.catch(() => { v.muted = true; $('#wvSnd').textContent = '🔇'; v.play().catch(() => { }); }); }
 }
-function wvSound() { const v = $('#wvid'); if (!v) return; v.muted = !v.muted; if (!v.muted && v.paused) v.play().catch(() => { }); if (v.ended || v.currentTime > v.duration - 0.2) { v.currentTime = 0; v.play().catch(() => { }); } $('#wvSnd').textContent = v.muted ? '🔇' : '🔊'; }
+function wvSound() { const v = $('#wvid'); if (!v) return; v.muted = !v.muted; if (v.muted) v.dataset.userMuted = '1'; else delete v.dataset.userMuted; if (!v.muted && v.paused) v.play().catch(() => { }); if (v.ended || v.currentTime > v.duration - 0.2) { v.currentTime = 0; v.play().catch(() => { }); } $('#wvSnd').textContent = v.muted ? '🔇' : '🔊'; }
 function wvClose() { const el = $('#welcomeV'); if (!el) return; const v = $('#wvid'); if (v) v.pause(); el.classList.add('out'); setTimeout(() => el.remove(), 250); }
 
 /* ---------- premiers pas (profil) ---------- */
@@ -123,7 +123,7 @@ async function setLang(l) {
 /* ---------- état ---------- */
 let sb;
 const S = {
-  session: null, me: null, myShop: null, cur: 'home', prev: 'home', tab: 'pour', muted: true,
+  session: null, me: null, myShop: null, cur: 'home', prev: 'home', tab: 'pour', muted: (() => { try { return localStorage.getItem('vibzo_muted') === '1'; } catch (e) { return false; } })(),
   loc: { country: 'CM', region: null, zone: false, world: true },
   feed: [], feedOffset: 0, feedDone: false, feedLoading: false, override: null,
   vids: new Map(), prods: new Map(), offers: new Map(), cands: new Map(), orders: new Map(),
@@ -316,7 +316,7 @@ SCREENS.home = async () => {
   const ov = !!S.override;
   $('#s-home').innerHTML = `<div id="topbar">${ov ? `<button class="ib" onclick="V.go(V.S.prev||'home')" aria-label="Retour">${I.back}</button><div></div><div></div>` :
     `<button class="loc" onclick="V.openLoc()">${esc(locLabel())} ▾</button><div class="tabs"><button class="${S.tab === 'abo' ? 'on' : ''}" onclick="V.setTab('abo')">Abonnements</button><button class="${S.tab === 'pour' ? 'on' : ''}" onclick="V.setTab('pour')">Pour toi</button></div><div class="rt"><button class="ib" onclick="V.go('discover')" aria-label="Rechercher">${I.search}</button><button class="ib" id="bellBtn" onclick="V.openNotifs()" aria-label="Notifications">${I.bell}${S.notifs ? `<span class="badge">${S.notifs > 99 ? '99+' : S.notifs}</span>` : ''}</button><button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button></div>`}</div>
-  <button class="mute" onclick="V.toggleMute()" aria-label="Son">${S.muted ? '🔇' : '🔊'}</button><div id="feed"></div>`;
+  <button class="mute" onclick="V.toggleMute()" aria-label="Son">${S.muted || soundBlocked ? '🔇' : '🔊'}</button><div id="feed"></div>`;
   if (ov) { S.feed = S.override.list; S.feedDone = true; renderSlides(true); setTimeout(() => { const el = document.querySelector(`.slide[data-id="${S.override.start}"]`); if (el) $('#feed').scrollTop = el.offsetTop; }, 30); return; }
   if (S.tab === 'abo' && !uid()) { $('#feed').innerHTML = endSlide('👥', 'Abonnements', 'Connecte-toi pour suivre tes créateurs préférés.', `<button class="btn" style="width:auto;padding:12px 22px" onclick="V.go('auth')">Se connecter</button>`); return; }
   S.feed = []; S.feedOffset = 0; S.feedDone = false;
@@ -344,7 +344,7 @@ function slideHTML(v) {
   S.vids.set(v.id, v);
   const mine = v.user_id === uid();
   return `<div class="slide" data-id="${v.id}">
-  <div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" loop playsinline ${S.muted ? 'muted' : ''} preload="metadata" onloadedmetadata="V.noImg(this)"></video></div>
+  <div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" loop playsinline ${S.muted || soundBlocked ? 'muted' : ''} preload="metadata" onloadedmetadata="V.noImg(this)"></video></div>
   ${v.title ? `<div class="vtitle" style="top:auto;bottom:150px">${esc(v.title)}</div>` : ''}
   <div class="vtap" onclick="V.tapVid(event,'${v.id}')" onpointerdown="V.holdStart(event,this)" onpointerup="V.holdEnd(this)" onpointerleave="V.holdEnd(this)" onpointercancel="V.holdEnd(this)" oncontextmenu="return false"></div><div class="pauseIc">▶</div><div class="spd">2x ⏩</div>
   <div class="vprog" onpointerdown="V.seek(event,this)"><i></i></div>
@@ -411,12 +411,29 @@ function observe() {
   io = new IntersectionObserver(es => es.forEach(e => {
     if (e.target.id === 'moreSlide') { if (e.isIntersecting) loadFeed(false); return; }
     const v = e.target.querySelector('video'); if (!v) return;
-    if (e.isIntersecting && S.cur === 'home' && !e.target.classList.contains('paused')) { v.muted = S.muted; v.play().catch(() => { }); watchView(v, e.target.dataset.id); bindProg(v, e.target); } else { v.pause(); v.playbackRate = 1; flushWatch(v, e.target.dataset.id); }
+    if (e.isIntersecting && S.cur === 'home' && !e.target.classList.contains('paused')) { playV(v); watchView(v, e.target.dataset.id); bindProg(v, e.target); } else { v.pause(); v.playbackRate = 1; flushWatch(v, e.target.dataset.id); }
   }), { threshold: .6 });
   document.querySelectorAll('#feed .slide').forEach(s => io.observe(s));
 }
 function setTab(t) { S.tab = t; go('home'); }
-function toggleMute() { S.muted = !S.muted; document.querySelectorAll('#feed video').forEach(v => v.muted = S.muted); $('.mute').textContent = S.muted ? '🔇' : '🔊'; }
+function toggleMute() { soundBlocked = false; S.muted = !S.muted; try { localStorage.setItem('vibzo_muted', S.muted ? '1' : '0'); } catch (e) { } document.querySelectorAll('#feed video').forEach(v => v.muted = S.muted); muteIcon(); }
+/* Son automatique : on essaie de lire avec le son. Si le navigateur l'interdit avant toute action
+   de la personne, la vidéo part en muet et le son s'active au premier toucher, n'importe où. */
+let soundBlocked = false;
+function muteIcon() { const b = $('.mute'); if (b) b.textContent = (S.muted || soundBlocked) ? '🔇' : '🔊'; }
+function playV(v) {
+  v.muted = S.muted || soundBlocked;
+  const p = v.play(); if (!p || !p.catch) return;
+  p.catch(err => { if (!v.muted && err && err.name === 'NotAllowedError') { soundBlocked = true; v.muted = true; muteIcon(); v.play().catch(() => { }); } });
+}
+function unlockSound() {
+  if (!soundBlocked && !(($('#wvid') || {}).muted && !S.muted)) return;
+  soundBlocked = false;
+  if (!S.muted) document.querySelectorAll('#feed video').forEach(v => { v.muted = false; });
+  const w = $('#wvid'); if (w && !S.muted && !w.dataset.userMuted) { w.muted = false; const b = $('#wvSnd'); if (b) b.textContent = '🔊'; }
+  muteIcon();
+}
+['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => window.addEventListener(ev, unlockSound, { capture: true, passive: true }));
 let lastTap = 0, tapT;
 function tapVid(e, id) {
   if (e.currentTarget._held) return;
