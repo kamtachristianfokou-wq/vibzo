@@ -418,3 +418,18 @@ a{color:var(--vio)}
 .card.start .rbar{margin:8px 0}
 .card.start button{display:block;width:100%;text-align:left;background:none;border:0;padding:7px 2px;font-size:14px;color:inherit;cursor:pointer;border-bottom:1px solid rgba(128,128,128,.12)}
 .card.start button.ok{opacity:.55;text-decoration:line-through}
+/* ===== vidéo de bienvenue v31 ===== */
+#welcomeV{position:fixed;inset:0;z-index:2000;background:#000;transition:opacity .25s}
+#welcomeV.out{opacity:0}
+#welcomeV video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#welcomeV .wv-snd,#welcomeV .wv-skip{position:absolute;z-index:2;top:calc(10px + env(safe-area-inset-top));background:rgba(0,0,0,.5);color:#fff;border:0;border-radius:20px;padding:8px 14px;font:600 14px 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+#welcomeV .wv-snd{left:12px;font-size:18px;padding:6px 12px}
+#welcomeV .wv-skip{right:12px}
+#welcomeV .wv-play{position:absolute;z-index:2;top:50%;left:50%;transform:translate(-50%,-50%);width:84px;height:84px;border-radius:50%;border:0;background:rgba(255,255,255,.9);font-size:34px;cursor:pointer}
+#welcomeV .wv-bot{position:absolute;z-index:2;left:0;right:0;bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.85) 45%);color:#fff;text-align:center;max-width:560px;margin:0 auto;opacity:0;transform:translateY(16px);transition:opacity .4s,transform .4s;pointer-events:none}
+#welcomeV.done .wv-bot{opacity:1;transform:none;pointer-events:auto}
+#welcomeV .wv-bot p{margin:0 0 8px;font-size:13px;opacity:.9}
+#welcomeV .wv-row{display:flex;gap:8px}
+#welcomeV .wv-row .btn{flex:1;padding:12px 8px;font-size:14px;margin:0}
+#welcomeV .wv-row .btn:first-child{flex:1.4}
+#welcomeV .wv-row .btn.ghost{background:rgba(255,255,255,.16);color:#fff;border-color:transparent}

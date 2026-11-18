@@ -158,6 +158,25 @@ Astuces pour grandir|Tips to grow|Dicas para crescer|Consejos para crecer|نصا
 Lier mes autres réseaux|Link my other networks|Ligar as minhas outras redes|Vincular mis otras redes|ربط شبكاتي الأخرى|Unganisha mitandao yangu mingine|ሌሎች አውታረ መረቦቼን አገናኝ|Digər şəbəkələrimi bağla
 Vues|Views|Visualizações|Vistas|المشاهدات|Mitazamo|እይታዎች|Baxışlar
 Vues (30 j)|Views (30 d)|Visualizações (30 d)|Vistas (30 d)|المشاهدات (30 يومًا)|Mitazamo (siku 30)|እይታዎች (30 ቀን)|Baxışlar (30 gün)
+Créer mon compte gratuit|Create my free account|Criar a minha conta grátis|Crear mi cuenta gratis|أنشئ حسابي المجاني|Fungua akaunti yangu bure|ነፃ መለያዬን ፍጠር|Pulsuz hesabımı yarat
+Regarder d’abord|Watch first|Ver primeiro|Ver primero|شاهد أولاً|Tazama kwanza|መጀመሪያ ተመልከት|Əvvəlcə bax
+Vidéos, emplois, boutiques et rencontres. Gratuit.|Videos, jobs, shops and dating. Free.|Vídeos, empregos, lojas e encontros. Grátis.|Videos, empleos, tiendas y citas. Gratis.|فيديوهات، وظائف، متاجر وتعارف. مجاناً.|Video, kazi, maduka na marafiki. Bure.|ቪዲዮዎች፣ ስራዎች፣ ሱቆች እና ትውውቅ። ነፃ።|Videolar, iş, mağazalar və tanışlıq. Pulsuz.
+Ton ami|Your friend|O teu amigo|Tu amigo|صديقك|Rafiki yako|ጓደኛህ|Dostun
+t’invite !|invites you!|convida-te!|te invita!|يدعوك!|anakualika!|ይጋብዝሃል!|səni dəvət edir!
+Installe Vibzo|Install Vibzo|Instala o Vibzo|Instala Vibzo|ثبّت Vibzo|Sakinisha Vibzo|Vibzoን ጫን|Vibzo-nu quraşdır
+Plus rapide, comme une vraie application|Faster, like a real app|Mais rápido, como uma app a sério|Más rápido, como una app de verdad|أسرع، مثل تطبيق حقيقي|Haraka zaidi, kama programu halisi|ፈጣን፣ እንደ እውነተኛ መተግበሪያ|Daha sürətli, əsl tətbiq kimi
+Installer|Install|Instalar|Instalar|تثبيت|Sakinisha|ጫን|Quraşdır
+Pour bien commencer|Getting started|Para começar bem|Para empezar bien|للبدء بشكل جيد|Kuanza vizuri|በጥሩ ሁኔታ ለመጀመር|Yaxşı başlanğıc üçün
+Ajoute ta photo de profil|Add your profile photo|Adiciona a tua foto de perfil|Añade tu foto de perfil|أضف صورة ملفك الشخصي|Weka picha ya wasifu wako|የመገለጫ ፎቶህን ጨምር|Profil şəklini əlavə et
+Publie ta première vidéo|Post your first video|Publica o teu primeiro vídeo|Publica tu primer video|انشر أول فيديو لك|Chapisha video yako ya kwanza|የመጀመሪያ ቪዲዮህን ለጥፍ|İlk videonu paylaş
+Suis 3 créateurs|Follow 3 creators|Segue 3 criadores|Sigue a 3 creadores|تابع 3 صنّاع محتوى|Fuata watayarishi 3|3 ፈጣሪዎችን ተከተል|3 yaradıcını izlə
+Lie ton TikTok / Instagram|Link your TikTok / Instagram|Liga o teu TikTok / Instagram|Vincula tu TikTok / Instagram|اربط TikTok / Instagram|Unganisha TikTok / Instagram yako|TikTok / Instagramህን አገናኝ|TikTok / Instagram-ını bağla
+Invite tes amis (3 amis = 7 jours de Gold)|Invite your friends (3 friends = 7 days of Gold)|Convida os teus amigos (3 amigos = 7 dias de Gold)|Invita a tus amigos (3 amigos = 7 días de Gold)|ادعُ أصدقاءك (3 أصدقاء = 7 أيام Gold)|Alika marafiki zako (marafiki 3 = siku 7 za Gold)|ጓደኞችህን ጋብዝ (3 ጓደኞች = 7 ቀን Gold)|Dostlarını dəvət et (3 dost = 7 gün Gold)
+Enregistrer / partager la vidéo|Save / share the video|Guardar / partilhar o vídeo|Guardar / compartir el video|حفظ / مشاركة الفيديو|Hifadhi / shiriki video|ቪዲዮውን አስቀምጥ / አጋራ|Videonu saxla / paylaş
+Ajout de la signature Vibzo. Garde l’écran allumé.|Adding the Vibzo signature. Keep the screen on.|A adicionar a assinatura Vibzo. Mantém o ecrã ligado.|Añadiendo la firma de Vibzo. Mantén la pantalla encendida.|جارٍ إضافة توقيع Vibzo. أبقِ الشاشة مضاءة.|Inaongeza sahihi ya Vibzo. Weka skrini ikiwa imewashwa.|የVibzo ፊርማ እየታከለ ነው። ማያውን አብርተህ ያዝ።|Vibzo imzası əlavə olunur. Ekranı açıq saxla.
+Vidéo prête|Video ready|Vídeo pronto|Video listo|الفيديو جاهز|Video iko tayari|ቪዲዮው ዝግጁ ነው|Video hazırdır
+Partager (WhatsApp, Instagram…)|Share (WhatsApp, Instagram…)|Partilhar (WhatsApp, Instagram…)|Compartir (WhatsApp, Instagram…)|مشاركة (WhatsApp، Instagram…)|Shiriki (WhatsApp, Instagram…)|አጋራ (WhatsApp, Instagram…)|Paylaş (WhatsApp, Instagram…)
+Ignorer|Skip|Saltar|Omitir|تخطَّ|Ruka|ዝለል|Keç
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)

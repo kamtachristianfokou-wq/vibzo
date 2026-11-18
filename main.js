@@ -85,13 +85,19 @@ setTimeout(maybeInstallBanner, 25000);
 /* ---------- accueil des nouveaux visiteurs ---------- */
 function welcome() {
   try { if (localStorage.getItem('vibzo_welcomed') || uid() || new URLSearchParams(location.search).get('pay')) return; localStorage.setItem('vibzo_welcomed', '1'); } catch (e) { return; }
-  const ref = pendingRef();
-  modal(`<div class="card welcome" style="max-width:360px;width:100%;background:#fff;text-align:center">
-  <div style="font-size:42px">👋</div><h3>Bienvenue sur Vibzo</h3>${ref ? `<p class="small" style="margin-top:4px">Ton ami <b>@${esc(ref)}</b> t’invite !</p>` : ''}
-  <div class="wl"><div>🎬<span><b>Vidéos courtes</b> de ton pays et du monde entier</span></div><div>💰<span><b>Gagne de l’argent</b> : cadeaux de tes fans, payés en Mobile Money</span></div><div>💼<span><b>Emplois</b> : l’appli te propose les offres faites pour toi</span></div><div>🛍️<span><b>Boutiques</b> : achète et vends près de chez toi</span></div><div>💘<span><b>Rencontres</b> entre adultes (Gold)</span></div></div>
-  <button class="btn" onclick="V.closeModal();V.go('auth')">Créer mon compte gratuit</button>
-  <button class="btn ghost" style="margin-top:8px" onclick="V.closeModal()">Regarder d’abord</button></div>`);
+  const ref = pendingRef(), lite = navigator.connection && navigator.connection.saveData;
+  const el = document.createElement('div'); el.id = 'welcomeV';
+  const wl = ['fr', 'en', 'pt', 'es', 'ar', 'sw', 'am', 'az'].includes(getLang()) ? getLang() : 'fr';
+  el.innerHTML = `<video id="wvid" src="welcome-${wl}.mp4" poster="welcome-${wl}.jpg" playsinline muted ${lite ? 'preload="none"' : 'autoplay preload="auto"'}></video>
+  <button class="wv-snd" id="wvSnd" aria-label="Son" onclick="V.wvSound()">🔇</button><button class="wv-skip" onclick="V.wvClose()">Ignorer ✕</button>
+  ${lite ? '<button class="wv-play" onclick="document.getElementById(\'wvid\').play();this.remove()">▶</button>' : ''}
+  <div class="wv-bot">${ref ? `<p>Ton ami <b>@${esc(ref)}</b> t’invite !</p>` : ''}<div class="wv-row"><button class="btn" onclick="V.wvClose();V.go('auth')">Créer mon compte gratuit</button><button class="btn ghost" onclick="V.wvClose()">Regarder d’abord</button></div></div>`;
+  document.body.appendChild(el);
+  const v = $('#wvid'); v.onended = () => el.classList.add('done'); setTimeout(() => el.classList.add('done'), 2500);
+  const p = v.play && !lite ? v.play() : null; if (p && p.catch) p.catch(() => { });
 }
+function wvSound() { const v = $('#wvid'); if (!v) return; v.muted = !v.muted; if (!v.muted && v.paused) v.play().catch(() => { }); if (v.ended || v.currentTime > v.duration - 0.2) { v.currentTime = 0; v.play().catch(() => { }); } $('#wvSnd').textContent = v.muted ? '🔇' : '🔊'; }
+function wvClose() { const el = $('#welcomeV'); if (!el) return; const v = $('#wvid'); if (v) v.pause(); el.classList.add('out'); setTimeout(() => el.remove(), 250); }
 
 /* ---------- premiers pas (profil) ---------- */
 function startChecklist(p) {
@@ -1748,6 +1754,7 @@ async function setVip() { const u = $('#vu').value.trim().replace(/^@/, ''), d =
    DÉMARRAGE
    ===================================================================== */
 window.V = {
+  wvSound, wvClose,
   downloadVid,
   giveCoins,
   hideInstall,
