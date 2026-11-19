@@ -248,6 +248,184 @@ pièces et gains|coins and earnings|moedas e ganhos|monedas y ganancias|العم
 Inviter des amis|Invite friends|Convidar amigos|Invitar amigos|ادعُ أصدقاءك|Alika marafiki|ጓደኞችን ጋብዝ|Dostları dəvət et
 Inviter des amis · gagne du Gold|Invite friends · earn Gold|Convidar amigos · ganha Gold|Invitar amigos · gana Gold|ادعُ أصدقاءك · اربح Gold|Alika marafiki · pata Gold|ጓደኞችን ጋብዝ · Gold አግኝ|Dostları dəvət et · Gold qazan
 Connecté|Logged in as|Ligado como|Conectado como|متصل باسم|Umeingia kama|የገባው|Daxil olub
+Afficher l’objectif|Show goal|Mostrar objetivo|Mostrar objetivo|اعرض الهدف|Onyesha lengo|ግቡን አሳይ|Hədəfi göstər
+Astuce : publie d’abord une vidéo de ton travail, puis ajoute-la ici|Tip: first post a video of your work, then add it here|Dica: publica primeiro um vídeo do teu trabalho e depois adiciona-o aqui|Consejo: publica primero un vídeo de tu trabajo y luego añádelo aquí|نصيحة: انشر أولًا فيديو لعملك ثم أضفه هنا|Kidokezo: chapisha kwanza video ya kazi yako, kisha uiongeze hapa|ጠቃሚ ምክር፦ መጀመሪያ የስራህን ቪዲዮ ለጥፍ፣ ከዚያ እዚህ ጨምር|Məsləhət: əvvəlcə işinin videosunu paylaş, sonra buraya əlavə et
+Astuce : touche un commentaire pour l’épingler en haut du live|Tip: tap a comment to pin it at the top of the live|Dica: toca num comentário para o fixar no topo do live|Consejo: toca un comentario para fijarlo arriba del directo|نصيحة: المس تعليقًا لتثبيته أعلى البث|Kidokezo: gusa maoni ili kuyabandika juu ya mubashara|ጠቃሚ ምክር፦ አስተያየትን በቀጥታው አናት ላይ ለመለጠፍ ንካው|Məsləhət: şərhi yayının yuxarısına bərkitmək üçün ona toxun
+Aucune|None|Nenhuma|Ninguna|لا شيء|Hakuna|ምንም|Heç biri
+Aucune vidéo téléchargée pour l’instant|No downloaded videos yet|Ainda não há vídeos descarregados|Aún no hay vídeos descargados|لا توجد فيديوهات محمّلة بعد|Bado hakuna video zilizopakuliwa|እስካሁን የወረደ ቪዲዮ የለም|Hələ yüklənmiş video yoxdur
+Avis|Reviews|Avaliações|Opiniones|التقييمات|Maoni|ግምገማዎች|Rəylər
+avis|reviews|avaliações|opiniones|تقييمات|maoni|ግምገማዎች|rəy
+Avis clients|Customer reviews|Avaliações de clientes|Opiniones de clientes|تقييمات العملاء|Maoni ya wateja|የደንበኞች ግምገማ|Müştəri rəyləri
+Badge vérifié|Verified badge|Selo verificado|Insignia verificada|شارة التحقق|Beji ya uthibitisho|የተረጋገጠ ባጅ|Təsdiq nişanı
+Catégorie|Category|Categoria|Categoría|الفئة|Aina|ምድብ|Kateqoriya
+Ce que les créateurs doivent montrer, ce qui est interdit|What creators must show, what is forbidden|O que os criadores devem mostrar e o que é proibido|Lo que los creadores deben mostrar y lo que está prohibido|ما يجب أن يعرضه المبدعون وما هو ممنوع|Kile wabunifu wanapaswa kuonyesha na kilichokatazwa|ፈጣሪዎች ማሳየት ያለባቸውና የተከለከለው|Yaradıcılar nəyi göstərməli, nə qadağandır
+Ce que tu proposes, tes horaires, ton expérience|What you offer, your hours, your experience|O que ofereces, o teu horário, a tua experiência|Lo que ofreces, tu horario, tu experiencia|ما تقدمه، أوقات عملك، خبرتك|Unachotoa, saa zako, uzoefu wako|የምታቀርበው፣ የስራ ሰዓትህ፣ ልምድህ|Nə təklif edirsən, iş saatların, təcrübən
+Ces documents servent uniquement à la vérification. Ils ne sont jamais publiés|These documents are only used for verification. They are never published|Estes documentos servem apenas para a verificação. Nunca são publicados|Estos documentos solo sirven para la verificación. Nunca se publican|تُستخدم هذه الوثائق للتحقق فقط ولا تُنشر أبدًا|Nyaraka hizi zinatumika kwa uthibitisho tu. Hazichapishwi kamwe|እነዚህ ሰነዶች ለማረጋገጫ ብቻ ያገለግላሉ። በፍጹም አይታተሙም|Bu sənədlər yalnız yoxlama üçündür. Heç vaxt dərc olunmur
+Choix|Choice|Opção|Opción|خيار|Chaguo|ምርጫ|Seçim
+Choix 3 (facultatif|Choice 3 (optional|Opção 3 (opcional|Opción 3 (opcional|الخيار 3 (اختياري|Chaguo 3 (si lazima|ምርጫ 3 (አማራጭ|Seçim 3 (könüllü
+Choix 4 (facultatif|Choice 4 (optional|Opção 4 (opcional|Opción 4 (opcional|الخيار 4 (اختياري|Chaguo 4 (si lazima|ምርጫ 4 (አማራጭ|Seçim 4 (könüllü
+Coiffure & beauté|Hair & beauty|Cabeleireiro e beleza|Peluquería y belleza|تصفيف الشعر والتجميل|Nywele na urembo|የፀጉርና የውበት|Saç və gözəllik
+Couture & mode|Tailoring & fashion|Costura e moda|Costura y moda|الخياطة والموضة|Ushonaji na mitindo|ልብስ ስፌትና ፋሽን|Dərzilik və moda
+Mécanique|Mechanics|Mecânica|Mecánica|الميكانيك|Ufundi wa magari|መካኒክ|Mexanika
+Plomberie|Plumbing|Canalização|Fontanería|السباكة|Mabomba|የቧንቧ ስራ|Santexnika
+Électricité|Electrical|Eletricidade|Electricidad|الكهرباء|Umeme|ኤሌክትሪክ|Elektrik
+Ménage & entretien|Cleaning & housekeeping|Limpeza e manutenção|Limpieza y mantenimiento|التنظيف والصيانة|Usafi na matengenezo|ጽዳትና ጥገና|Təmizlik və baxım
+Cuisine & traiteur|Cooking & catering|Cozinha e catering|Cocina y catering|الطبخ والتموين|Upishi na huduma za chakula|ምግብ ማብሰልና አቅርቦት|Mətbəx və ketrinq
+Photo & vidéo|Photo & video|Foto e vídeo|Foto y vídeo|التصوير والفيديو|Picha na video|ፎቶና ቪዲዮ|Foto və video
+Cours & soutien scolaire|Lessons & tutoring|Aulas e explicações|Clases y apoyo escolar|الدروس والدعم المدرسي|Masomo na ufundishaji|ትምህርትና የቤት አስጠኚ|Dərslər və repetitorluq
+Informatique & téléphones|Computers & phones|Informática e telemóveis|Informática y teléfonos|الحواسيب والهواتف|Kompyuta na simu|ኮምፒውተርና ስልክ|Kompüter və telefonlar
+Transport & déménagement|Transport & moving|Transporte e mudanças|Transporte y mudanzas|النقل والانتقال|Usafiri na kuhamisha|ትራንስፖርትና ቤት ማዛወር|Nəqliyyat və köçmə
+Événements & DJ|Events & DJ|Eventos e DJ|Eventos y DJ|المناسبات والدي جي|Matukio na DJ|ዝግጅቶችና ዲጄ|Tədbirlər və DJ
+Santé & bien-être|Health & wellness|Saúde e bem-estar|Salud y bienestar|الصحة والعافية|Afya na ustawi|ጤናና ደህንነት|Sağlamlıq və rifah
+Construction & BTP|Construction|Construção|Construcción|البناء|Ujenzi|ግንባታ|Tikinti
+Créateur|Creator|Criador|Creador|مبدع|Mbunifu|ፈጣሪ|Yaradıcı
+Recruteur|Recruiter|Recrutador|Reclutador|مُوظِّف|Mwajiri|ቀጣሪ|İşə götürən
+Créer le défi|Create the challenge|Criar o desafio|Crear el reto|أنشئ التحدي|Unda changamoto|ፈተናውን ፍጠር|Çağırışı yarat
+Demander la vérification|Request verification|Pedir verificação|Solicitar verificación|اطلب التحقق|Omba uthibitisho|ማረጋገጫ ጠይቅ|Yoxlama istə
+Demander à rejoindre l’écran|Ask to join the screen|Pedir para entrar no ecrã|Pedir unirse a la pantalla|اطلب الانضمام إلى الشاشة|Omba kujiunga kwenye skrini|ስክሪኑን ለመቀላቀል ጠይቅ|Ekrana qoşulmağı xahiş et
+Quitter l’écran|Leave the screen|Sair do ecrã|Salir de la pantalla|غادر الشاشة|Ondoka kwenye skrini|ከስክሪኑ ውጣ|Ekrandan çıx
+Des centaines de créateurs filment des vidéos avec ton produit et ton hashtag. Tu paies uniquement les prix des gagnants, plus 15 % de frais Vibzo|Hundreds of creators film videos with your product and hashtag. You only pay the winners' prizes, plus a 15% Vibzo fee|Centenas de criadores filmam vídeos com o teu produto e o teu hashtag. Pagas apenas os prémios dos vencedores, mais 15% de taxa Vibzo|Cientos de creadores graban vídeos con tu producto y tu hashtag. Solo pagas los premios de los ganadores, más un 15 % de comisión de Vibzo|يصوّر مئات المبدعين فيديوهات بمنتجك ووسمك. تدفع جوائز الفائزين فقط، مع 15٪ رسوم Vibzo|Mamia ya wabunifu wanarekodi video na bidhaa yako na hashtag yako. Unalipa zawadi za washindi tu, pamoja na ada ya Vibzo ya 15%|በመቶዎች የሚቆጠሩ ፈጣሪዎች በምርትህና በሃሽታግህ ቪዲዮ ይቀርጻሉ። የአሸናፊዎቹን ሽልማት ብቻ ትከፍላለህ፣ እና 15% የVibzo ክፍያ|Yüzlərlə yaradıcı sənin məhsulun və heşteqinlə video çəkir. Yalnız qaliblərin mükafatlarını və 15% Vibzo haqqını ödəyirsən
+Défi sponsorisé|Sponsored challenge|Desafio patrocinado|Reto patrocinado|تحدٍ مموّل|Changamoto iliyodhaminiwa|በስፖንሰር የቀረበ ፈተና|Sponsorlu çağırış
+Défis avec des prix|Challenges with prizes|Desafios com prémios|Retos con premios|تحديات بجوائز|Changamoto zenye zawadi|ሽልማት ያላቸው ፈተናዎች|Mükafatlı çağırışlar
+Ensuite, envoie sur WhatsApp|Then send on WhatsApp|Depois, envia pelo WhatsApp|Luego, envía por WhatsApp|ثم أرسل عبر واتساب|Kisha tuma kwa WhatsApp|ከዚያ በWhatsApp ላክ|Sonra WhatsApp ilə göndər
+Ex : Montre ton meilleur pas de danse avec notre jus|E.g. Show your best dance move with our juice|Ex.: Mostra o teu melhor passo de dança com o nosso sumo|Ej.: Muestra tu mejor paso de baile con nuestro zumo|مثال: أظهر أفضل حركة رقص مع عصيرنا|Mfano: Onyesha mtindo wako bora wa kucheza na juisi yetu|ምሳሌ፦ ምርጥ የዳንስ እንቅስቃሴህን ከጭማቂያችን ጋር አሳይ|Məs.: Şirəmizlə ən yaxşı rəqs hərəkətini göstər
+Ex : Quelle tenue pour demain|E.g. Which outfit for tomorrow|Ex.: Que roupa para amanhã|Ej.: ¿Qué ropa para mañana|مثال: أي ملابس للغد|Mfano: Nguo gani kwa kesho|ምሳሌ፦ ለነገ የትኛው ልብስ|Məs.: Sabah üçün hansı geyim
+Ex : Tresses et nattes à domicile|E.g. Braids at home|Ex.: Tranças ao domicílio|Ej.: Trenzas a domicilio|مثال: تضفير الشعر في المنزل|Mfano: Kusuka nywele nyumbani|ምሳሌ፦ በቤት የፀጉር ሽሩባ|Məs.: Evdə hörüklər
+Fermer le chat|Close the chat|Fechar o chat|Cerrar el chat|أغلق الدردشة|Funga gumzo|ውይይቱን ዝጋ|Söhbəti bağla
+Invite jusqu’à 3 personnes à l’écran avec toi. Les visiteurs non connectés ne peuvent pas être invités|Invite up to 3 people on screen with you. Visitors who are not logged in can't be invited|Convida até 3 pessoas para o ecrã contigo. Visitantes sem sessão iniciada não podem ser convidados|Invita hasta 3 personas a la pantalla contigo. Los visitantes sin sesión no pueden ser invitados|ادعُ حتى 3 أشخاص إلى الشاشة معك. لا يمكن دعوة الزوار غير المسجلين|Alika hadi watu 3 kwenye skrini pamoja nawe. Wageni ambao hawajaingia hawawezi kualikwa|እስከ 3 ሰዎችን ከአንተ ጋር ወደ ስክሪኑ ጋብዝ። ያልገቡ ጎብኚዎች ሊጋበዙ አይችሉም|Ekrana səninlə 3 nəfərə qədər dəvət et. Daxil olmamış qonaqlar dəvət edilə bilməz
+Lancer le sondage|Start the poll|Iniciar a sondagem|Iniciar la encuesta|ابدأ الاستطلاع|Anzisha kura|ምርጫውን ጀምር|Sorğunu başlat
+Lancer un défi pour ma marque|Launch a challenge for my brand|Lançar um desafio para a minha marca|Lanzar un reto para mi marca|أطلق تحديًا لعلامتي التجارية|Anzisha changamoto kwa chapa yangu|ለብራንዴ ፈተና ጀምር|Brendim üçün çağırış başlat
+Lancer un sondage|Start a poll|Lançar uma sondagem|Lanzar una encuesta|أطلق استطلاعًا|Anzisha kura|ምርጫ ጀምር|Sorğu başlat
+Le badge ✔ Vérifié montre que l’équipe Vibzo a contrôlé ton identité. Les acheteurs et les candidats te font plus confiance, et tu vends plus|The ✔ Verified badge shows that the Vibzo team checked your identity. Buyers and candidates trust you more, and you sell more|O selo ✔ Verificado mostra que a equipa Vibzo confirmou a tua identidade. Compradores e candidatos confiam mais em ti e vendes mais|La insignia ✔ Verificado muestra que el equipo de Vibzo comprobó tu identidad. Compradores y candidatos confían más en ti y vendes más|تُظهر شارة ✔ موثّق أن فريق Vibzo تحقق من هويتك. يثق بك المشترون والمرشحون أكثر وتبيع أكثر|Beji ✔ Imethibitishwa inaonyesha kuwa timu ya Vibzo imekagua utambulisho wako. Wanunuzi na waombaji wanakuamini zaidi, na unauza zaidi|✔ የተረጋገጠ ባጅ የVibzo ቡድን ማንነትህን እንዳጣራ ያሳያል። ገዢዎችና እጩዎች የበለጠ ያምኑሃል፣ የበለጠም ትሸጣለህ|✔ Təsdiqlənmiş nişanı Vibzo komandasının şəxsiyyətini yoxladığını göstərir. Alıcılar və namizədlər sənə daha çox güvənir, daha çox satırsan
+Les messages contenant ces mots sont cachés pour tout le monde|Messages containing these words are hidden for everyone|As mensagens com estas palavras ficam ocultas para todos|Los mensajes con estas palabras se ocultan para todos|تُخفى الرسائل التي تحتوي على هذه الكلمات عن الجميع|Ujumbe wenye maneno haya unafichwa kwa kila mtu|እነዚህን ቃላት የያዙ መልእክቶች ለሁሉም ይደበቃሉ|Bu sözləri olan mesajlar hamı üçün gizlədilir
+Les vidéos ne se chargent qu’au moment où tu les regardes, les aperçus sont désactivés. Tu consommes beaucoup moins de données|Videos only load when you watch them and previews are turned off. You use much less data|Os vídeos só carregam quando os vês e as pré-visualizações ficam desligadas. Gastas muito menos dados|Los vídeos solo se cargan cuando los ves y las vistas previas se desactivan. Consumes muchos menos datos|لا تُحمَّل الفيديوهات إلا عند مشاهدتها وتُعطَّل المعاينات. تستهلك بيانات أقل بكثير|Video zinapakia tu unapozitazama na hakiki zimezimwa. Unatumia data kidogo sana|ቪዲዮዎቹ የሚጫኑት ስትመለከታቸው ብቻ ነው፣ ቅድመ እይታዎች ጠፍተዋል። በጣም ያነሰ ዳታ ትጠቀማለህ|Videolar yalnız baxanda yüklənir, önizləmələr söndürülür. Daha az data işlədirsən
+Mode petit forfait|Data saver mode|Modo poupança de dados|Modo ahorro de datos|وضع توفير البيانات|Hali ya kuokoa data|የዳታ ቁጠባ ሁነታ|Data qənaət rejimi
+Petit forfait & hors ligne|Data saver & offline|Poupança de dados e offline|Ahorro de datos y sin conexión|توفير البيانات وبدون اتصال|Kuokoa data na nje ya mtandao|የዳታ ቁጠባና ከመስመር ውጭ|Data qənaəti və oflayn
+Modération du chat|Chat moderation|Moderação do chat|Moderación del chat|إدارة الدردشة|Udhibiti wa gumzo|የውይይት ቁጥጥር|Söhbət moderasiyası
+Mode lent|Slow mode|Modo lento|Modo lento|الوضع البطيء|Hali ya polepole|ዝግ ያለ ሁነታ|Yavaş rejim
+Mots interdits (séparés par des virgules|Banned words (separated by commas|Palavras proibidas (separadas por vírgulas|Palabras prohibidas (separadas por comas|كلمات ممنوعة (مفصولة بفواصل|Maneno yaliyokatazwa (yakitenganishwa kwa koma|የተከለከሉ ቃላት (በኮማ የተለዩ|Qadağan sözlər (vergüllə ayrılmış
+Nom complet (comme sur ta pièce d’identité|Full name (as on your ID|Nome completo (como no teu documento|Nombre completo (como en tu documento|الاسم الكامل (كما في هويتك|Jina kamili (kama kwenye kitambulisho chako|ሙሉ ስም (በመታወቂያህ ላይ እንዳለው|Tam ad (şəxsiyyət vəsiqəndəki kimi
+Nom de la marque|Brand name|Nome da marca|Nombre de la marca|اسم العلامة التجارية|Jina la chapa|የብራንድ ስም|Brendin adı
+Noter|Rate|Avaliar|Valorar|قيّم|Kadiria|ደረጃ ስጥ|Qiymətləndir
+Noter ce prestataire|Rate this provider|Avaliar este prestador|Valorar a este proveedor|قيّم مقدم الخدمة هذا|Kadiria mtoa huduma huyu|ይህን አገልግሎት ሰጪ ደረጃ ስጥ|Bu xidmətçini qiymətləndir
+Noter la boutique|Rate the shop|Avaliar a loja|Valorar la tienda|قيّم المتجر|Kadiria duka|ሱቁን ደረጃ ስጥ|Mağazanı qiymətləndir
+Objectif|Goal|Objetivo|Objetivo|الهدف|Lengo|ግብ|Hədəf
+Objectif de cadeaux|Gift goal|Objetivo de presentes|Objetivo de regalos|هدف الهدايا|Lengo la zawadi|የስጦታ ግብ|Hədiyyə hədəfi
+Obtenir le badge vérifié|Get the verified badge|Obter o selo verificado|Obtener la insignia verificada|احصل على شارة التحقق|Pata beji ya uthibitisho|የተረጋገጠ ባጅ አግኝ|Təsdiq nişanı al
+Obtenir|Get|Obter|Obtener|احصل|Pata|አግኝ|Al
+Outils du live|Live tools|Ferramentas do live|Herramientas del directo|أدوات البث|Zana za mubashara|የቀጥታ መሳሪያዎች|Yayın alətləri
+Partager le défi|Share the challenge|Partilhar o desafio|Compartir el reto|شارك التحدي|Shiriki changamoto|ፈተናውን አጋራ|Çağırışı paylaş
+Partager le live|Share the live|Partilhar o live|Compartir el directo|شارك البث|Shiriki mubashara|ቀጥታውን አጋራ|Yayını paylaş
+Partager mon live|Share my live|Partilhar o meu live|Compartir mi directo|شارك بثي|Shiriki mubashara wangu|ቀጥታዬን አጋራ|Yayınımı paylaş
+Pas encore de participation. Sois le premier|No entries yet. Be the first|Ainda sem participações. Sê o primeiro|Aún no hay participaciones. Sé el primero|لا مشاركات بعد. كن الأول|Bado hakuna washiriki. Kuwa wa kwanza|እስካሁን ተሳታፊ የለም። የመጀመሪያው ሁን|Hələ iştirak yoxdur. İlk sən ol
+Pas encore d’avis|No reviews yet|Ainda sem avaliações|Aún no hay opiniones|لا تقييمات بعد|Bado hakuna maoni|እስካሁን ግምገማ የለም|Hələ rəy yoxdur
+Personne pour le moment|Nobody yet|Ninguém por agora|Nadie por ahora|لا أحد حاليًا|Hakuna mtu kwa sasa|ለአሁን ማንም የለም|Hələ heç kim yoxdur
+Pièces à atteindre|Coins to reach|Moedas a atingir|Monedas a alcanzar|العملات المطلوبة|Sarafu za kufikia|የሚደረስባቸው ሳንቲሞች|Çatılacaq sikkələr
+Pour les marques|For brands|Para marcas|Para marcas|للعلامات التجارية|Kwa chapa|ለብራንዶች|Brendlər üçün
+Une photo de ta pièce d’identité (carte, passeport ou permis|A photo of your ID (card, passport or driving licence|Uma foto do teu documento (cartão, passaporte ou carta de condução|Una foto de tu documento (DNI, pasaporte o permiso|صورة لهويتك (بطاقة أو جواز سفر أو رخصة|Picha ya kitambulisho chako (kadi, pasipoti au leseni|የመታወቂያህ ፎቶ (ካርድ፣ ፓስፖርት ወይም መንጃ ፈቃድ|Şəxsiyyət vəsiqənin şəkli (kart, pasport və ya sürücülük vəsiqəsi
+Un selfie où tu tiens cette pièce à côté de ton visage|A selfie holding that ID next to your face|Uma selfie a segurar esse documento junto ao rosto|Un selfie sosteniendo ese documento junto a tu cara|صورة سيلفي وأنت تحمل الهوية بجانب وجهك|Selfie ukishika kitambulisho hicho karibu na uso wako|ያንን መታወቂያ ከፊትህ አጠገብ ይዘህ የራስ ፎቶ|O vəsiqəni üzünün yanında tutduğun selfi
+Pour une entreprise : une photo de ton registre de commerce (facultatif|For a company: a photo of your business registration (optional|Para uma empresa: uma foto do teu registo comercial (opcional|Para una empresa: una foto de tu registro mercantil (opcional|للشركات: صورة من سجلك التجاري (اختياري|Kwa kampuni: picha ya usajili wa biashara yako (si lazima|ለድርጅት፦ የንግድ ምዝገባህ ፎቶ (አማራጭ|Şirkət üçün: ticarət reyestrinin şəkli (könüllü
+Prix à partir de (facultatif|Price from (optional|Preço a partir de (opcional|Precio desde (opcional|السعر ابتداءً من (اختياري|Bei kuanzia (si lazima|ዋጋ ከ (አማራጭ|Qiymət, başlayaraq (könüllü
+Produit conforme ? Livraison rapide ? Vendeur sérieux|Product as described? Fast delivery? Reliable seller|Produto conforme? Entrega rápida? Vendedor sério|¿Producto conforme? ¿Entrega rápida? ¿Vendedor serio|هل المنتج مطابق؟ توصيل سريع؟ بائع جاد|Bidhaa sahihi? Uwasilishaji wa haraka? Muuzaji makini|ምርቱ እንደተገለጸው ነው? ፈጣን ማድረስ? ታማኝ ሻጭ|Məhsul uyğundur? Çatdırılma sürətlidir? Satıcı etibarlıdır
+Proposer mon service|Offer my service|Oferecer o meu serviço|Ofrecer mi servicio|اعرض خدمتي|Toa huduma yangu|አገልግሎቴን አቅርብ|Xidmətimi təklif et
+Prénom et nom|First and last name|Nome e apelido|Nombre y apellido|الاسم واللقب|Jina la kwanza na la mwisho|ስምና የአባት ስም|Ad və soyad
+Publie une vidéo avec|Post a video with|Publica um vídeo com|Publica un vídeo con|انشر فيديو مع|Chapisha video yenye|ቪዲዮ ለጥፍ ከ|Bu heşteqlə video paylaş
+avant la fin. Classement selon les vues réelles et les j’aime. Les gagnants reçoivent leur prix dans leur portefeuille Vibzo, retirable en Mobile Money|before the end. Ranking by real views and likes. Winners get their prize in their Vibzo wallet, withdrawable via Mobile Money|antes do fim. Classificação pelas visualizações reais e gostos. Os vencedores recebem o prémio na carteira Vibzo, levantável por Mobile Money|antes del final. Clasificación según las vistas reales y los me gusta. Los ganadores reciben su premio en su monedero Vibzo, retirable por Mobile Money|قبل النهاية. الترتيب حسب المشاهدات الحقيقية والإعجابات. يتلقى الفائزون جوائزهم في محفظة Vibzo، قابلة للسحب عبر Mobile Money|kabla ya mwisho. Nafasi kwa mitazamo halisi na kupendwa. Washindi wanapata zawadi kwenye pochi yao ya Vibzo, inayotolewa kwa Mobile Money|ከማብቂያው በፊት። ደረጃው በእውነተኛ እይታዎችና መውደዶች ነው። አሸናፊዎች ሽልማታቸውን በVibzo ቦርሳቸው ያገኛሉ፣ በሞባይል ገንዘብ ይወጣል|bitməmişdən əvvəl. Sıralama real baxışlara və bəyənmələrə görədir. Qaliblər mükafatı Vibzo pul kisəsində alır, Mobile Money ilə çıxarıla bilər
+Publier mon avis|Post my review|Publicar a minha avaliação|Publicar mi opinión|انشر تقييمي|Chapisha maoni yangu|ግምገማዬን ለጥፍ|Rəyimi paylaş
+Publier mon service|Publish my service|Publicar o meu serviço|Publicar mi servicio|انشر خدمتي|Chapisha huduma yangu|አገልግሎቴን ለጥፍ|Xidmətimi dərc et
+Quand tu ouvres Vibzo en Wi-Fi, 10 nouvelles vidéos sont gardées pour plus tard, sans internet|When you open Vibzo on Wi-Fi, 10 new videos are saved for later, without internet|Quando abres o Vibzo em Wi-Fi, 10 vídeos novos ficam guardados para depois, sem internet|Cuando abres Vibzo con Wi-Fi, se guardan 10 vídeos nuevos para más tarde, sin internet|عند فتح Vibzo عبر الواي فاي، تُحفظ 10 فيديوهات جديدة لمشاهدتها لاحقًا دون إنترنت|Ukifungua Vibzo kwenye Wi-Fi, video 10 mpya zinahifadhiwa kwa baadaye, bila intaneti|Vibzoን በWi-Fi ስትከፍት 10 አዳዲስ ቪዲዮዎች ለኋላ ያለ ኢንተርኔት ይቀመጣሉ|Vibzo-nu Wi-Fi ilə açanda 10 yeni video sonra internetsiz baxmaq üçün saxlanılır
+Règles et description|Rules and description|Regras e descrição|Reglas y descripción|القواعد والوصف|Kanuni na maelezo|ደንቦችና መግለጫ|Qaydalar və təsvir
+Seul toi peux écrire|Only you can write|Só tu podes escrever|Solo tú puedes escribir|أنت فقط من يمكنه الكتابة|Ni wewe tu unayeweza kuandika|መጻፍ የምትችለው አንተ ብቻ ነህ|Yalnız sən yaza bilərsən
+Sondage|Poll|Sondagem|Encuesta|استطلاع|Kura|ምርጫ|Sorğu
+Spectateurs|Viewers|Espectadores|Espectadores|المشاهدون|Watazamaji|ተመልካቾች|İzləyicilər
+spectateurs|viewers|espectadores|espectadores|مشاهدين|watazamaji|ተመልካቾች|izləyici
+Spectateurs et invités|Viewers and guests|Espectadores e convidados|Espectadores e invitados|المشاهدون والضيوف|Watazamaji na wageni|ተመልካቾችና እንግዶች|İzləyicilər və qonaqlar
+Titre du défi|Challenge title|Título do desafio|Título del reto|عنوان التحدي|Kichwa cha changamoto|የፈተናው ርዕስ|Çağırışın adı
+Ton avis (facultatif|Your review (optional|A tua avaliação (opcional|Tu opinión (opcional|تقييمك (اختياري|Maoni yako (si lazima|ግምገማህ (አማራጭ|Rəyin (könüllü
+Ton avis est public et aide les autres acheteurs à éviter les arnaques|Your review is public and helps other buyers avoid scams|A tua avaliação é pública e ajuda outros compradores a evitar burlas|Tu opinión es pública y ayuda a otros compradores a evitar estafas|تقييمك علني ويساعد المشترين الآخرين على تجنب الاحتيال|Maoni yako ni ya umma na yanasaidia wanunuzi wengine kuepuka utapeli|ግምገማህ ለሕዝብ ክፍት ነው፣ ሌሎች ገዢዎች ከማጭበርበር እንዲጠበቁ ይረዳል|Rəyin açıqdır və digər alıcılara fırıldaqdan qaçmağa kömək edir
+Tous les pays|All countries|Todos os países|Todos los países|جميع الدول|Nchi zote|ሁሉም ሀገራት|Bütün ölkələr
+Tu peux noter un prestataire après avoir échangé avec lui par message sur Vibzo|You can rate a provider after messaging with them on Vibzo|Podes avaliar um prestador depois de trocar mensagens com ele no Vibzo|Puedes valorar a un proveedor después de hablar con él por mensaje en Vibzo|يمكنك تقييم مقدم الخدمة بعد التراسل معه على Vibzo|Unaweza kumkadiria mtoa huduma baada ya kuwasiliana naye kwa ujumbe kwenye Vibzo|በVibzo በመልእክት ከተነጋገርክ በኋላ አገልግሎት ሰጪውን ደረጃ መስጠት ትችላለህ|Vibzo-da onunla yazışdıqdan sonra xidmətçini qiymətləndirə bilərsən
+Télécharger 10 vidéos maintenant|Download 10 videos now|Descarregar 10 vídeos agora|Descargar 10 vídeos ahora|حمّل 10 فيديوهات الآن|Pakua video 10 sasa|አሁን 10 ቪዲዮዎችን አውርድ|İndi 10 video yüklə
+Télécharger automatiquement en Wi-Fi|Download automatically on Wi-Fi|Descarregar automaticamente em Wi-Fi|Descargar automáticamente con Wi-Fi|التحميل تلقائيًا عبر الواي فاي|Pakua kiotomatiki kwenye Wi-Fi|በWi-Fi በራስ-ሰር አውርድ|Wi-Fi ilə avtomatik yüklə
+Une barre de progression s’affiche pour tous : tes fans t’aident à l’atteindre avec leurs cadeaux|A progress bar is shown to everyone: your fans help you reach it with their gifts|Uma barra de progresso aparece para todos: os teus fãs ajudam-te a atingi-la com presentes|Una barra de progreso se muestra a todos: tus fans te ayudan a alcanzarla con sus regalos|يظهر شريط تقدم للجميع: يساعدك معجبوك على بلوغه بهداياهم|Upau wa maendeleo unaonekana kwa wote: mashabiki wako wanakusaidia kuufikia kwa zawadi zao|የእድገት አሞሌ ለሁሉም ይታያል፦ አድናቂዎችህ በስጦታቸው እንድትደርስበት ይረዱሃል|Hamıya irəliləyiş zolağı görünür: fanatların hədiyyələrlə ona çatmağa kömək edir
+Vendeur non vérifié|Unverified seller|Vendedor não verificado|Vendedor no verificado|بائع غير موثّق|Muuzaji asiyethibitishwa|ያልተረጋገጠ ሻጭ|Təsdiqlənməmiş satıcı
+Vendeur vérifié par Vibzo|Seller verified by Vibzo|Vendedor verificado pelo Vibzo|Vendedor verificado por Vibzo|بائع موثّق من Vibzo|Muuzaji amethibitishwa na Vibzo|በVibzo የተረጋገጠ ሻጭ|Vibzo tərəfindən təsdiqlənmiş satıcı
+Vidéo de démonstration (une de tes vidéos|Demo video (one of your videos|Vídeo de demonstração (um dos teus vídeos|Vídeo de demostración (uno de tus vídeos|فيديو توضيحي (أحد فيديوهاتك|Video ya maonyesho (moja ya video zako|የማሳያ ቪዲዮ (ከቪዲዮዎችህ አንዱ|Nümayiş videosu (videolarından biri
+Vidéos hors ligne|Offline videos|Vídeos offline|Vídeos sin conexión|فيديوهات بدون اتصال|Video za nje ya mtandao|ከመስመር ውጭ ቪዲዮዎች|Oflayn videolar
+Regarder sans internet|Watch without internet|Ver sem internet|Ver sin internet|شاهد دون إنترنت|Tazama bila intaneti|ያለ ኢንተርኔት ተመልከት|İnternetsiz bax
+Tout supprimer|Delete all|Apagar tudo|Eliminar todo|احذف الكل|Futa zote|ሁሉንም ሰርዝ|Hamısını sil
+Vérifié|Verified|Verificado|Verificado|موثّق|Imethibitishwa|የተረጋገጠ|Təsdiqlənib
+ventes livrées|delivered sales|vendas entregues|ventas entregadas|مبيعات مُسلَّمة|mauzo yaliyowasilishwa|የደረሱ ሽያጮች|çatdırılmış satış
+sur Vibzo depuis|on Vibzo since|no Vibzo desde|en Vibzo desde|على Vibzo منذ|kwenye Vibzo tangu|በVibzo ከ|Vibzo-da bu vaxtdan
+dès|from|desde|desde|ابتداءً من|kuanzia|ከ|başlayaraq
+À partir de|From|A partir de|Desde|ابتداءً من|Kuanzia|ከ|Başlayaraq
+message toutes les 10 secondes par spectateur|message every 10 seconds per viewer|mensagem a cada 10 segundos por espectador|mensaje cada 10 segundos por espectador|رسالة كل 10 ثوانٍ لكل مشاهد|ujumbe kila sekunde 10 kwa kila mtazamaji|መልእክት በየ10 ሰከንዱ ለእያንዳንዱ ተመልካች|hər izləyiçi üçün 10 saniyədə bir mesaj
+Écrire pour réserver|Message to book|Escrever para reservar|Escribir para reservar|راسل للحجز|Andika ili kuweka nafasi|ለመያዝ ጻፍ|Rezerv üçün yaz
+à payer pour lancer le défi|to pay to launch the challenge|a pagar para lançar o desafio|a pagar para lanzar el reto|للدفع لإطلاق التحدي|kulipa ili kuanzisha changamoto|ፈተናውን ለመጀመር የሚከፈል|çağırışı başlatmaq üçün ödəniləcək
+j restants|days left|dias restantes|días restantes|يوم متبقٍ|siku zimebaki|ቀናት ቀርተዋል|gün qalıb
+participations|entries|participações|participaciones|مشاركات|washiriki|ተሳታፊዎች|iştirak
+Participer|Join|Participar|Participar|شارك|Shiriki|ተሳተፍ|Qatıl
+Classement|Ranking|Classificação|Clasificación|الترتيب|Msimamo|ደረጃ|Sıralama
+Choisir|Choose|Escolher|Elegir|اختر|Chagua|ምረጥ|Seç
+Valider les gagnants|Confirm winners|Confirmar vencedores|Confirmar ganadores|أكّد الفائزين|Thibitisha washindi|አሸናፊዎችን አረጋግጥ|Qalibləri təsdiqlə
+Services|Services|Serviços|Servicios|الخدمات|Huduma|አገልግሎቶች|Xidmətlər
+Mes services|My services|Os meus serviços|Mis servicios|خدماتي|Huduma zangu|አገልግሎቶቼ|Xidmətlərim
+Près de chez toi|Near you|Perto de ti|Cerca de ti|بالقرب منك|Karibu nawe|በአቅራቢያህ|Yaxınlığında
+Tout|All|Tudo|Todo|الكل|Zote|ሁሉም|Hamısı
+Vidéo|Video|Vídeo|Vídeo|فيديو|Video|ቪዲዮ|Video
+Masqué|Hidden|Oculto|Oculto|مخفي|Imefichwa|ተደብቋል|Gizli
+Quartier / zone d’intervention|Neighbourhood / service area|Bairro / zona de atuação|Barrio / zona de servicio|الحي / منطقة العمل|Mtaa / eneo la huduma|ሰፈር / የአገልግሎት ክልል|Məhəllə / xidmət ərazisi
+WhatsApp (facultatif|WhatsApp (optional|WhatsApp (opcional|WhatsApp (opcional|واتساب (اختياري|WhatsApp (si lazima|WhatsApp (አማራጭ|WhatsApp (könüllü
+Devise|Currency|Moeda|Moneda|العملة|Sarafu|ምንዛሬ|Valyuta
+Participants|Participants|Participantes|Participantes|المشاركون|Washiriki|ተሳታፊዎች|İştirakçılar
+Défi créé|Challenge created|Desafio criado|Reto creado|تم إنشاء التحدي|Changamoto imeundwa|ፈተና ተፈጥሯል|Çağırış yaradıldı
+Il sera mis en ligne dès réception du paiement|It will go live as soon as payment is received|Será publicado assim que o pagamento for recebido|Se publicará en cuanto se reciba el pago|سيُنشر فور استلام الدفع|Itachapishwa mara malipo yatakapopokelewa|ክፍያው እንደደረሰ ይለቀቃል|Ödəniş alınan kimi yayımlanacaq
+Montant à payer|Amount to pay|Montante a pagar|Importe a pagar|المبلغ المستحق|Kiasi cha kulipa|የሚከፈለው መጠን|Ödəniləcək məbləğ
+de prix|in prizes|em prémios|en premios|من الجوائز|ya zawadi|ሽልማት|mükafat
+Envoyer la preuve sur WhatsApp|Send proof on WhatsApp|Enviar comprovativo pelo WhatsApp|Enviar comprobante por WhatsApp|أرسل الإثبات عبر واتساب|Tuma uthibitisho kwa WhatsApp|ማረጋገጫውን በWhatsApp ላክ|Sübutu WhatsApp ilə göndər
+Ton compte est vérifié|Your account is verified|A tua conta está verificada|Tu cuenta está verificada|حسابك موثّق|Akaunti yako imethibitishwa|መለያህ ተረጋግጧል|Hesabın təsdiqlənib
+Compte vérifié|Verified account|Conta verificada|Cuenta verificada|حساب موثّق|Akaunti imethibitishwa|የተረጋገጠ መለያ|Təsdiqlənmiş hesab
+Envoyer sur WhatsApp|Send on WhatsApp|Enviar pelo WhatsApp|Enviar por WhatsApp|أرسل عبر واتساب|Tuma kwa WhatsApp|በWhatsApp ላክ|WhatsApp ilə göndər
+Recruteur vérifié par Vibzo|Recruiter verified by Vibzo|Recrutador verificado pelo Vibzo|Reclutador verificado por Vibzo|موظِّف موثّق من Vibzo|Mwajiri amethibitishwa na Vibzo|በVibzo የተረጋገጠ ቀጣሪ|Vibzo tərəfindən təsdiqlənmiş işəgötürən
+son identité a été contrôlée|their identity has been checked|a identidade foi verificada|su identidad ha sido comprobada|تم التحقق من هويته|utambulisho wake umekaguliwa|ማንነቱ ተረጋግጧል|şəxsiyyəti yoxlanılıb
+Réponse du vendeur|Seller's reply|Resposta do vendedor|Respuesta del vendedor|رد البائع|Jibu la muuzaji|የሻጩ መልስ|Satıcının cavabı
+Répondre à cet avis|Reply to this review|Responder a esta avaliação|Responder a esta opinión|رد على هذا التقييم|Jibu maoni haya|ለዚህ ግምገማ መልስ ስጥ|Bu rəyə cavab ver
+Avis envoyé|Review sent|Avaliação enviada|Opinión enviada|تم إرسال التقييم|Maoni yametumwa|ግምገማ ተልኳል|Rəy göndərildi
+Vendre pendant le live|Sell during the live|Vender durante o live|Vender durante el directo|بِع أثناء البث|Uza wakati wa mubashara|በቀጥታ ጊዜ ሽጥ|Yayın zamanı sat
+Vendre un produit|Sell a product|Vender um produto|Vender un producto|بِع منتجًا|Uza bidhaa|ምርት ሽጥ|Məhsul sat
+Épingler|Pin|Fixar|Fijar|ثبّت|Bandika|ለጥፍ|Bərkit
+Épinglé|Pinned|Fixado|Fijado|مثبّت|Imebandikwa|ተለጥፏል|Bərkidilib
+Retirer le produit de l’écran|Remove the product from the screen|Retirar o produto do ecrã|Quitar el producto de la pantalla|أزل المنتج من الشاشة|Ondoa bidhaa kwenye skrini|ምርቱን ከስክሪኑ አስወግድ|Məhsulu ekrandan götür
+Inviter|Invite|Convidar|Invitar|ادعُ|Alika|ጋብዝ|Dəvət et
+Accepter|Accept|Aceitar|Aceptar|اقبل|Kubali|ተቀበል|Qəbul et
+Expulser|Remove|Expulsar|Expulsar|اطرد|Mfukuze|አስወጣ|Çıxar
+Retirer|Remove|Retirar|Quitar|أزل|Ondoa|አስወግድ|Götür
+À l’écran|On screen|No ecrã|En pantalla|على الشاشة|Kwenye skrini|በስክሪኑ ላይ|Ekranda
+Demande|Request|Pedido|Solicitud|طلب|Ombi|ጥያቄ|Sorğu
+votes|votes|votos|votos|أصوات|kura|ድምፆች|səs
+Retirer l’objectif|Remove goal|Remover objetivo|Quitar objetivo|أزل الهدف|Ondoa lengo|ግቡን አስወግድ|Hədəfi götür
+Question|Question|Pergunta|Pregunta|السؤال|Swali|ጥያቄ|Sual
+Affiché|Shown|Visível|Visible|معروض|Inaonyeshwa|ታይቷል|Göstərilir
+En cours|In progress|Em curso|En curso|جارٍ|Inaendelea|በሂደት ላይ|Davam edir
+Tu es à l’écran avec l’animateur|You're on screen with the host|Estás no ecrã com o anfitrião|Estás en pantalla con el anfitrión|أنت على الشاشة مع المضيف|Uko kwenye skrini na mwenyeji|ከአስተናጋጁ ጋር በስክሪኑ ላይ ነህ|Aparıcı ilə ekrandasan
+Le chat est fermé par l’animateur|The host has closed the chat|O anfitrião fechou o chat|El anfitrión ha cerrado el chat|أغلق المضيف الدردشة|Mwenyeji amefunga gumzo|አስተናጋጁ ውይይቱን ዘግቷል|Aparıcı söhbəti bağlayıb
+Mode lent activé|Slow mode on|Modo lento ativado|Modo lento activado|تم تفعيل الوضع البطيء|Hali ya polepole imewashwa|ዝግ ያለ ሁነታ በርቷል|Yavaş rejim aktivdir
+Objectif atteint ! Merci à tous|Goal reached! Thank you all|Objetivo atingido! Obrigado a todos|¡Objetivo alcanzado! Gracias a todos|تم بلوغ الهدف! شكرًا للجميع|Lengo limefikiwa! Asanteni nyote|ግቡ ተሳክቷል! ሁላችሁንም እናመሰግናለን|Hədəfə çatıldı! Hamıya təşəkkürlər
+Merci pour ton avis|Thanks for your review|Obrigado pela tua avaliação|Gracias por tu opinión|شكرًا على تقييمك|Asante kwa maoni yako|ስለ ግምገማህ እናመሰግናለን|Rəyin üçün təşəkkürlər
+Ton service est en ligne|Your service is live|O teu serviço está online|Tu servicio está publicado|خدمتك متاحة الآن|Huduma yako iko hewani|አገልግሎትህ በመስመር ላይ ነው|Xidmətin yayımdadır
+Demande envoyée à l’animateur|Request sent to the host|Pedido enviado ao anfitrião|Solicitud enviada al anfitrión|تم إرسال الطلب إلى المضيف|Ombi limetumwa kwa mwenyeji|ጥያቄው ለአስተናጋጁ ተልኳል|Sorğu aparıcıya göndərildi
+Commentaire épinglé|Comment pinned|Comentário fixado|Comentario fijado|تم تثبيت التعليق|Maoni yamebandikwa|አስተያየቱ ተለጥፏል|Şərh bərkidildi
+Règles du chat mises à jour|Chat rules updated|Regras do chat atualizadas|Reglas del chat actualizadas|تم تحديث قواعد الدردشة|Kanuni za gumzo zimesasishwa|የውይይት ደንቦች ተዘምነዋል|Söhbət qaydaları yeniləndi
+Mode petit forfait activé|Data saver on|Poupança de dados ativada|Ahorro de datos activado|تم تفعيل توفير البيانات|Kuokoa data kumewashwa|የዳታ ቁጠባ በርቷል|Data qənaəti aktivdir
+Pas de connexion internet|No internet connection|Sem ligação à internet|Sin conexión a internet|لا يوجد اتصال بالإنترنت|Hakuna muunganisho wa intaneti|የኢንተርኔት ግንኙነት የለም|İnternet bağlantısı yoxdur
+Regarder mes vidéos hors ligne|Watch my offline videos|Ver os meus vídeos offline|Ver mis vídeos sin conexión|شاهد فيديوهاتي بدون اتصال|Tazama video zangu za nje ya mtandao|ከመስመር ውጭ ቪዲዮዎቼን ተመልከት|Oflayn videolarıma bax
+Réessayer|Try again|Tentar de novo|Reintentar|أعد المحاولة|Jaribu tena|እንደገና ሞክር|Yenidən cəhd et
+Gagnants récompensés|Winners rewarded|Vencedores premiados|Ganadores premiados|تمت مكافأة الفائزين|Washindi wamezawadiwa|አሸናፊዎች ተሸልመዋል|Qaliblər mükafatlandırıldı
+Défi sponsorisé par|Challenge sponsored by|Desafio patrocinado por|Reto patrocinado por|تحدٍ برعاية|Changamoto imedhaminiwa na|በስፖንሰር የቀረበ ፈተና በ|Sponsorlu çağırış:
+Prestataire non vérifié : ne paie jamais tout à l’avance. Paie après le travail ou au rendez-vous|Unverified provider: never pay everything in advance. Pay after the work or at the appointment|Prestador não verificado: nunca pagues tudo adiantado. Paga depois do trabalho ou no encontro|Proveedor no verificado: nunca pagues todo por adelantado. Paga después del trabajo o en la cita|مقدم خدمة غير موثّق: لا تدفع كل شيء مقدمًا أبدًا. ادفع بعد العمل أو عند الموعد|Mtoa huduma asiyethibitishwa: usilipe kila kitu mapema. Lipa baada ya kazi au kwenye miadi|ያልተረጋገጠ አገልግሎት ሰጪ፦ ሁሉንም አስቀድመህ በፍጹም አትክፈል። ከስራው በኋላ ወይም በቀጠሮው ላይ ክፈል|Təsdiqlənməmiş xidmətçi: heç vaxt hər şeyi əvvəlcədən ödəmə. İşdən sonra və ya görüşdə ödə
+Choix 1|Choice 1|Opção 1|Opción 1|الخيار 1|Chaguo 1|ምርጫ 1|Seçim 1
+Choix 2|Choice 2|Opção 2|Opción 2|الخيار 2|Chaguo 2|ምርጫ 2|Seçim 2
+1 message toutes les 10 secondes par spectateur|1 message every 10 seconds per viewer|1 mensagem a cada 10 segundos por espectador|1 mensaje cada 10 segundos por espectador|رسالة واحدة كل 10 ثوانٍ لكل مشاهد|Ujumbe 1 kila sekunde 10 kwa kila mtazamaji|በየ10 ሰከንዱ 1 መልእክት ለእያንዳንዱ ተመልካች|Hər izləyiçi üçün 10 saniyədə 1 mesaj
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)
@@ -579,9 +757,9 @@ const SKIP = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'CODE']);
 function translateNode(root) {
   if (lang === 'fr' || !root) return;
   if (root.nodeType === 3) { tText(root); return; }
-  if (root.nodeType !== 1 || SKIP.has(root.tagName)) return;
+  if (root.nodeType !== 1) return; if (SKIP.has(root.tagName)) { if (root.tagName === 'TEXTAREA') tAttrs(root); return; }
   tAttrs(root);
-  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, { acceptNode: n => n.nodeType === 1 && SKIP.has(n.tagName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, { acceptNode: n => { if (n.nodeType === 1 && SKIP.has(n.tagName)) { if (n.tagName === 'TEXTAREA') tAttrs(n); return NodeFilter.FILTER_REJECT; } return NodeFilter.FILTER_ACCEPT; } });
   let n; while ((n = w.nextNode())) { if (n.nodeType === 3) tText(n); else tAttrs(n); }
 }
 function tText(n) { if (n.__vz === n.nodeValue) return; const t = translateText(n.nodeValue); if (t != null) { n.nodeValue = t; } n.__vz = n.nodeValue; }

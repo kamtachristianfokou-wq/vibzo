@@ -277,7 +277,7 @@ async function saveSetup() {
   Object.assign(S.me, upd); S.loc = worldLoc(cc); saveLoc(); applyLang(); closeModal(); toast('Profil prêt ✅'); applyRefIfAny(); go(S.cur === 'auth' ? 'home' : S.cur);
 }
 // Colonnes publiques du profil (le téléphone est privé : lu via private_phone)
-const PROFILE_COLS = 'id,username,display_name,bio,avatar_url,country,region,role,vip_until,created_at,city,lang,needs_setup,instagram,tiktok,youtube';
+const PROFILE_COLS = 'id,username,display_name,bio,avatar_url,country,region,role,vip_until,created_at,city,lang,needs_setup,instagram,tiktok,youtube,verified';
 async function loadMe() {
   if (!uid()) { S.me = null; S.myShop = null; return; }
   const [{ data: me }, { data: shop }] = await Promise.all([
@@ -344,7 +344,7 @@ function slideHTML(v) {
   S.vids.set(v.id, v);
   const mine = v.user_id === uid();
   return `<div class="slide" data-id="${v.id}">
-  <div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" loop playsinline ${S.muted || soundBlocked ? 'muted' : ''} preload="metadata" onloadedmetadata="V.noImg(this)"></video></div>
+  <div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" loop playsinline ${S.muted || soundBlocked ? 'muted' : ''} preload="${S.saver ? 'none' : 'metadata'}" onloadedmetadata="V.noImg(this)"></video></div>
   ${v.title ? `<div class="vtitle" style="top:auto;bottom:150px">${esc(v.title)}</div>` : ''}
   <div class="vtap" onclick="V.tapVid(event,'${v.id}')" onpointerdown="V.holdStart(event,this)" onpointerup="V.holdEnd(this)" onpointerleave="V.holdEnd(this)" onpointercancel="V.holdEnd(this)" oncontextmenu="return false"></div><div class="pauseIc">▶</div><div class="spd">2x ⏩</div>
   <div class="vprog" onpointerdown="V.seek(event,this)"><i></i></div>
@@ -665,13 +665,13 @@ async function sendReport(type, id, i) {
 let qTimer;
 SCREENS.discover = () => {
   const pre = S.searchQ || ''; S.searchQ = null;
-  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="livesStrip"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
-  loadTrends(); search(); livesStrip();
+  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="chStrip"></div><div class="pad" id="livesStrip"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
+  loadTrends(); search(); livesStrip(); loadChallenges().catch(() => { });
 };
 async function loadTrends() {
   const el = $('#trends'); if (!el) return;
   const q = ($('#q') ? $('#q').value : '').trim();
-  if (q) { el.innerHTML = q.startsWith('#') ? `<div class="taghead"><div class="big">#</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Hashtag · publie ta vidéo avec #${esc(q.slice(1))} pour participer au défi</div></div><button class="btn sm" style="width:auto" onclick="V.go('create')">＋ Participer</button></div>` : q.startsWith('♪') ? `<div class="taghead"><div class="big">♪</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Son · toutes les vidéos avec ce son</div></div></div>` : ''; return; }
+  if (q) { el.innerHTML = q.startsWith('#') ? `<div class="taghead"><div class="big">#</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Hashtag · publie ta vidéo avec #${esc(q.slice(1))} pour participer au défi</div></div><button class="btn sm" style="width:auto" onclick="V.go('create')">＋ Participer</button></div>` : q.startsWith('♪') ? `<div class="taghead"><div class="big">♪</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Son · toutes les vidéos avec ce son</div></div></div>` : ''; if (q.startsWith('#') && q.length > 1) tagChallengeBanner(q.slice(1)).catch(() => { }); return; }
   const [{ data: tags }, { data: snds }] = await Promise.all([sb.rpc('trending_tags', { p_limit: 12 }), sb.rpc('trending_sounds', { p_limit: 6 })]);
   el.innerHTML = (tags || []).length || (snds || []).length ? `<div class="lbl">🔥 Tendances de la semaine</div><div class="trend">${(tags || []).map((t, i) => `<button onclick="V.openTag('${esc(t.tag)}')"><b>${i < 3 ? ['🥇', '🥈', '🥉'][i] : '#'}</b> ${esc(t.tag)} <span>${fmtN(t.videos)}</span></button>`).join('')}${(snds || []).map(s => `<button onclick="V.openSound('${esc(s.sound.replace(/'/g, '’'))}')">♪ ${esc(s.sound)} <span>${fmtN(s.videos)}</span></button>`).join('')}</div>` : '';
 }
@@ -693,7 +693,7 @@ async function search() {
   S._grid = vids; const lb = $('#dlbl'); if (lb) lb.innerHTML = q ? (q.startsWith('#') || q.startsWith('♪') ? 'Les plus vues' : 'Résultats') : '<span>Vidéos récentes</span> · ' + esc(locLabel());
   if (q) loadTrends();
 }
-const thumb = (v) => { S.vids.set(v.id, v); return `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.openGrid('${v.id}')"><video src="${esc(v.video_url)}#t=0.5" muted preload="metadata" playsinline></video><span>${v.view_count ? '▶ ' + fmtN(v.view_count) : '♥ ' + fmtN(v.like_count)}</span></button>`; };
+const thumb = (v) => { S.vids.set(v.id, v); return `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.openGrid('${v.id}')">${S.saver ? '<div class="vthph">▶</div>' : `<video src="${esc(v.video_url)}#t=0.5" muted preload="metadata" playsinline></video>`}<span>${v.view_count ? '▶ ' + fmtN(v.view_count) : '♥ ' + fmtN(v.like_count)}</span></button>`; };
 function openGrid(id) { const list = S._grid || [S.vids.get(id)]; S.override = { list, start: id }; go('home', { keepOverride: true }); }
 
 /* =====================================================================
@@ -710,7 +710,7 @@ SCREENS.create = async () => {
   <div class="prev" id="prev" style="${draft ? '' : 'display:none'};background:#0b2540">${draft ? `<video src="${draft.url}" autoplay loop muted playsinline></video>` : ''}</div>
   <div class="field"><label>Titre à l’écran (facultatif)</label><input id="ct" maxlength="80" placeholder="Ex : Mon premier challenge 🔥"></div>
   <div class="field"><label>Description</label><textarea id="cd" rows="2" maxlength="300" placeholder="Décris ta vidéo…"></textarea></div>
-  <div class="field"><label>Hashtags</label><input id="ch" placeholder="danse, humour, cuisine"></div>
+  <div class="field"><label>Hashtags</label><input id="ch" placeholder="danse, humour, cuisine" value="${esc(S.draftTag || '')}"></div>
   ${prods.length ? `<div class="field"><label>🛍️ Taguer un produit de ma boutique</label><select id="cp"><option value="">Aucun</option>${prods.map(p => `<option value="${p.id}">${esc(p.name)} · ${money(p.price, p.currency)}</option>`).join('')}</select></div>` : ''}
   <p class="mut small" style="margin-top:12px">Ta vidéo sera visible par tous dans ta région. Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs de façon inappropriée.</p>
   <div class="progress" id="prog" style="display:none"><i></i></div>
@@ -816,7 +816,7 @@ async function publish() {
     const tags = ($('#ch').value || '').toLowerCase().split(/[,\s#]+/).map(t => t.replace(/[^a-z0-9àâäéèêëïîôöùûüç_]/g, '')).filter(Boolean).slice(0, 8);
     const row = { user_id: uid(), video_url: pub.publicUrl, title: $('#ct').value.trim(), caption: $('#cd').value.trim(), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null };
     const { error } = await sb.from('videos').insert(row); if (error) throw error;
-    bar.style.width = '100%'; draft = null; toast('Vidéo publiée 🎉');
+    bar.style.width = '100%'; draft = null; S.draftTag = null; toast('Vidéo publiée 🎉');
     S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc();
     go('profile');
   } catch (e) { fail(e); } finally { clearInterval(timer); busy(btn, false); }
@@ -852,12 +852,12 @@ const ST = { pending: ['En vérification', 'warn'], open: ['En ligne', 'ok2'], c
 const pill = s => `<span class="pill ${(ST[s] || [])[1] || ''}">${(ST[s] || [s])[0]}</span>`;
 function jobCard(o, mine) {
   S.offers.set(o.id, o);
-  return `<div class="card job">${o.score ? matchBar(o.score, o.reasons) : ''}<div class="row"><div class="grow" onclick="V.offerDetail('${o.id}')"><div class="t">${esc(o.title)}</div><div class="co">${esc(o.company)}</div></div>${mine ? pill(o.status) : `<span class="mut small">${ago(o.created_at)}</span>`}</div>
+  return `<div class="card job">${o.score ? matchBar(o.score, o.reasons) : ''}<div class="row"><div class="grow" onclick="V.offerDetail('${o.id}')"><div class="t">${esc(o.title)}</div><div class="co">${esc(o.company)}${vb(o.poster_verified)}</div></div>${mine ? pill(o.status) : `<span class="mut small">${ago(o.created_at)}</span>`}</div>
   <div class="tags"><span>📍 ${esc(o.region || '')}${o.region ? ', ' : ''}${esc((C[o.country] || {}).n || '')}</span><span>${esc(o.contract)}</span><span>${esc(o.remote)}</span>${o.open_to === 'monde' ? '<span>🌍 Monde entier</span>' : ''}${o.salary ? `<span class="g">${money(o.salary, o.currency)} / mois</span>` : ''}<span>${esc(o.sector)}</span></div>
   <div class="jact">${mine ? `<button class="btn sm" onclick="V.offerApps('${o.id}')">👥 Candidatures (${o.application_count})</button><button class="btn sm ghost" style="width:auto" onclick="V.offerMatches('${o.id}')">✨ Profils suggérés</button>${o.status === 'open' ? `<button class="btn sm ghost" onclick="V.closeOffer('${o.id}')">Fermer</button>` : ''}`
       : `<button class="btn sm ${o.applied_by_me ? 'ghost' : ''}" ${o.applied_by_me || o.user_id === uid() ? 'disabled' : ''} onclick="V.applyJob('${o.id}')">${o.applied_by_me ? 'Candidature envoyée ✓' : o.user_id === uid() ? 'Ton offre' : 'Postuler'}</button><button class="btn sm ghost" style="width:auto" onclick="V.offerDetail('${o.id}')">Détails</button><button class="dots" onclick="V.report('job','${o.id}')">🚩</button>`}</div></div>`;
 }
-function offerDetail(id) { const o = S.offers.get(id); sheet(esc(o.title), `<div class="co mut">${esc(o.company)} · <span>publié par</span> ${esc(o.poster_name)} <span>${ago(o.created_at)}</span></div><div class="tags"><span>📍 ${esc(o.region || '')} ${esc((C[o.country] || {}).n || '')}</span><span>${esc(o.contract)}</span><span>${esc(o.remote)}</span>${o.salary ? `<span class="g">${money(o.salary, o.currency)} / mois</span>` : ''}</div><p style="white-space:pre-wrap;margin-top:14px;line-height:1.5;font-size:14.5px">${esc(o.description || 'Pas de description.')}</p><div class="safety">🛡️<span>Un vrai recruteur ne demande jamais d’argent pour un emploi. Signale toute demande de paiement.</span></div>${o.user_id !== uid() && !o.applied_by_me ? `<button class="btn" onclick="V.applyJob('${o.id}')">Postuler</button>` : ''}<button class="btn ghost" onclick="V.shareThing('j','${o.id}')">📤 Partager l’offre</button>`); }
+function offerDetail(id) { const o = S.offers.get(id); sheet(esc(o.title), `<div class="co mut">${esc(o.company)} · <span>publié par</span> ${esc(o.poster_name)} <span>${ago(o.created_at)}</span></div><div class="tags"><span>📍 ${esc(o.region || '')} ${esc((C[o.country] || {}).n || '')}</span><span>${esc(o.contract)}</span><span>${esc(o.remote)}</span>${o.salary ? `<span class="g">${money(o.salary, o.currency)} / mois</span>` : ''}</div><p style="white-space:pre-wrap;margin-top:14px;line-height:1.5;font-size:14.5px">${esc(o.description || 'Pas de description.')}</p>${o.poster_verified ? '<div class="safety ok">✔<span><b>Recruteur vérifié par Vibzo</b> : son identité a été contrôlée.</span></div>' : ''}<div class="safety">🛡️<span>Un vrai recruteur ne demande jamais d’argent pour un emploi. Signale toute demande de paiement.</span></div>${o.user_id !== uid() && !o.applied_by_me ? `<button class="btn" onclick="V.applyJob('${o.id}')">Postuler</button>` : ''}<button class="btn ghost" onclick="V.shareThing('j','${o.id}')">📤 Partager l’offre</button>`); }
 function candCard(c) {
   S.cands.set(c.user_id, c);
   return `<div class="card">${c.score ? matchBar(c.score, c.reasons, c.offer_title) : ''}<div class="row" onclick="V.openProfile('${c.user_id}')">${avatar(c)}<div class="grow"><b>${esc(c.display_name)}</b><div class="mut small">${esc(c.job_title)} · ${c.experience_years} an${c.experience_years > 1 ? 's' : ''} d’expérience</div></div></div>${c.about ? `<p class="small" style="margin-top:8px">${esc(c.about)}</p>` : ''}<div class="tags">${(c.skills || []).map(k => `<span>${esc(k)}</span>`).join('')}<span>📍 ${esc(c.region || (C[c.country] || {}).n || '')}</span><span class="g">Dispo : ${esc(c.availability)}</span>${c.mobility === 'international' ? '<span>✈️ Mobile à l’international</span>' : c.mobility === 'teletravail' ? '<span>💻 Télétravail</span>' : ''}</div>${c.user_id === uid() ? '' : `<div class="jact"><button class="btn sm" onclick="V.contactCand('${c.user_id}')">💬 Contacter</button></div>`}</div>`;
@@ -973,13 +973,15 @@ SCREENS.shop = async () => {
       : sh.status === 'suspended' ? `<div class="sbanner" style="background:#d81f45"><div class="big">⛔</div><div class="grow"><b>${esc(sh.name)} : suspendue</b><div class="small">Contacte l’équipe Vibzo.</div></div></div>`
       : shopExpired(sh) ? `<div class="sbanner" style="background:linear-gradient(135deg,#ffd76a,#e0a800);color:#3a2a00"><div class="big">⏰</div><div class="grow"><b>${esc(sh.name)} : abonnement terminé</b><div class="small">Tes produits ne sont plus visibles. Renouvelle pour les remettre en ligne.</div></div><button class="btn" onclick="V.myShopSheet()">Renouveler</button></div>`
         : `<div class="sbanner"><div class="big">🏪</div><div class="grow"><b>${esc(sh.name)}</b><div class="small" style="opacity:.92">Boutique active${sh.paid_until ? ' jusqu’au ' + new Date(sh.paid_until).toLocaleDateString('fr-FR') : ''}</div></div><button class="btn" onclick="V.myShopSheet()">Gérer</button></div>`;
-  $('#s-shop').innerHTML = hdr('Boutiques', `${locBtn()}<button class="ib" onclick="V.go('orders')" aria-label="Commandes">${I.box}</button>`) + banner + `<div class="lbl pad">Produits · ${esc(locLabel())}</div><div class="pgrid" id="pgrid">${loading()}</div>`;
+  const svc = S.shopTab === 'svc';
+  $('#s-shop').innerHTML = hdr('Boutiques', `${locBtn()}<button class="ib" onclick="V.go('orders')" aria-label="Commandes">${I.box}</button>`) + `<div class="pad" style="padding-bottom:0"><div class="seg"><button class="${svc ? '' : 'on'}" onclick="V.shopTab('prod')">🛍️ Produits</button><button class="${svc ? 'on' : ''}" onclick="V.shopTab('svc')">🛠️ Services</button></div></div>` + (svc ? `<div class="lbl pad">Services · ${esc(locLabel())}</div>` : banner + `<div class="lbl pad">Produits · ${esc(locLabel())}</div>`) + `<div class="pgrid" id="pgrid">${loading()}</div>`;
+  if (svc) return renderServices();
   const { data, error } = await inScope(sb.from('products_view').select('*').eq('active', true)).order('created_at', { ascending: false }).limit(60);
   if (error) throw error;
   $('#pgrid').innerHTML = data.length ? data.map(prodCard).join('') : `<div class="empty" style="grid-column:1/-1"><div class="big">🛍️</div>Aucun produit dans cette zone pour l’instant.</div>`;
 };
 const prodImg = p => p.image_url ? `<img class="thumbimg" src="${esc(p.image_url)}" alt="" loading="lazy">` : '🛍️';
-function prodCard(p) { S.prods.set(p.id, p); return `<button class="prod" onclick="V.openProduct('${p.id}')"><div class="im" style="${gst(gfor(p.id))}">${prodImg(p)}</div><div class="bd"><div class="n">${esc(p.name)}</div><div class="p">${money(p.price, p.currency)}</div><div class="s">${esc(p.shop_name)} · ${esc(p.region || '')}</div></div></button>`; }
+function prodCard(p) { S.prods.set(p.id, p); return `<button class="prod" onclick="V.openProduct('${p.id}')"><div class="im" style="${gst(gfor(p.id))}">${prodImg(p)}</div><div class="bd"><div class="n">${esc(p.name)}</div><div class="p">${money(p.price, p.currency)}</div><div class="s">${esc(p.shop_name)}${vb(p.seller_verified)} · ${esc(p.region || '')}</div>${p.rating_count ? `<div class="s">${rate(p.rating_sum, p.rating_count)}</div>` : ''}</div></button>`; }
 async function openProduct(id) {
   let p = S.prods.get(id);
   if (!p) { const { data, error } = await sb.from('products_view').select('*').eq('id', id).maybeSingle(); if (error || !data) return toast('Produit indisponible'); p = data; S.prods.set(id, p); }
@@ -987,6 +989,7 @@ async function openProduct(id) {
   const wa = p.whatsapp ? `https://wa.me/${p.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Bonjour, je suis intéressé(e) par « ' + p.name + ' » vu sur Vibzo.')}` : '';
   sheet(esc(p.shop_name), `<div class="bigim" style="${gst(gfor(p.id))};position:relative;overflow:hidden">${prodImg(p)}</div><h2 style="margin-top:14px;font-size:20px">${esc(p.name)}</h2><div class="row" style="margin-top:6px"><b style="font-size:22px" class="grow">${money(p.price, p.currency)}</b>${p.stock ? `<span class="mut small">${p.stock} en stock</span>` : ''}</div>
   <div class="tags"><span>📍 ${esc(p.region || '')} ${esc((C[p.country] || {}).n || '')}</span><span>💵 Paiement à la livraison</span></div>
+  ${trustBlock(p)}
   ${p.description ? `<p style="margin-top:12px;font-size:14px;line-height:1.5;white-space:pre-wrap">${esc(p.description)}</p>` : ''}
   ${mine ? '<p class="mut small" style="margin-top:12px">C’est ton produit.</p>' : `<div class="row" style="margin-top:14px"><div class="qty"><button onclick="const e=document.getElementById('pq');e.textContent=Math.max(1,+e.textContent-1)">−</button><span id="pq">1</span><button onclick="const e=document.getElementById('pq');e.textContent=Math.min(99,+e.textContent+1)">+</button></div><button class="btn grow" style="margin:0" onclick="V.orderForm('${p.id}')">Commander</button></div>
   ${wa ? `<a class="btn ghost" href="${wa}" target="_blank" rel="noopener" style="text-decoration:none">💬 Contacter sur WhatsApp</a>` : ''}
@@ -1007,9 +1010,12 @@ async function placeOrder(id, q) {
   const address = $('#oa').value.trim(), phone = $('#op').value.trim();
   if (address.length < 3) return toast('Indique ton adresse de livraison'); if (phone.replace(/\D/g, '').length < 6) return toast('Indique un numéro de téléphone valide');
   const btn = $('#oBtn'); busy(btn, true);
-  const { error } = await sb.rpc('place_order', { p_product: id, p_qty: q, p_address: address, p_phone: phone, p_note: $('#on').value.trim() });
+  const inLive = LV && LV.pinned === id ? LV.id : null;
+  const { error } = await sb.rpc('place_order_v2', { p_product: id, p_qty: q, p_address: address, p_phone: phone, p_note: $('#on').value.trim(), p_live: inLive });
   busy(btn, false); if (error) return fail(error);
-  closeSheet(); toast('Commande envoyée au vendeur ✅'); go('orders');
+  closeSheet(); toast('Commande envoyée au vendeur ✅');
+  if (LV) { const pr = S.prods.get(id); lvSendData({ t: 'o', n: (pr && pr.name || '').slice(0, 60) }); liveLine(`<b class="lvg">🛍️ Tu as commandé ${esc(pr ? pr.name : '')}</b>`); return; }
+  go('orders');
 }
 function shopForm() {
   if (!requireAuth('Connecte-toi pour ouvrir ta boutique.')) return;
@@ -1083,7 +1089,8 @@ SCREENS.orders = async () => {
   const sell = orderTab === 'sell' && S.myShop;
   const { data, error } = await sb.from('orders_view').select('*').eq(sell ? 'seller_id' : 'buyer_id', uid()).order('created_at', { ascending: false }).limit(100);
   if (error) throw error;
-  $('#olist').innerHTML = data.length ? data.map(o => { S.orders.set(o.id, o); return `<div class="card"><div class="row"><div class="grow"><b>${esc(o.product_name)}</b> × ${o.quantity}<div class="mut small">${sell ? 'Client : ' + esc(o.buyer_name) : esc(o.shop_name)} · ${ago(o.created_at)}</div></div>${pill(o.status)}</div><div class="tags"><span class="g">${money(o.total, o.currency)}</span><span>💵 À la livraison</span></div>${sell ? `<p class="small" style="margin-top:8px">📍 ${esc(o.address)}<br>📞 ${esc(o.phone)}${o.note ? '<br>📝 ' + esc(o.note) : ''}</p><div class="jact"><select onchange="V.setOrder('${o.id}',this.value)" style="flex:1">${['new', 'confirmed', 'shipped', 'delivered', 'cancelled'].map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${ST[s][0]}</option>`).join('')}</select><button class="btn sm" style="width:auto" onclick="V.chatWith('${o.buyer_id}','shop','Commande : ${esc(o.product_name.replace(/'/g, '’'))}','${o.id}')">💬</button></div>` : `<div class="jact">${o.status === 'new' ? `<button class="btn sm ghost" onclick="V.setOrder('${o.id}','cancelled')">Annuler</button>` : ''}<button class="btn sm" onclick="V.chatWith('${o.seller_id}','shop','Commande : ${esc(o.product_name.replace(/'/g, '’'))}','${o.id}')">💬 Vendeur</button></div>`}</div>`; }).join('') : `<div class="empty"><div class="big">📦</div>Aucune commande pour l’instant.</div>`;
+  $('#olist').innerHTML = data.length ? data.map(o => { S.orders.set(o.id, o); return `<div class="card" id="ord-${o.id}"><div class="row"><div class="grow"><b>${esc(o.product_name)}</b> × ${o.quantity}<div class="mut small">${sell ? 'Client : ' + esc(o.buyer_name) : esc(o.shop_name)} · ${ago(o.created_at)}</div></div>${pill(o.status)}</div><div class="tags"><span class="g">${money(o.total, o.currency)}</span><span>💵 À la livraison</span></div>${sell ? `<p class="small" style="margin-top:8px">📍 ${esc(o.address)}<br>📞 ${esc(o.phone)}${o.note ? '<br>📝 ' + esc(o.note) : ''}</p><div class="jact"><select onchange="V.setOrder('${o.id}',this.value)" style="flex:1">${['new', 'confirmed', 'shipped', 'delivered', 'cancelled'].map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${ST[s][0]}</option>`).join('')}</select><button class="btn sm" style="width:auto" onclick="V.chatWith('${o.buyer_id}','shop','Commande : ${esc(o.product_name.replace(/'/g, '’'))}','${o.id}')">💬</button></div>` : `<div class="jact">${o.status === 'new' ? `<button class="btn sm ghost" onclick="V.setOrder('${o.id}','cancelled')">Annuler</button>` : ''}<button class="btn sm" onclick="V.chatWith('${o.seller_id}','shop','Commande : ${esc(o.product_name.replace(/'/g, '’'))}','${o.id}')">💬 Vendeur</button></div>`}</div>`; }).join('') : `<div class="empty"><div class="big">📦</div>Aucune commande pour l’instant.</div>`;
+  if (!sell && data.length) addReviewButtons(data).catch(() => { });
 };
 async function setOrder(id, st) { const { error } = await sb.from('orders').update({ status: st }).eq('id', id); if (error) return fail(error); toast('Commande : ' + ST[st][0]); go('orders'); }
 
@@ -1100,7 +1107,7 @@ SCREENS.profile = async () => {
   const tab = own ? S.profTab : 'videos';
   $('#s-profile').innerHTML = hdr('@' + esc(p.username), own ? `<button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button><button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.settings()" aria-label="Paramètres">${I.gear}</button>` : `<button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.report('profile','${p.id}')" aria-label="Signaler">🚩</button>`, own ? '' : (S.prev && S.prev !== 'profile' ? S.prev : 'home')) + `
   <div class="ptop"><div class="pav ${p.is_vip ? 'gold' : ''}" style="${p.avatar_url ? '' : gbg(gfor(p.username))}">${p.avatar_url ? `<img class="avimg" src="${esc(p.avatar_url)}" alt="">` : esc(p.display_name[0].toUpperCase())}${p.is_vip ? '<span class="gb">👑</span>' : ''}</div>
-  <h2 style="margin-top:12px;font-size:19px">${esc(p.display_name)}${p.is_creator ? ' <span class="crb">💰 Créateur</span>' : ''}</h2>${p.bio ? `<p class="mut" style="font-size:14px;margin-top:4px">${esc(p.bio)}</p>` : ''}
+  <h2 style="margin-top:12px;font-size:19px">${esc(p.display_name)}${vb(p.verified)}${p.is_creator ? ' <span class="crb">💰 Créateur</span>' : ''}</h2>${p.bio ? `<p class="mut" style="font-size:14px;margin-top:4px">${esc(p.bio)}</p>` : ''}
   <div class="tags" style="justify-content:center"><span>📍 ${esc(p.region || '')} ${esc((C[p.country] || {}).f || '')} ${esc((C[p.country] || {}).n || '')}</span>${p.is_vip ? '<span style="color:#a87800">👑 Gold</span>' : ''}</div>
   ${socials(p)}
   <div class="pstats"><div><b>${fmtN(p.following)}</b><span>Abonnements</span></div><div><b>${fmtN(p.followers)}</b><span>Abonnés</span></div><div><b>${fmtN(p.likes_received)}</b><span>J’aime</span></div><div><b>${fmtN(p.views || 0)}</b><span>Vues</span></div></div>
@@ -1190,6 +1197,8 @@ function settings() {
   <button onclick="V.gold()"><span class="e">👑</span>Vibzo Gold<span class="r">${vip ? 'Actif jusqu’au ' + new Date(S.me.vip_until).toLocaleDateString('fr-FR') : 'Découvrir'} ›</span></button>
   <button onclick="V.closeSheet();${S.myShop ? 'V.myShopSheet()' : 'V.shopForm()'}"><span class="e">🏪</span>Ma boutique<span class="r">${S.myShop ? (ST[S.myShop.status] || [''])[0] : 'Ouvrir'} ›</span></button>
   <button onclick="V.myCV()"><span class="e">📄</span>Mon profil candidat<span class="r">›</span></button>
+  <button onclick="V.verifySheet()"><span class="e">✔️</span>Badge vérifié<span class="r">${S.me.verified ? '✅' : 'Obtenir'} ›</span></button>
+  <button onclick="V.saverSheet()"><span class="e">📶</span>Petit forfait & hors ligne<span class="r">${S.saver ? 'Activé' : ''} ›</span></button>
   <button onclick="V.creatorSheet()"><span class="e">💰</span>Programme Créateurs<span class="r">›</span></button>
   <button onclick="V.mfaSheet()"><span class="e">🔐</span>Validation en 2 étapes<span class="r">${S.mfaOn ? '✅ activée' : 'conseillé ›'}</span></button>
   <button onclick="V.walletSheet()"><span class="e">💰</span>Mon portefeuille<span class="r">pièces et gains ›</span></button>
@@ -1439,7 +1448,7 @@ async function refreshUnread() {
 /* =====================================================================
    NOTIFICATIONS ET PARRAINAGE
    ===================================================================== */
-const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''], match: ['💘', ''], order: ['🛍️', ''], order_status: ['📦', ''], application: ['💼', ''], offer_ok: ['✅', ''], live: ['🔴', ''] };
+const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''], match: ['💘', ''], order: ['🛍️', ''], order_status: ['📦', ''], application: ['💼', ''], offer_ok: ['✅', ''], live: ['🔴', ''], review: ['⭐', ''], verified: ['✔️', ''], service: ['🛠️', ''], challenge: ['🏆', ''] };
 async function refreshNotifs() {
   if (!uid()) return;
   const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false);
@@ -1449,7 +1458,7 @@ async function openNotifs() {
   if (!requireAuth('Connecte-toi pour voir tes notifications.')) return;
   sheet('🔔 Notifications', `<div id="nlist">${loading()}</div>`);
   const { data, error } = await sb.from('notifications_view').select('*').order('created_at', { ascending: false }).limit(80); if (error) return fail(error);
-  $('#nlist').innerHTML = data.length ? data.map(n => { const t = NT[n.type] || NT.system; return `<button class="nrow ${n.read ? '' : 'new'}" onclick="V.openNotif('${n.type}','${n.video_id || ''}','${n.actor_id || ''}','${n.ref_id || ''}')">${n.actor_avatar ? `<img class="avimg" src="${esc(n.actor_avatar)}" alt="" style="width:40px;height:40px;border-radius:50%">` : `<span class="nic">${t[0]}</span>`}<div class="grow" style="text-align:left"><div><b>${esc(n.actor_name || 'Vibzo')}</b> ${t[1]} ${n.body ? `<span class="mut">${richText(n.body)}</span>` : ''}</div><div class="mut small">${ago(n.created_at)}</div></div>${n.video_url ? `<video src="${esc(n.video_url)}#t=0.5" muted preload="metadata" playsinline class="nth"></video>` : ''}</button>`; }).join('') : '<div class="empty"><div class="big">🔔</div><p>Pas encore de notification. Publie, commente et suis des créateurs !</p></div>';
+  $('#nlist').innerHTML = data.length ? data.map(n => { const t = NT[n.type] || NT.system; return `<button class="nrow ${n.read ? '' : 'new'}" onclick="V.openNotif('${n.type}','${n.video_id || ''}','${n.actor_id || ''}','${n.ref_id || ''}')">${n.actor_avatar ? `<img class="avimg" src="${esc(n.actor_avatar)}" alt="" style="width:40px;height:40px;border-radius:50%">` : `<span class="nic">${t[0]}</span>`}<div class="grow" style="text-align:left"><div><b>${esc(n.actor_name || 'Vibzo')}</b> ${t[1]} ${n.body ? `<span class="mut">${richText(n.body)}</span>` : ''}</div><div class="mut small">${ago(n.created_at)}</div></div>${n.video_url && !S.saver ? `<video src="${esc(n.video_url)}#t=0.5" muted preload="metadata" playsinline class="nth"></video>` : ''}</button>`; }).join('') : '<div class="empty"><div class="big">🔔</div><p>Pas encore de notification. Publie, commente et suis des créateurs !</p></div>';
   if (data.some(n => !n.read)) { await sb.from('notifications').update({ read: true }).eq('read', false); S.notifs = 0; const b = $('#bellBtn'); if (b) b.innerHTML = I.bell; }
 }
 async function openNotif(type, vid, actor, ref) {
@@ -1460,6 +1469,10 @@ async function openNotif(type, vid, actor, ref) {
   if (type === 'application' && ref) return openAppsLink(ref);
   if (type === 'offer_ok') { S.jobTab = 'mine'; return go('jobs'); }
   if (type === 'live' && ref) return openLive(ref);
+  if (type === 'review' && ref) return shopReviews(ref);
+  if (type === 'verified') return verifySheet();
+  if (type === 'service' && ref) return openService(ref);
+  if (type === 'challenge' && ref) return openChallenge(ref);
   if (vid) { const { data } = await sb.from('videos_feed').select('*').eq('id', vid).maybeSingle(); if (data) { S.override = { list: [data], start: vid }; go('home', { keepOverride: true }); if (type === 'comment' || type === 'reply' || type === 'mention' || type === 'comment_like') setTimeout(() => openComments(vid), 400); return; } }
   if (actor) openProfile(actor);
 }
@@ -1696,6 +1709,7 @@ SCREENS.admin = async () => {
   (offers.data || []).forEach(o => S.offers.set(o.id, o));
   $('#adm').innerHTML = `<div class="stats">${[['Utilisateurs', s.users], ['Nouveaux (7 j)', s.users_7d], ['Vidéos', s.videos], ['Membres Gold', s.vip], ['Profils rencontre', s.dating], ['Matchs', s.matches], ['Demandes d’abonnement', s.requests], ['Boutiques actives', s.shops_active], ['Boutiques en attente', s.shops_pending], ['Offres en ligne', s.offers_open], ['Offres à valider', s.offers_pending], ['Commandes', s.orders], ['Signalements ouverts', s.reports_open]].map(([l, v]) => `<div class="stat"><b>${fmtN(v)}</b><span>${l}</span></div>`).join('')}</div>
   <div class="lbl">Utilisateurs par pays</div><div class="tags">${Object.entries(s.by_country || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${(C[k] || {}).f || ''} ${esc((C[k] || {}).n || k)} : ${n}</span>`).join('')}</div>
+  <div class="lbl">✔️ Vérifications et 🏆 défis sponsorisés</div><div id="admV">${loading()}</div>
   <div class="lbl">🎁 Cadeaux : pièces à valider et retraits à payer</div><div id="admW">${loading()}</div>
   <div class="lbl">💰 Programme Créateurs (vues sur 30 jours)</div><button class="btn sm gold" style="margin-bottom:8px" onclick="V.payCalc()">🧮 Calculer les gains du mois</button><div id="admCr">${loading()}</div>
   <div class="lbl">Aperçu de la page de paiement (ce que voient les membres)</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('A')">🇦🇿 Azerbaïdjan</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('C')">🌍 Afrique</button><button class="btn sm ghost" style="width:auto" onclick="V.previewPay('form')">👑 Formulaire Gold</button></div>
@@ -1705,7 +1719,7 @@ SCREENS.admin = async () => {
   <div class="lbl">Offres à valider (${(offers.data || []).length})</div>${(offers.data || []).map(o => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(o.title)}</b><div class="mut small">${esc(o.company)} · ${esc((C[o.country] || {}).n || '')} · par ${esc(o.poster_name)}</div><button class="mut small" onclick="V.offerDetail('${o.id}')" style="text-decoration:underline">Lire</button></div><div class="acts"><button class="ok" onclick="V.modOffer('${o.id}','open')">Publier</button><button class="ko" onclick="V.modOffer('${o.id}','rejected')">Refuser</button></div></div>`).join('') || '<p class="mut small">Rien à valider.</p>'}
   <div class="lbl">Boutiques</div>${(shops.data || []).map(sh => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(sh.name)}</b> ${pill(sh.status)}<div class="mut small">${esc((C[sh.country] || {}).n || '')} · ${esc(sh.platform)}${sh.whatsapp ? ' · ' + esc(sh.whatsapp) : ''}${sh.paid_until ? ' · payé jusqu’au ' + new Date(sh.paid_until).toLocaleDateString('fr-FR') : ''}</div></div><div class="acts"><button class="ok" onclick="V.modShop('${sh.id}','active')">+30 j</button>${sh.status !== 'suspended' ? `<button class="ko" onclick="V.modShop('${sh.id}','suspended')">Suspendre</button>` : ''}</div></div>`).join('') || '<p class="mut small">Aucune boutique.</p>'}
   <div class="lbl">Signalements (${(reports.data || []).length})</div>${(reports.data || []).map(r => `<div class="mq"><span class="k">🚩</span><div class="grow"><b style="font-size:14px">${esc(r.reason)}</b><div class="mut small">${esc(r.target_type)} · ${ago(r.created_at)}</div></div><div class="acts">${r.target_type === 'video' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','hide')">Masquer</button>` : r.target_type === 'comment' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','delc')">Supprimer</button>` : r.target_type === 'profile' ? `<button class="ok" onclick="V.openProfile('${esc(r.target_id)}')">Voir</button>` : r.target_type === 'live' ? `<button class="ok" onclick="V.openLive('${esc(r.target_id)}')">Voir</button><button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','endlive')">Couper le live</button>` : ''}<button class="ok" onclick="V.modReport('${r.id}','','ok')">Classer</button></div></div>`).join('') || '<p class="mut small">Aucun signalement 🎉</p>'}`;
-  loadAdminCreators(); loadAdminWallet();
+  loadAdminCreators(); loadAdminWallet(); loadAdminTrust();
 };
 async function modOffer(id, st) { closeSheet(); const { error } = await sb.from('job_offers').update({ status: st }).eq('id', id); if (error) return fail(error); toast(st === 'open' ? 'Offre publiée' : 'Offre refusée'); go('admin'); }
 async function modShop(id, st) {
@@ -1794,6 +1808,8 @@ function shareText(k, id) {
   if (k === 'p') { const p = S.prods.get(id); return p ? `🛍️ ${p.name} · ${money(p.price, p.currency)} sur Vibzo` : 'Regarde ce produit sur Vibzo 🛍️'; }
   if (k === 'j') { const o = S.offers.get(id); return o ? `💼 Offre d’emploi : ${o.title} · ${o.company}` : 'Offre d’emploi sur Vibzo 💼'; }
   if (k === 'u') { const u = S.shareUser; return u ? `Découvre @${u} sur Vibzo 🔥` : 'Découvre ce créateur sur Vibzo 🔥'; }
+  if (k === 's') { const v = S.svcs.get(id); return v ? `🛠️ ${v.title} · ${v.display_name} sur Vibzo` : 'Service près de chez toi sur Vibzo 🛠️'; }
+  if (k === 'c') { const c = S.chs.get(id); return c ? `🏆 Défi #${c.hashtag} : ${money(c.prize1 + c.prize2 + c.prize3, c.currency)} de prix à gagner sur Vibzo !` : '🏆 Défi avec des prix sur Vibzo'; }
   if (k === 'l') { const l = LV && LV.host; return l ? `🔴 @${l.username} est en direct sur Vibzo, viens vite !` : '🔴 En direct sur Vibzo'; }
   return 'Vibzo';
 }
@@ -1813,10 +1829,10 @@ async function ensureOffer(id) {
 async function openOfferLink(id) { const o = await ensureOffer(id); if (!o) return toast('Offre indisponible'); offerDetail(id); }
 async function openAppsLink(id) { const o = await ensureOffer(id); if (!o) return go('jobs'); offerApps(id); }
 async function handleDeepLink() {
-  const m = /^#([pjul])=([0-9a-f-]{36})/i.exec(location.hash); if (!m) return;
+  const m = /^#([pjulsc])=([0-9a-f-]{36})/i.exec(location.hash); if (!m) return;
   history.replaceState(null, '', location.pathname + location.search);
   const [, k, id] = m;
-  if (k === 'p') openProduct(id); else if (k === 'j') openOfferLink(id); else if (k === 'u') openProfile(id); else if (k === 'l') openLive(id);
+  if (k === 'p') openProduct(id); else if (k === 'j') openOfferLink(id); else if (k === 'u') openProfile(id); else if (k === 'l') openLive(id); else if (k === 's') openService(id); else if (k === 'c') openChallenge(id);
 }
 
 /* =====================================================================
@@ -1859,23 +1875,25 @@ function goLive() {
 }
 function liveUI(o) {
   const old = $('#liveOv'); if (old) old.remove();
-  LV = Object.assign({ likes: 0, pend: 0, lastMsg: 0, t0: Date.now(), gifts: 0, hearts: 0 }, o);
+  LV = Object.assign({ likes: 0, pend: 0, lastMsg: 0, t0: Date.now(), gifts: 0, hearts: 0, msgs: [], reqs: new Map(), guests: new Set(), mod: {} }, o);
   const host = o.role === 'host', h = o.host || {};
   const d = document.createElement('div'); d.id = 'liveOv';
   d.innerHTML = `<video id="lvVid" autoplay playsinline ${host ? 'muted class="mirror"' : ''}></video><div class="lvwait" id="lvWait">${loading()}<div>${host ? 'Préparation du live…' : 'Connexion au live…'}</div></div>
   <div class="lvtap" onclick="V.liveTap(event)"></div>
-  <div class="lvtop"><div class="lvhost">${avatar(h, 36)}<div><b>@${esc(h.username || '')}</b>${o.title ? `<small>${esc(o.title)}</small>` : ''}</div></div><span class="lvbadge">EN DIRECT</span><span class="lvcnt" id="lvCnt">👁 0</span><button class="ib" onclick="V.closeLive()" aria-label="Fermer">${I.close}</button></div>
+  <div class="lvtop"><div class="lvhost">${avatar(h, 36)}<div><b>@${esc(h.username || '')}${vb(h.verified)}</b>${o.title ? `<small>${esc(o.title)}</small>` : ''}</div>${!host && uid() && !h.following ? `<button class="lvfol" id="lvFol" onclick="V.liveFollow()">＋ Suivre</button>` : ''}</div><div class="lvtop3" id="lvTop"></div><button class="lvcnt" id="lvCnt" onclick="V.liveViewers()">👁 0</button><button class="ib" onclick="V.closeLive()" aria-label="Fermer">${I.close}</button></div>
+  <div class="lvbadge lvbadge2">EN DIRECT</div><div class="lvstack"><div class="lvpin" id="lvPin" style="display:none"></div><div class="lvgoal" id="lvGoal" style="display:none"></div><div class="lvpoll" id="lvPoll" style="display:none"></div></div><div class="lvguests" id="lvGuests"></div>
   <div class="lvstats" id="lvStats">❤️ <b id="lvLikes">0</b> · 🪙 <b id="lvCoins">0</b></div>
   <button class="lvsnd" id="lvSnd" style="display:none" onclick="V.liveSound()">🔇 Touche pour activer le son</button>
-  <div class="lvchat" id="lvChat"></div>
+  <div class="lvchat" id="lvChat"></div><div class="lvprod" id="lvProd" style="display:none"></div>
+  ${o.role === 'viewer' ? `<div class="lvquick">${['😂', '🔥', '👏', '😍', '🙏', '💯'].map(e => `<button onclick="V.liveQuick('${e}')">${e}</button>`).join('')}</div>` : ''}
   <div class="lvbar">${o.role !== 'guest' ? `<input id="lvMsg" maxlength="150" placeholder="Dis quelque chose…" onkeydown="if(event.key==='Enter')V.liveSend()"><button onclick="V.liveSend()" aria-label="Envoyer">➤</button>` : `<button class="grow lvlogin" onclick="V.closeLive();V.go('auth')">Connecte-toi pour discuter</button>`}
-  ${host ? `<button onclick="V.liveFlip()" aria-label="Retourner la caméra">🔄</button><button onclick="V.liveMic()" id="lvMic" aria-label="Micro">🎙️</button>` : `<button onclick="V.liveGiftSheet()" aria-label="Cadeau">🎁</button><button onclick="V.liveHeart()" aria-label="J’aime">❤️</button>`}
-  <button onclick="V.shareThing('l','${o.id}')" aria-label="Partager">📤</button>${host ? `<button class="lvend" onclick="V.closeLive()">Terminer</button>` : `<button onclick="V.report('live','${o.id}')" aria-label="Signaler">🚩</button>`}</div>`;
+  ${host ? `<button onclick="V.liveTools()" aria-label="Outils" id="lvToolsB">✨</button><button onclick="V.liveFlip()" aria-label="Retourner la caméra">🔄</button><button onclick="V.liveMic()" id="lvMic" aria-label="Micro">🎙️</button><button class="lvend" onclick="V.closeLive()">Terminer</button>` : `${o.role === 'viewer' ? `<button onclick="V.liveGiftSheet()" aria-label="Cadeau">🎁</button>` : ''}<button onclick="V.liveHeart()" aria-label="J’aime">❤️</button><button onclick="V.liveMore()" aria-label="Plus">⋯</button>`}</div>`;
   $('#sheetBg').parentNode.appendChild(d);
   document.querySelectorAll('#feed video').forEach(v => v.pause());
 }
 function liveSys(t) { liveLine(`<i>${t}</i>`); }
-function liveLine(html) { const c = $('#lvChat'); if (!c) return; c.insertAdjacentHTML('beforeend', `<div>${html}</div>`); while (c.children.length > 40) c.firstChild.remove(); c.scrollTop = c.scrollHeight; }
+function liveLine(html, pinIdx) { const c = $('#lvChat'); if (!c) return; c.insertAdjacentHTML('beforeend', pinIdx != null && LV && LV.role === 'host' ? `<div class="pinable" onclick="V.livePinMsg(${pinIdx})">${html}</div>` : `<div>${html}</div>`); while (c.children.length > 40) c.firstChild.remove(); c.scrollTop = c.scrollHeight; }
+function liveMsg(u, m) { if (!LV || badWord(m)) return; LV.msgs.push({ u: String(u).slice(0, 40), m: String(m).slice(0, 150) }); if (LV.msgs.length > 200) LV.msgs = LV.msgs.slice(-200); liveLine(`<b>@${esc(u)}</b> ${esc(m)}`, LV.msgs.length - 1); }
 function liveCount() { return LV && LV.room ? LV.room.remoteParticipants.size : 0; }
 function liveUpd() {
   if (!LV) return; LV.peak = Math.max(LV.peak || 0, liveCount()); const c = $('#lvCnt'); if (c) c.textContent = '👁 ' + fmtN(Math.max(LV.role === 'host' ? 0 : 1, liveCount()));
@@ -1884,16 +1902,38 @@ function liveUpd() {
 function lvSendData(m) { try { LV.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(m)), { reliable: m.t !== 'h' }); } catch (e) { } }
 function bindRoom(room, LK) {
   const E = LK.RoomEvent;
-  room.on(E.ParticipantConnected, p => { liveUpd(); if (LV && LV.role === 'host') liveSys(`👋 @${esc(p.name || 'invité')} a rejoint`); });
-  room.on(E.ParticipantDisconnected, p => { liveUpd(); if (LV && LV.role !== 'host' && LV.host && String(p.identity).startsWith(LV.host.host_id || LV.host.id)) liveOver(); });
+  room.on(E.ParticipantConnected, p => { liveUpd(); if (LV) { liveSys(`👋 @${esc(p.name || 'invité')} a rejoint`); if (LV.role === 'host') setTimeout(() => liveStateFor(p), 600); } });
+  room.on(E.ParticipantDisconnected, p => { liveUpd(); if (!LV) return; removeTile(p.identity); if (LV.role === 'host') { LV.reqs.delete(p.identity); if (LV.guests.delete(p.identity)) lvSendData({ t: 'guests', guests: [...LV.guests] }); } else if (fromHost(p)) liveOver(); });
+  room.on(E.TrackSubscribed, (track, pub, p) => {
+    if (!LV) return;
+    if (track.kind === 'video') { if (fromHost(p)) { track.attach($('#lvVid')); const w = $('#lvWait'); if (w) w.style.display = 'none'; } else addTile(p.identity, p.name, track); }
+    else { const a = track.attach(); a.style.display = 'none'; const ov = $('#liveOv'); if (ov) ov.appendChild(a); }
+  });
+  room.on(E.TrackUnsubscribed, (track, pub, p) => { if (track.kind === 'video' && !fromHost(p)) removeTile(p.identity); try { track.detach(); } catch (e) { } });
+  room.on(E.ParticipantPermissionsChanged, (prev, p) => { if (!LV || LV.role !== 'viewer' || p !== room.localParticipant) return; const can = p.permissions && p.permissions.canPublish; if (can) joinStage(); else leaveStage(false); });
   room.on(E.Disconnected, () => { if (LV && !LV.closing) liveOver(); });
   room.on(E.AudioPlaybackStatusChanged, () => { const b = $('#lvSnd'); if (b) b.style.display = room.canPlaybackAudio ? 'none' : 'block'; });
   room.on(E.DataReceived, (payload, p) => {
     let m; try { m = JSON.parse(new TextDecoder().decode(payload)); } catch (e) { return; }
     const who = esc((p && p.name) || 'invité');
-    if (m.t === 'c' && typeof m.m === 'string') liveLine(`<b>@${who}</b> ${esc(m.m.slice(0, 150))}`);
+    const H = fromHost(p);
+    if (m.t === 'c' && typeof m.m === 'string') { if (LV.mod && LV.mod.off && !H) return; liveMsg((p && p.name) || 'invité', m.m.slice(0, 150)); }
+    else if (m.t === 'pin' && H) showPinMsg(m.pin && typeof m.pin.m === 'string' ? { u: String(m.pin.u || ''), m: m.pin.m.slice(0, 150) } : null);
+    else if (m.t === 'goal' && H) { LV.goal = m.goal && +m.goal.target > 0 ? { label: String(m.goal.label || '').slice(0, 40), target: +m.goal.target, base: +m.goal.base || 0 } : null; showGoal(); }
+    else if (m.t === 'poll' && H) { LV.poll = m.poll && Array.isArray(m.poll.o) ? { id: String(m.poll.id), q: String(m.poll.q).slice(0, 80), o: m.poll.o.slice(0, 4).map(x => String(x).slice(0, 30)), c: (m.poll.c || []).map(Number) } : null; LV.myVote = undefined; showPoll(); }
+    else if (m.t === 'pollr' && H) { if (LV.poll && LV.poll.id === m.id && Array.isArray(m.c)) { LV.poll.c = m.c.map(Number); showPoll(); } }
+    else if (m.t === 'vote') { if (LV.role === 'host' && LV.poll && m.id === LV.poll.id && p && Number.isInteger(m.i) && m.i >= 0 && m.i < LV.poll.o.length) { LV.poll.votes.set(p.identity, m.i); pollTally(); } }
+    else if (m.t === 'mod' && H) { LV.mod = { slow: !!(m.mod && m.mod.slow), off: !!(m.mod && m.mod.off), words: ((m.mod && m.mod.words) || []).slice(0, 30).map(String) }; if (LV.mod.off) liveSys('🔒 Le chat est fermé par l’animateur'); }
+    else if (m.t === 'state' && H) applyState(m);
+    else if (m.t === 'req') { if (LV.role === 'host' && p && isUuidIdent(p.identity)) { LV.reqs.set(p.identity, p.name); liveSys(`✋ @${who} veut rejoindre l’écran`); toast(`✋ @${p.name} veut te rejoindre à l’écran`); const tb = $('#lvToolsB'); if (tb) tb.classList.add('dot'); } }
+    else if (m.t === 'stage' && H) { if (m.on) setTimeout(() => { if (LV && LV.room && LV.room.localParticipant.permissions && LV.room.localParticipant.permissions.canPublish) joinStage(); }, 900); else leaveStage(false); }
+    else if (m.t === 'guests' && H) { LV.guests = new Set((m.guests || []).map(String)); document.querySelectorAll('#lvGuests .lvtile').forEach(t => { if (!LV.guests.has(t.dataset.id)) t.remove(); }); }
+    else if (m.t === 'leave') { if (LV.role === 'host' && p) { LV.guests.delete(p.identity); removeTile(p.identity); liveAction('demote', p.identity); lvSendData({ t: 'guests', guests: [...LV.guests] }); } }
+    else if (m.t === 'fol') liveSys(`➕ @${who} suit l’animateur`);
     else if (m.t === 'h') { LV.likes += Math.min(30, +m.n || 1); liveHearts(Math.min(5, +m.n || 1)); liveUpd(); }
-    else if (m.t === 'g') { const G = GIFTS.find(x => x[0] === m.g); if (!G) return; LV.gifts += G[3]; liveLine(`<b class="lvg">@${who} a envoyé ${G[1]} ${G[2]}</b>`); giftFly(G[1], G[3]); liveUpd(); }
+    else if (m.t === 'p') { if (LV.role !== 'host' && (m.id === '' || /^[0-9a-f-]{36}$/i.test(m.id))) showPinned(m.id || null); }
+    else if (m.t === 'o' && typeof m.n === 'string') { LV.orders = (LV.orders || 0) + 1; liveLine(`<b class="lvg">🛍️ @${who} a commandé ${esc(m.n.slice(0, 60))}</b>`); if (LV.role === 'host') { showPinned(LV.pinned); toast('🛍️ Nouvelle commande pendant le live !'); } }
+    else if (m.t === 'g') { const G = GIFTS.find(x => x[0] === m.g); if (!G) return; LV.gifts += G[3]; liveLine(`<b class="lvg">@${who} a envoyé ${G[1]} ${G[2]}</b>`); giftFly(G[1], G[3]); liveUpd(); showGoal(); setTimeout(liveTop, 1500); }
   });
 }
 async function startLive() {
@@ -1921,7 +1961,7 @@ async function startLive() {
     for (const t of tracks) await room.localParticipant.publishTrack(t);
     $('#lvWait').style.display = 'none'; liveSys('🔴 Tu es en direct ! Tes abonnés ont été prévenus.'); liveUpd();
     LV.ping = setInterval(() => { if (LV) sb.rpc('live_ping', { p_live: LV.id, p_viewers: liveCount() }).then(() => { }, () => { }); }, 15000);
-    sb.rpc('live_ping', { p_live: id, p_viewers: 0 });
+    sb.rpc('live_ping', { p_live: id, p_viewers: 0 }); LV.topT = setInterval(liveTop, 20000);
   } catch (e) { fail(e); closeLive(); }
 }
 async function openLive(id) {
@@ -1935,15 +1975,12 @@ async function openLive(id) {
   if (!tk.token) { closeLive(); return toast(tk.error === 'not_configured' ? 'Les lives arrivent très bientôt sur Vibzo 🔴' : 'Ce live est terminé'); }
   try {
     const LK = await loadLK(); const room = new LK.Room({ adaptiveStream: true }); LV.room = room; bindRoom(room, LK);
-    room.on(LK.RoomEvent.TrackSubscribed, track => {
-      if (track.kind === 'video') { track.attach($('#lvVid')); $('#lvWait').style.display = 'none'; }
-      else { const a = track.attach(); a.style.display = 'none'; $('#liveOv').appendChild(a); }
-    });
     await room.connect(tk.url, tk.token);
     room.startAudio().catch(() => { }); const sb2 = $('#lvSnd'); if (sb2 && !room.canPlaybackAudio) sb2.style.display = 'block';
     LV.likes = l.likes || 0; LV.gifts = l.gift_coins || 0; liveUpd();
     liveSys(`Bienvenue dans le live de @${esc(l.username)} 👋 Sois respectueux.`);
-    LV.flush = setInterval(liveFlush, 5000);
+    if (l.pinned_product) showPinned(l.pinned_product);
+    LV.flush = setInterval(liveFlush, 5000); liveTop(); LV.topT = setInterval(liveTop, 20000);
   } catch (e) { fail(e); closeLive(); }
 }
 function liveSound() { if (LV && LV.room) LV.room.startAudio().then(() => { const b = $('#lvSnd'); if (b) b.style.display = 'none'; }, () => { }); }
@@ -1957,8 +1994,12 @@ function liveTap(e) { if (LV && LV.role !== 'host') liveHeart(); }
 function liveFlush() { if (!LV || LV.role !== 'viewer' || !LV.pend) return; const n = Math.min(30, LV.pend); LV.pend -= n; sb.rpc('live_like', { p_live: LV.id, p_n: n }).then(() => { }, () => { }); }
 function liveSend() {
   const i = $('#lvMsg'); if (!i || !LV || !LV.room) return; const m = i.value.trim(); if (!m) return;
-  if (Date.now() - LV.lastMsg < 1500) return toast('Doucement 🙂'); LV.lastMsg = Date.now();
-  lvSendData({ t: 'c', m: m.slice(0, 150) }); liveLine(`<b>@${esc((S.me && S.me.username) || 'moi')}</b> ${esc(m.slice(0, 150))}`); i.value = '';
+  const hostMe = LV.role === 'host', md = LV.mod || {};
+  if (!hostMe && md.off) return toast('🔒 Le chat est fermé par l’animateur');
+  if (!hostMe && badWord(m)) return toast('Ce message n’est pas autorisé dans ce live');
+  const wait = !hostMe && md.slow ? 10000 : 1500;
+  if (Date.now() - LV.lastMsg < wait) return toast(md.slow && !hostMe ? '🐢 Mode lent : patiente quelques secondes' : 'Doucement 🙂'); LV.lastMsg = Date.now();
+  lvSendData({ t: 'c', m: m.slice(0, 150) }); liveMsg((S.me && S.me.username) || 'moi', m.slice(0, 150)); i.value = '';
 }
 async function liveFlip() {
   if (!LV || !LV.tracks) return; const vt = LV.tracks.find(t => t.kind === 'video'); if (!vt) return;
@@ -1992,20 +2033,556 @@ function liveOver() {
 }
 async function closeLive() {
   if (!LV) return; const lv = LV; lv.closing = true; LV = null;
-  clearInterval(lv.ping); clearInterval(lv.flush);
+  clearInterval(lv.ping); clearInterval(lv.flush); clearInterval(lv.topT);
+  for (const t of lv.stageTracks || []) { try { t.stop(); } catch (e) { } }
   if (lv.role === 'viewer' && lv.pend) sb.rpc('live_like', { p_live: lv.id, p_n: Math.min(30, lv.pend) }).then(() => { }, () => { });
   if (lv.room) { try { await lv.room.disconnect(); } catch (e) { } }
   (lv.tracks || []).forEach(t => { try { t.stop(); } catch (e) { } });
   const ov = $('#liveOv'); if (ov) ov.remove();
   if (lv.role === 'host') {
     await sb.rpc('end_live', { p_live: lv.id }).then(() => { }, () => { });
-    const { data: r } = await sb.from('lives').select('peak_viewers,likes,gift_coins').eq('id', lv.id).maybeSingle();
+    const { data: r } = await sb.from('lives').select('peak_viewers,likes,gift_coins,orders_count').eq('id', lv.id).maybeSingle();
     const min = Math.max(1, Math.round((Date.now() - lv.t0) / 60000));
-    modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🎉</div><h3>Live terminé</h3><div class="pstats" style="margin:12px 0"><div><b>${min} min</b><span>Durée</span></div><div><b>${fmtN(Math.max((r && r.peak_viewers) || 0, lv.peak || 0))}</b><span>Spectateurs max</span></div><div><b>${fmtN((r && r.likes) || lv.likes)}</b><span>Cœurs</span></div><div><b>🪙 ${fmtN((r && r.gift_coins) || lv.gifts)}</b><span>Cadeaux</span></div></div><button class="btn" onclick="V.closeModal()">Super !</button></div>`);
+    modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🎉</div><h3>Live terminé</h3><div class="pstats" style="margin:12px 0"><div><b>${min} min</b><span>Durée</span></div><div><b>${fmtN(Math.max((r && r.peak_viewers) || 0, lv.peak || 0))}</b><span>Spectateurs max</span></div><div><b>${fmtN((r && r.likes) || lv.likes)}</b><span>Cœurs</span></div><div><b>🪙 ${fmtN((r && r.gift_coins) || lv.gifts)}</b><span>Cadeaux</span></div>${(r && r.orders_count) || lv.orders ? `<div><b>🛍️ ${fmtN((r && r.orders_count) || lv.orders)}</b><span>Commandes</span></div>` : ''}</div><button class="btn" onclick="V.closeModal()">Super !</button></div>`);
   }
 }
 
+/* =====================================================================
+   CONFIANCE : BADGE VÉRIFIÉ + AVIS CLIENTS
+   ===================================================================== */
+const vb = on => on ? '<span class="vb" title="Vérifié par Vibzo">✔</span>' : '';
+const rate = (sum, n) => n ? `<span class="rt">★ ${(sum / n).toFixed(1).replace('.', ',')} <small>(${n})</small></span>` : '';
+const starsTxt = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+const monthYear = ts => new Date(ts).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+function trustBlock(p) {
+  return `<button class="trust" onclick="V.shopReviews('${p.shop_id}')"><div class="grow"><div>${p.seller_verified ? '<b class="ok">✔ Vendeur vérifié par Vibzo</b>' : '<b>Vendeur non vérifié</b>'}</div>
+  <div class="mut small">${p.rating_count ? `★ ${(p.rating_sum / p.rating_count).toFixed(1).replace('.', ',')} · ${p.rating_count} <span>avis</span>` : '<span>Pas encore d’avis</span>'} · ${p.sales_count || 0} <span>ventes livrées</span>${p.shop_since ? ` · <span>sur Vibzo depuis</span> ${monthYear(p.shop_since)}` : ''}</div></div><span class="r">›</span></button>`;
+}
+async function shopReviews(shopId) {
+  sheet('⭐ Avis clients', `<div id="rvList">${loading()}</div>`);
+  const { data, error } = await sb.from('reviews_view').select('*').eq('shop_id', shopId).order('created_at', { ascending: false }).limit(60);
+  if (error) return fail(error);
+  const mine = S.myShop && S.myShop.id === shopId, n = data.length, avg = n ? data.reduce((a, r) => a + r.rating, 0) / n : 0;
+  if (!$('#rvList')) return;
+  $('#rvList').innerHTML = (n ? `<div class="rvhead"><b>${avg.toFixed(1).replace('.', ',')}</b><div><div class="stars">${starsTxt(Math.round(avg))}</div><div class="mut small">${n} <span>avis</span></div></div></div>` : '') +
+    (n ? data.map(r => `<div class="rv"><div class="row">${avatar(r, 34)}<div class="grow"><b>${esc(r.display_name)}</b><div class="stars sm">${starsTxt(r.rating)}</div></div><span class="mut small">${ago(r.created_at)}</span></div>
+    ${r.product_name ? `<div class="mut small">🛍️ ${esc(r.product_name)}</div>` : ''}${r.comment ? `<p>${esc(r.comment)}</p>` : ''}
+    ${r.reply ? `<div class="rvreply"><b>Réponse du vendeur</b><p>${esc(r.reply)}</p></div>` : mine ? `<div class="row" style="margin-top:6px"><input id="rr-${r.id}" maxlength="300" placeholder="Répondre à cet avis…" style="flex:1"><button class="btn sm" style="width:auto" onclick="V.replyReview('${r.id}','${shopId}')">Envoyer</button></div>` : ''}</div>`).join('')
+      : '<div class="empty"><div class="big">⭐</div><p>Pas encore d’avis. Les clients peuvent noter la boutique après la livraison.</p></div>');
+}
+async function replyReview(id, shopId) {
+  const i = $('#rr-' + id); if (!i || i.value.trim().length < 2) return toast('Écris ta réponse');
+  const { error } = await sb.rpc('reply_review', { p_review: id, p_reply: i.value.trim() }); if (error) return fail(error);
+  toast('Réponse publiée ✅'); shopReviews(shopId);
+}
+async function addReviewButtons(orders) {
+  const ok = orders.filter(o => o.status === 'delivered' || (['new', 'confirmed', 'shipped'].includes(o.status) && Date.now() - new Date(o.created_at) > 10 * 864e5));
+  if (!ok.length) return;
+  const { data } = await sb.from('reviews').select('order_id').in('order_id', ok.map(o => o.id));
+  const done = new Set((data || []).map(r => r.order_id));
+  ok.forEach(o => { const el = $('#ord-' + o.id); if (!el) return; const b = el.querySelector('.jact'); if (!b) return;
+    b.insertAdjacentHTML('afterbegin', done.has(o.id) ? '<span class="pill ok2">⭐ Avis envoyé</span>' : `<button class="btn sm gold" onclick="V.reviewForm('${o.id}')">⭐ Noter la boutique</button>`); });
+}
+let rvStars = 5;
+function reviewForm(orderId) {
+  const o = S.orders.get(orderId); rvStars = 5;
+  sheet('⭐ Noter la boutique', `<p class="mut small">${esc(o ? o.shop_name + ' · ' + o.product_name : '')}</p><div class="starpick" id="stp">${[1, 2, 3, 4, 5].map(i => `<button onclick="V.pickStars(${i})">★</button>`).join('')}</div>
+  <div class="field"><label>Ton avis (facultatif)</label><textarea id="rvC" rows="3" maxlength="300" placeholder="Produit conforme ? Livraison rapide ? Vendeur sérieux ?"></textarea></div>
+  <p class="mut small">Ton avis est public et aide les autres acheteurs à éviter les arnaques.</p><button class="btn" id="rvBtn" onclick="V.sendReview('${orderId}')">Publier mon avis</button>`);
+  pickStars(5);
+}
+function pickStars(n) { rvStars = n; document.querySelectorAll('#stp button').forEach((b, i) => b.classList.toggle('on', i < n)); }
+async function sendReview(orderId) {
+  const btn = $('#rvBtn'); busy(btn, true);
+  const { error } = await sb.rpc('leave_review', { p_order: orderId, p_rating: rvStars, p_comment: ($('#rvC').value || '').trim() }); busy(btn, false);
+  if (error) return fail(error); closeSheet(); toast('Merci pour ton avis ⭐'); go('orders');
+}
+const VKINDS = { seller: '🏪 Vendeur', recruiter: '💼 Recruteur', creator: '🎬 Créateur' };
+async function verifySheet() {
+  if (!requireAuth()) return;
+  if (S.me.verified) { sheet('✔ Compte vérifié', `<div class="hero" style="margin:0;text-align:center"><div style="font-size:44px">✔️</div><h2 style="color:#1e9be8">Ton compte est vérifié</h2><p class="small">Le badge ✔ apparaît sur ton profil, ta boutique, tes offres d’emploi et tes services. Les clients te font plus confiance.</p></div>`); return; }
+  sheet('✔ Obtenir le badge vérifié', `<div id="vfW">${loading()}</div>`);
+  const { data } = await sb.from('verification_requests').select('*').eq('user_id', uid()).eq('status', 'pending').maybeSingle();
+  if (!$('#vfW')) return;
+  const help = `<ol class="small" style="padding-left:18px;line-height:1.6;margin:10px 0"><li>Une photo de ta pièce d’identité (carte, passeport ou permis)</li><li>Un selfie où tu tiens cette pièce à côté de ton visage</li><li>Pour une entreprise : une photo de ton registre de commerce (facultatif)</li></ol><p class="mut small">Ces documents servent uniquement à la vérification. Ils ne sont jamais publiés.</p>`;
+  if (data) { $('#vfW').innerHTML = `<div class="safety">⏳<span>Ta demande (${VKINDS[data.kind]}) est en cours. Si ce n’est pas déjà fait, envoie tes documents à l’équipe Vibzo sur WhatsApp :</span></div>${help}<a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;text-decoration:none" target="_blank" rel="noopener" href="${verifyWa(data.kind, data.full_name)}">💬 Envoyer sur WhatsApp</a>`; return; }
+  $('#vfW').innerHTML = `<div class="hero" style="margin:0 0 10px;text-align:center"><div style="font-size:40px">✔️</div><p class="small">Le badge ✔ Vérifié montre que l’équipe Vibzo a contrôlé ton identité. Les acheteurs et les candidats te font plus confiance, et tu vends plus.</p></div>
+  <div class="field"><label>Je suis</label><select id="vfK">${Object.entries(VKINDS).map(([k, l]) => `<option value="${k}" ${S.myShop && k === 'seller' ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+  <div class="field"><label>Nom complet (comme sur ta pièce d’identité)</label><input id="vfN" maxlength="80" placeholder="Prénom et nom"></div>
+  <p class="small" style="margin-top:10px;font-weight:700">Ensuite, envoie sur WhatsApp :</p>${help}
+  <button class="btn" id="vfBtn" onclick="V.sendVerify()">Demander la vérification</button>`;
+}
+const verifyWa = (kind, name) => `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(`Bonjour Vibzo, je demande le badge vérifié pour mon compte @${S.me.username} (${(VKINDS[kind] || '').replace(/^\S+ /, '')}, ${name}). Je joins ma pièce d’identité et un selfie avec la pièce.`)}`;
+async function sendVerify() {
+  const k = $('#vfK').value, n = $('#vfN').value.trim(); if (n.length < 3) return toast('Indique ton nom complet');
+  const btn = $('#vfBtn'); busy(btn, true); const { error } = await sb.rpc('request_verification', { p_kind: k, p_name: n }); busy(btn, false);
+  if (error) return fail(error);
+  window.open(verifyWa(k, n), '_blank'); toast('Demande envoyée ✅ Envoie tes documents sur WhatsApp'); verifySheet();
+}
+
+/* =====================================================================
+   ACHAT PENDANT LE LIVE
+   ===================================================================== */
+async function liveProducts() {
+  if (!LV || !S.myShop) return toast('Ouvre une boutique pour vendre pendant tes lives 🛍️');
+  sheet('🛍️ Vendre pendant le live', `<p class="mut small">Épingle un produit : il s’affiche sur l’écran de tous les spectateurs avec un bouton « Commander ».</p><div id="lpL">${loading()}</div>`);
+  const { data, error } = await sb.from('products').select('id,name,price,currency,image_url').eq('shop_id', S.myShop.id).eq('active', true).order('created_at', { ascending: false });
+  if (error) return fail(error); if (!$('#lpL')) return;
+  $('#lpL').innerHTML = (data.length ? data.map(p => `<div class="citem"><div class="im" style="${gst(gfor(p.id))};position:relative;overflow:hidden">${prodImg(p)}</div><div class="grow"><b>${esc(p.name)}</b><div class="mut small">${money(p.price, p.currency)}</div></div><button class="btn sm" style="width:auto" onclick="V.livePin('${p.id}')">${LV && LV.pinned === p.id ? '📌 Épinglé' : 'Épingler'}</button></div>`).join('')
+    : '<div class="empty">Ta boutique n’a pas encore de produit actif.</div>') + (LV && LV.pinned ? `<button class="btn ghost" onclick="V.livePin(null)">Retirer le produit de l’écran</button>` : '');
+}
+async function livePin(id) {
+  if (!LV) return; const { error } = await sb.rpc('live_pin', { p_live: LV.id, p_product: id }); if (error) return fail(error);
+  lvSendData({ t: 'p', id: id || '' }); closeSheet(); showPinned(id); toast(id ? '📌 Produit affiché pour tous les spectateurs' : 'Produit retiré');
+}
+async function showPinned(id) {
+  if (!LV) return; LV.pinned = id || null; const box = $('#lvProd'); if (!box) return; const ovx = $('#liveOv'); if (ovx) ovx.classList.toggle('hasprod', !!id);
+  if (!id) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  let p = S.prods.get(id);
+  if (!p) { const { data } = await sb.from('products_view').select('*').eq('id', id).maybeSingle(); if (!data) return; p = data; S.prods.set(id, p); }
+  if (!LV || LV.pinned !== id) return;
+  box.innerHTML = `<div class="im" style="${gst(gfor(p.id))};position:relative;overflow:hidden">${prodImg(p)}</div><div class="grow"><b>${esc(p.name)}</b><div>${money(p.price, p.currency)}${p.seller_verified ? ' · <span class="vb">✔</span>' : ''}</div></div>${LV.role === 'host' ? `<span class="lvord">🛍️ ${fmtN(LV.orders || 0)}</span>` : `<button class="btn sm" style="width:auto" onclick="V.liveBuy('${p.id}')">Commander</button>`}`;
+  box.style.display = 'flex';
+}
+function liveBuy(id) { if (!requireAuth('Connecte-toi pour commander.')) return; orderForm(id); }
+
+/* =====================================================================
+   SERVICES PRÈS DE CHEZ MOI
+   ===================================================================== */
+const SVC_CATS = [['Coiffure & beauté', '💇'], ['Couture & mode', '🧵'], ['Mécanique', '🔧'], ['Plomberie', '🚰'], ['Électricité', '💡'], ['Ménage & entretien', '🧹'], ['Cuisine & traiteur', '🍲'], ['Photo & vidéo', '📸'], ['Cours & soutien scolaire', '📚'], ['Informatique & téléphones', '💻'], ['Transport & déménagement', '🚚'], ['Événements & DJ', '🎉'], ['Santé & bien-être', '💆'], ['Construction & BTP', '🏗️'], ['Autre', '✨']];
+const svcIcon = c => (SVC_CATS.find(x => x[0] === c) || ['', '🛠️'])[1];
+S.svcs = new Map();
+async function renderServices() {
+  const cat = S.svcCat || '';
+  $('#pgrid').outerHTML = `<div class="pad" style="padding-top:0"><div class="chips" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px"><button class="chip ${!cat ? 'on' : ''}" onclick="V.svcCat('')">Tout</button>${SVC_CATS.map(([c, e]) => `<button class="chip ${cat === c ? 'on' : ''}" onclick="V.svcCat('${c.replace(/'/g, '’')}')">${e} ${c}</button>`).join('')}</div>
+  <button class="btn sm" onclick="V.serviceForm()">＋ Proposer mon service</button><div class="list" id="svList">${loading()}</div></div>`;
+  let q = inScope(sb.from('services_view').select('*').eq('status', 'active')); if (cat) q = q.eq('category', cat.replace(/’/g, "'"));
+  const [{ data, error }, mine] = await Promise.all([q.order('created_at', { ascending: false }).limit(60), uid() ? sb.from('services_view').select('*').eq('user_id', uid()) : Promise.resolve({ data: [] })]);
+  if (error) throw error; if (!$('#svList')) return;
+  const my = (mine.data || []);
+  $('#svList').innerHTML = (my.length ? `<div class="lbl">Mes services</div>${my.map(s => svcCard(s, true)).join('')}<div class="lbl">Près de chez toi</div>` : '') +
+    (data.filter(s => s.user_id !== uid()).map(s => svcCard(s)).join('') || `<div class="empty"><div class="big">🛠️</div>Aucun service dans cette zone pour l’instant. Sois le premier à proposer le tien !</div>`);
+}
+function svcCard(s, mine) {
+  S.svcs.set(s.id, s);
+  return `<button class="card svc" onclick="V.openService('${s.id}')"><div class="svic">${svcIcon(s.category)}</div><div class="grow" style="text-align:left"><div class="t">${esc(s.title)}</div>
+  <div class="mut small">${esc(s.display_name)}${vb(s.verified)} · ${esc(s.area || s.region || (C[s.country] || {}).n || '')}</div>
+  <div class="tags" style="margin-top:4px">${s.price_from != null ? `<span class="g"><span>dès</span> ${money(s.price_from, s.currency)}</span>` : ''}${rate(s.rating_sum, s.rating_count)}${s.video_url ? '<span>🎬 Vidéo</span>' : ''}${mine && s.status !== 'active' ? '<span class="bad">Masqué</span>' : ''}</div></div></button>`;
+}
+async function openService(id) {
+  let s = S.svcs.get(id);
+  if (!s) { const { data } = await sb.from('services_view').select('*').eq('id', id).maybeSingle(); if (!data) return toast('Service indisponible'); s = data; S.svcs.set(id, s); }
+  const mine = s.user_id === uid(), wa = s.whatsapp ? s.whatsapp.replace(/\D/g, '') : '';
+  sheet(`${svcIcon(s.category)} ${esc(s.category)}`, `${s.video_url ? `<div class="svvid"><video src="${esc(s.video_url)}" ${S.saver ? 'preload="none" controls' : 'autoplay muted loop'} playsinline></video></div>` : ''}
+  <h2 style="margin-top:12px;font-size:20px">${esc(s.title)}</h2>
+  <button class="mitem" style="padding:8px 0" onclick="V.openProfile('${s.user_id}')">${avatar(s, 40)}<div class="grow" style="text-align:left"><div class="n">${esc(s.display_name)}${vb(s.verified)}</div><div class="l">@${esc(s.username)}</div></div></button>
+  <div class="tags"><span>📍 ${esc([s.area, s.region, (C[s.country] || {}).n].filter(Boolean).join(', '))}</span>${s.price_from != null ? `<span class="g"><span>À partir de</span> ${money(s.price_from, s.currency)}</span>` : ''}${rate(s.rating_sum, s.rating_count)}</div>
+  ${s.description ? `<p style="white-space:pre-wrap;margin-top:12px;line-height:1.5;font-size:14.5px">${esc(s.description)}</p>` : ''}
+  ${s.verified ? '' : '<div class="safety">🛡️<span>Prestataire non vérifié : ne paie jamais tout à l’avance. Paie après le travail ou au rendez-vous.</span></div>'}
+  ${mine ? `<div class="row" style="margin-top:12px"><button class="btn sm grow" onclick="V.serviceForm('${s.id}')">✏️ Modifier</button><button class="btn sm ghost grow" onclick="V.toggleService('${s.id}')">${s.status === 'active' ? '🙈 Masquer' : '👁️ Afficher'}</button><button class="btn sm ghost" style="width:auto" onclick="V.delService('${s.id}')">🗑️</button></div>`
+      : `<button class="btn" onclick="V.chatWith('${s.user_id}','dm','',null)">💬 Écrire pour réserver</button>${wa ? `<div class="row"><a class="btn ghost grow" style="text-decoration:none;display:flex;align-items:center;justify-content:center" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('Bonjour, je vous contacte depuis Vibzo pour « ' + s.title + ' ».')}">🟢 WhatsApp</a><a class="btn ghost grow" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="tel:+${wa}">📞 Appeler</a></div>` : ''}`}
+  <div class="row" style="margin-top:4px"><button class="btn sm ghost grow" onclick="V.shareThing('s','${s.id}')">📤 Partager</button>${mine ? '' : `<button class="btn sm ghost grow" onclick="V.svcReviewForm('${s.id}')">⭐ Noter</button><button class="btn sm ghost" style="width:auto" onclick="V.report('service','${s.id}')">🚩</button>`}</div>
+  <div class="lbl">⭐ Avis</div><div id="svRv">${loading()}</div>`);
+  const { data } = await sb.from('service_reviews_view').select('*').eq('service_id', id).order('created_at', { ascending: false }).limit(30);
+  if ($('#svRv')) $('#svRv').innerHTML = (data || []).length ? data.map(r => `<div class="rv"><div class="row">${avatar(r, 30)}<div class="grow"><b>${esc(r.display_name)}</b><div class="stars sm">${starsTxt(r.rating)}</div></div><span class="mut small">${ago(r.created_at)}</span></div>${r.comment ? `<p>${esc(r.comment)}</p>` : ''}</div>`).join('') : '<p class="mut small">Pas encore d’avis.</p>';
+}
+function svcReviewForm(id) {
+  if (!requireAuth()) return; rvStars = 5;
+  sheet('⭐ Noter ce prestataire', `<div class="starpick" id="stp">${[1, 2, 3, 4, 5].map(i => `<button onclick="V.pickStars(${i})">★</button>`).join('')}</div><div class="field"><label>Ton avis (facultatif)</label><textarea id="rvC" rows="3" maxlength="300"></textarea></div><p class="mut small">Tu peux noter un prestataire après avoir échangé avec lui par message sur Vibzo.</p><button class="btn" id="rvBtn" onclick="V.sendSvcReview('${id}')">Publier</button>`);
+  pickStars(5);
+}
+async function sendSvcReview(id) {
+  const btn = $('#rvBtn'); busy(btn, true);
+  const { error } = await sb.rpc('review_service', { p_service: id, p_rating: rvStars, p_comment: ($('#rvC').value || '').trim() }); busy(btn, false);
+  if (error) return fail(error); toast('Merci pour ton avis ⭐'); const s = S.svcs.get(id); if (s) { s.rating_sum += rvStars; s.rating_count++; } openService(id);
+}
+async function serviceForm(id) {
+  if (!requireAuth('Connecte-toi pour proposer ton service.')) return;
+  const s = id ? S.svcs.get(id) : {}; const c = C[S.me.country] || {};
+  sheet(id ? 'Modifier mon service' : '🛠️ Proposer mon service', `<div id="svF">${loading()}</div>`);
+  const { data: vids } = await sb.from('videos').select('id,title,caption').eq('user_id', uid()).eq('status', 'published').order('created_at', { ascending: false }).limit(30);
+  if (!$('#svF')) return;
+  $('#svF').innerHTML = `<div class="field"><label>Catégorie</label><select id="svC">${SVC_CATS.map(([k, e]) => `<option value="${esc(k)}" ${s.category === k ? 'selected' : ''}>${e} ${k}</option>`).join('')}</select></div>
+  <div class="field"><label>Titre</label><input id="svT" maxlength="80" value="${esc(s.title || '')}" placeholder="Ex : Tresses et nattes à domicile"></div>
+  <div class="field"><label>Description</label><textarea id="svD" rows="3" maxlength="600" placeholder="Ce que tu proposes, tes horaires, ton expérience…">${esc(s.description || '')}</textarea></div>
+  <div class="row"><div class="field grow"><label>Prix à partir de (facultatif)</label><input id="svP" type="number" min="0" inputmode="numeric" value="${s.price_from ?? ''}"></div><div class="field" style="width:90px"><label>Devise</label><input value="${S.me.country === 'AZ' ? '₼' : 'FCFA'}" disabled></div></div>
+  <div class="field"><label>Quartier / zone d’intervention</label><input id="svA" maxlength="80" value="${esc(s.area || '')}" placeholder="Ex : Akwa, Bonapriso, tout Douala"></div>
+  <div class="field"><label>WhatsApp (facultatif)</label><input id="svW" type="tel" inputmode="tel" maxlength="20" value="${esc(s.whatsapp || '')}" placeholder="${esc(c.tel || '+')} …"></div>
+  <div class="field"><label>🎬 Vidéo de démonstration (une de tes vidéos)</label><select id="svV"><option value="">Aucune</option>${(vids || []).map(v => `<option value="${v.id}" ${s.video_id === v.id ? 'selected' : ''}>${esc((v.title || v.caption || 'Vidéo').slice(0, 50))}</option>`).join('')}</select></div>
+  <p class="mut small">${(vids || []).length ? 'Montre ton travail en vidéo : c’est ce qui convainc le plus les clients.' : 'Astuce : publie d’abord une vidéo de ton travail, puis ajoute-la ici.'}</p>
+  <button class="btn" id="svB" onclick="V.saveService('${id || ''}')">${id ? 'Enregistrer' : 'Publier mon service'}</button>`;
+}
+async function saveService(id) {
+  const t = $('#svT').value.trim(); if (t.length < 3) return toast('Indique un titre');
+  const pf = $('#svP').value.trim(), row = { category: $('#svC').value, title: t, description: $('#svD').value.trim(), price_from: pf === '' ? null : Math.max(0, +pf), area: $('#svA').value.trim() || null, whatsapp: $('#svW').value.trim() || null, video_id: $('#svV').value || null, country: S.me.country, region: S.me.region || null, currency: S.me.country === 'AZ' ? '₼' : 'FCFA' };
+  const btn = $('#svB'); busy(btn, true);
+  const { error } = id ? await sb.from('services').update(row).eq('id', id) : await sb.from('services').insert({ ...row, user_id: uid() });
+  busy(btn, false); if (error) return fail(error);
+  closeSheet(); toast(id ? 'Service mis à jour ✅' : 'Ton service est en ligne ✅'); S.shopTab = 'svc'; go('shop');
+}
+async function toggleService(id) { const s = S.svcs.get(id); const { error } = await sb.from('services').update({ status: s.status === 'active' ? 'hidden' : 'active' }).eq('id', id); if (error) return fail(error); closeSheet(); go('shop'); }
+async function delService(id) { if (!confirm('Supprimer ce service ?')) return; const { error } = await sb.from('services').delete().eq('id', id); if (error) return fail(error); closeSheet(); toast('Service supprimé'); go('shop'); }
+
+/* =====================================================================
+   DÉFIS SPONSORISÉS PAR DES MARQUES
+   ===================================================================== */
+S.chs = new Map();
+const daysLeft = ts => Math.max(0, Math.ceil((new Date(ts) - Date.now()) / 864e5));
+async function loadChallenges() {
+  const el = $('#chStrip'); if (!el) return;
+  const { data } = await sb.from('challenges_view').select('*').eq('status', 'active').gt('ends_at', new Date().toISOString()).order('prize1', { ascending: false }).limit(12);
+  const cc = myCc(), list = (data || []).filter(c => !c.countries || c.countries.includes(cc));
+  list.forEach(c => S.chs.set(c.id, c)); if (!$('#chStrip')) return;
+  el.innerHTML = `<div class="row" style="align-items:center"><div class="lbl grow" style="margin-top:10px">🏆 Défis avec des prix</div><button class="mut small" onclick="V.challengeForm()">＋ Pour les marques</button></div>` +
+    (list.length ? `<div class="chstrip">${list.map(c => `<button class="chc" onclick="V.openChallenge('${c.id}')"><div class="chp">🏆 ${money(c.prize1 + c.prize2 + c.prize3, c.currency)}</div><b>${esc(c.title)}</b><div class="small">#${esc(c.hashtag)}</div><div class="small" style="opacity:.85">${esc(c.brand_name)}${vb(c.brand_verified)} · ${daysLeft(c.ends_at)} <span>j restants</span></div></button>`).join('')}</div>` : '<p class="mut small">Aucun défi en ce moment. Les marques peuvent lancer le leur et récompenser les meilleurs créateurs.</p>');
+}
+async function openChallenge(id) {
+  let c = S.chs.get(id);
+  if (!c) { const { data } = await sb.from('challenges_view').select('*').eq('id', id).maybeSingle(); if (!data) return toast('Défi introuvable'); c = data; S.chs.set(id, c); }
+  const live = c.status === 'active' && new Date(c.ends_at) > new Date(), mine = c.brand_id === uid(), canPick = c.status === 'active' && !live && mine;
+  sheet('🏆 Défi sponsorisé', `<div class="chhero"><div class="small">${esc(c.brand_name)}${vb(c.brand_verified)}</div><h2>${esc(c.title)}</h2><div class="chtag">#${esc(c.hashtag)}</div>
+  <div class="chprz"><div>🥇<b>${money(c.prize1, c.currency)}</b></div>${c.prize2 ? `<div>🥈<b>${money(c.prize2, c.currency)}</b></div>` : ''}${c.prize3 ? `<div>🥉<b>${money(c.prize3, c.currency)}</b></div>` : ''}</div>
+  <div class="small">${c.status === 'pending' ? '<span>⏳ En attente de validation</span>' : live ? `<span>⏰ Encore</span> ${daysLeft(c.ends_at)} <span>jours</span>` : c.status === 'finished' ? '<span>✅ Terminé : gagnants désignés</span>' : '<span>⌛ Terminé : gagnants bientôt annoncés</span>'} · ${c.entries} <span>participations</span></div></div>
+  ${c.description ? `<p style="white-space:pre-wrap;margin-top:12px;line-height:1.5;font-size:14.5px">${esc(c.description)}</p>` : ''}
+  <div class="safety">🏆<span>Publie une vidéo avec <b>#${esc(c.hashtag)}</b> avant la fin. Classement selon les vues réelles et les j’aime. Les gagnants reçoivent leur prix dans leur portefeuille Vibzo, retirable en Mobile Money.</span></div>
+  ${live && !mine ? `<button class="btn gold" onclick="V.joinChallenge('${c.id}')">🎬 Participer</button>` : ''}
+  ${canPick ? `<div class="safety warn">👇<span>Ton défi est terminé : coche jusqu’à 3 vidéos gagnantes, dans l’ordre (1er, 2e, 3e).</span></div>` : ''}
+  <button class="btn sm ghost" onclick="V.shareThing('c','${c.id}')">📤 Partager le défi</button>
+  <div class="lbl">📊 Classement</div><div id="chB">${loading()}</div>${canPick ? `<button class="btn" id="chW" onclick="V.awardChallenge('${c.id}')">Valider les gagnants</button>` : ''}`);
+  const { data } = await sb.rpc('challenge_board', { p_id: id }); if (!$('#chB')) return;
+  S._chPick = []; const w = c.winners || [];
+  $('#chB').innerHTML = (data || []).length ? data.slice(0, 20).map((b, i) => { S.vids.set(b.video_id, S.vids.get(b.video_id) || { id: b.video_id, video_url: b.video_url, user_id: b.user_id, username: b.username });
+    const wi = w.indexOf(b.user_id); return `<div class="chrow ${wi >= 0 ? 'win' : ''}"><b class="chn">${wi >= 0 ? ['🥇', '🥈', '🥉'][wi] : i + 1}</b>${avatar(b, 34)}<div class="grow"><b>@${esc(b.username)}</b><div class="mut small">👁 ${fmtN(b.views)} · ♥ ${fmtN(b.likes)}</div></div>${canPick ? `<button class="btn sm ghost" style="width:auto" id="pk-${b.video_id}" onclick="V.pickWinner('${b.video_id}')">Choisir</button>` : `<button class="btn sm ghost" style="width:auto" onclick="V.openTag('${esc(c.hashtag)}')">▶</button>`}</div>`; }).join('')
+    : '<p class="mut small">Pas encore de participation. Sois le premier !</p>';
+}
+function pickWinner(vid) {
+  const a = S._chPick || (S._chPick = []), i = a.indexOf(vid);
+  if (i >= 0) a.splice(i, 1); else { if (a.length >= 3) return toast('3 gagnants maximum'); a.push(vid); }
+  document.querySelectorAll('[id^="pk-"]').forEach(b => { const k = a.indexOf(b.id.slice(3)); b.textContent = k >= 0 ? ['🥇', '🥈', '🥉'][k] : 'Choisir'; });
+}
+async function awardChallenge(id) {
+  const a = S._chPick || []; if (!a.length) return toast('Choisis au moins un gagnant');
+  if (!confirm('Valider ces gagnants ? Les prix seront versés tout de suite.')) return;
+  const btn = $('#chW'); busy(btn, true); const { error } = await sb.rpc('challenge_award', { p_id: id, p_videos: a }); busy(btn, false);
+  if (error) return fail(error); S.chs.delete(id); toast('🏆 Gagnants récompensés !'); openChallenge(id);
+}
+function joinChallenge(id) { const c = S.chs.get(id); if (!requireAuth('Connecte-toi pour participer.')) return; S.draftTag = c.hashtag; closeSheet(); go('create'); toast(`Ajoute ta vidéo : #${c.hashtag} est déjà dans tes hashtags 🏆`); }
+function challengeForm() {
+  if (!requireAuth('Connecte-toi pour lancer un défi.')) return;
+  const cur = coinCur(), az = cur === '₼';
+  sheet('🏆 Lancer un défi pour ma marque', `<div class="hero" style="margin:0 0 10px;text-align:center"><div style="font-size:40px">🏆</div><p class="small">Des centaines de créateurs filment des vidéos avec ton produit et ton hashtag. Tu paies uniquement les prix des gagnants, plus 15 % de frais Vibzo.</p></div>
+  <div class="field"><label>Nom de la marque</label><input id="cfB" maxlength="60" value="${esc(S.myShop ? S.myShop.name : '')}"></div>
+  <div class="field"><label>Titre du défi</label><input id="cfT" maxlength="80" placeholder="Ex : Montre ton meilleur pas de danse avec notre jus"></div>
+  <div class="field"><label>Hashtag (sans espace ni accent)</label><input id="cfH" maxlength="31" placeholder="#monjusdance" autocapitalize="off"></div>
+  <div class="field"><label>Règles et description</label><textarea id="cfD" rows="3" maxlength="800" placeholder="Ce que les créateurs doivent montrer, ce qui est interdit…"></textarea></div>
+  <div class="row"><div class="field grow"><label>🥇 1er prix (${cur})</label><input id="cf1" type="number" inputmode="numeric" min="0" value="${az ? 50 : 50000}"></div><div class="field grow"><label>🥈 2e (${cur})</label><input id="cf2" type="number" inputmode="numeric" min="0" value="${az ? 20 : 20000}"></div><div class="field grow"><label>🥉 3e (${cur})</label><input id="cf3" type="number" inputmode="numeric" min="0" value="${az ? 10 : 10000}"></div></div>
+  <div class="row"><div class="field grow"><label>Durée</label><select id="cfJ"><option value="7">7 jours</option><option value="14" selected>14 jours</option><option value="30">30 jours</option></select></div><div class="field grow"><label>Participants</label><select id="cfZ"><option value="me">${esc((C[myCc()] || {}).n || '')}</option><option value="zone">${esc(ZONES[C[myCc()].z])}</option><option value="all">Tous les pays</option></select></div></div>
+  <div class="safety" id="cfTot"></div><button class="btn gold" id="cfBtn" onclick="V.saveChallenge()">Créer le défi</button>`);
+  const upd = () => { const t = (+$('#cf1').value || 0) + (+$('#cf2').value || 0) + (+$('#cf3').value || 0); $('#cfTot').innerHTML = `💰<span>Prix : <b>${money(t, cur)}</b> + frais 15 % = <b>${money(Math.ceil(t * 1.15), cur)}</b> à payer pour lancer le défi.</span>`; };
+  ['cf1', 'cf2', 'cf3'].forEach(k => $('#' + k).oninput = upd); upd();
+}
+async function saveChallenge() {
+  if ($('#cfB').value.trim().length < 2) return toast('Indique le nom de la marque'); if ($('#cfT').value.trim().length < 3) return toast('Indique le titre du défi');
+  const z = $('#cfZ').value, cc = myCc(), countries = z === 'me' ? [cc] : z === 'zone' ? Object.keys(C).filter(k => C[k].z === C[cc].z) : null;
+  const btn = $('#cfBtn'); busy(btn, true);
+  const { data, error } = await sb.rpc('create_challenge', { p_brand: $('#cfB').value.trim(), p_title: $('#cfT').value.trim(), p_tag: $('#cfH').value.trim(), p_desc: $('#cfD').value.trim(), p_p1: +$('#cf1').value || 0, p_p2: +$('#cf2').value || 0, p_p3: +$('#cf3').value || 0, p_days: +$('#cfJ').value, p_countries: countries });
+  busy(btn, false); if (error) return fail(error);
+  closeSheet(); const pi = PAYMENT_INFO[C[cc].z] || {}, tag = ($('#cfH') ? $('#cfH').value : '').replace(/^#/, '');
+  const msg = `Bonjour Vibzo, je viens de créer un défi sponsorisé (réf. ${String(data.id).slice(0, 8)}). Montant à payer : ${money(data.total, data.currency)}. Voici ma preuve de paiement.`;
+  modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🏆</div><h3>Défi créé !</h3><p class="small">Il sera mis en ligne dès réception du paiement.</p>
+  <div class="card" style="margin:10px 0;text-align:left"><div class="small">Montant à payer</div><b style="font-size:20px">${money(data.total, data.currency)}</b><div class="mut small">${money(data.prizes, data.currency)} <span>de prix</span> + 15 %</div>
+  <div class="small" style="margin-top:8px">${pi.iban ? `🏦 ${esc(pi.bank)} · ${esc(pi.holder)}<br><b>${esc(pi.iban)}</b>` : `📱 ${esc(pi.momo || '')}<br><b>${esc(pi.number || '')}</b>`}</div></div>
+  <a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}">💬 Envoyer la preuve sur WhatsApp</a>
+  <button class="btn ghost" style="margin-top:8px" onclick="V.closeModal()">Plus tard</button></div>`);
+}
+async function tagChallengeBanner(tag) {
+  const { data } = await sb.from('challenges_view').select('*').eq('hashtag', tag.toLowerCase()).in('status', ['active', 'finished']).order('created_at', { ascending: false }).limit(1);
+  const c = (data || [])[0], el = $('#trends'); if (!c || !el) return; S.chs.set(c.id, c);
+  el.insertAdjacentHTML('beforeend', `<button class="chban" onclick="V.openChallenge('${c.id}')">🏆 <b>Défi sponsorisé par ${esc(c.brand_name)}</b> · ${money(c.prize1 + c.prize2 + c.prize3, c.currency)} <span>de prix</span> ›</button>`);
+}
+
+/* =====================================================================
+   ADMIN : vérifications et défis
+   ===================================================================== */
+async function loadAdminTrust() {
+  const el = $('#admV'); if (!el) return;
+  const [vq, ch] = await Promise.all([sb.rpc('admin_verification_queue'), sb.from('challenges_view').select('*').in('status', ['pending', 'active']).order('created_at')]);
+  const ended = (ch.data || []).filter(c => c.status === 'active' && Date.now() - new Date(c.ends_at) > 7 * 864e5);
+  el.innerHTML = ((vq.data || []).map(r => `<div class="mq"><span class="k">✔️</span><div class="grow"><b style="font-size:14px">@${esc(r.username)} · ${esc(r.full_name)}</b><div class="mut small">${VKINDS[r.kind] || r.kind} · ${esc(r.country || '')} · <span>compte de</span> ${r.account_age_days} j · ${r.sales} <span>ventes</span> · ${r.offers} <span>offres</span></div><div class="mut small">Vérifie la pièce d’identité et le selfie reçus sur WhatsApp.</div></div><div class="acts"><button class="ok" onclick="V.verifyDecide('${r.id}',true)">Valider</button><button class="ko" onclick="V.verifyDecide('${r.id}',false)">Refuser</button></div></div>`).join('') || '<p class="mut small">Aucune demande de vérification.</p>') +
+    (ch.data || []).filter(c => c.status === 'pending').map(c => `<div class="mq"><span class="k">🏆</span><div class="grow"><b style="font-size:14px">#${esc(c.hashtag)} · ${esc(c.brand_name)}</b><div class="mut small">${money(c.prize1 + c.prize2 + c.prize3, c.currency)} <span>de prix</span> → <b>${money(Math.ceil((c.prize1 + c.prize2 + c.prize3) * 1.15), c.currency)}</b> <span>à encaisser</span> · réf. ${c.id.slice(0, 8)}</div></div><div class="acts"><button class="ok" onclick="V.chDecide('${c.id}',true)">Payé ✓</button><button class="ko" onclick="V.chDecide('${c.id}',false)">Refuser</button></div></div>`).join('') +
+    ended.map(c => `<div class="mq"><span class="k">⌛</span><div class="grow"><b style="font-size:14px">#${esc(c.hashtag)}</b><div class="mut small">Terminé depuis plus de 7 jours sans gagnants désignés par la marque.</div></div><div class="acts"><button class="ok" onclick="V.chAutoAward('${c.id}')">Top 3 auto</button></div></div>`).join('');
+}
+async function verifyDecide(id, ok) { const { error } = await sb.rpc('admin_verify', { p_req: id, p_ok: ok }); if (error) return fail(error); toast(ok ? 'Compte vérifié ✔' : 'Demande refusée'); loadAdminTrust(); }
+async function chDecide(id, ok) { const { error } = await sb.rpc('admin_challenge_decide', { p_id: id, p_ok: ok }); if (error) return fail(error); toast(ok ? 'Défi en ligne 🏆' : 'Défi refusé'); loadAdminTrust(); }
+async function chAutoAward(id) {
+  const { data } = await sb.rpc('challenge_board', { p_id: id }); const seen = new Set(), top = [];
+  (data || []).forEach(b => { if (top.length < 3 && !seen.has(b.user_id)) { seen.add(b.user_id); top.push(b.video_id); } });
+  if (!top.length) return toast('Aucune participation');
+  const { error } = await sb.rpc('challenge_award', { p_id: id, p_videos: top }); if (error) return fail(error); toast('🏆 Gagnants récompensés'); loadAdminTrust();
+}
+
+/* =====================================================================
+   MODE PETIT FORFAIT + VIDÉOS HORS LIGNE
+   ===================================================================== */
+S.saver = (() => { try { return localStorage.getItem('vibzo_saver') === '1'; } catch (e) { return false; } })();
+const conn = () => navigator.connection || {};
+const onWifi = () => conn().type === 'wifi' || conn().type === 'ethernet';
+function idb() {
+  return new Promise((ok, ko) => { const r = indexedDB.open('vibzo-offline', 1); r.onupgradeneeded = () => r.result.createObjectStore('vids', { keyPath: 'id' }); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
+}
+async function offAll() { const db = await idb(); return new Promise(ok => { const q = db.transaction('vids').objectStore('vids').getAll(); q.onsuccess = () => ok((q.result || []).sort((a, b) => b.saved - a.saved)); q.onerror = () => ok([]); }); }
+async function offPut(v) { const db = await idb(); return new Promise((ok, ko) => { const t = db.transaction('vids', 'readwrite'); t.objectStore('vids').put(v); t.oncomplete = ok; t.onerror = () => ko(t.error); }); }
+async function offDel(id) { const db = await idb(); return new Promise(ok => { const t = db.transaction('vids', 'readwrite'); id ? t.objectStore('vids').delete(id) : t.objectStore('vids').clear(); t.oncomplete = ok; t.onerror = ok; }); }
+const mb = n => (n / 1048576).toFixed(n > 104857600 ? 0 : 1).replace('.', ',') + ' Mo';
+let offBusy = false;
+async function dlOffline(n = 10, silent = false) {
+  if (offBusy) return; if (!navigator.onLine) return silent || toast('Pas de connexion');
+  if (!silent && !onWifi() && conn().type && !confirm('Tu n’es pas en Wi-Fi : le téléchargement va utiliser ton forfait (environ 3 à 8 Mo par vidéo). Continuer ?')) return;
+  offBusy = true; let got = 0;
+  try {
+    const have = new Set((await offAll()).map(v => v.id));
+    const { data } = await sb.rpc('feed', { p_countries: countries(), p_region: regionF(), p_mode: 'pour', p_limit: 25, p_offset: 0 });
+    for (const v of (data || []).filter(v => !have.has(v.id)).slice(0, n)) {
+      try {
+        const r = await fetch(v.video_url); if (!r.ok) continue; const blob = await r.blob(); if (blob.size > 40 * 1048576) continue;
+        await offPut({ id: v.id, blob, size: blob.size, title: v.title || '', caption: v.caption || '', username: v.username || '', saved: Date.now() }); got++;
+        if (!silent) { const p = $('#offProg'); if (p) p.textContent = `📥 ${got} / ${n}…`; }
+      } catch (e) { }
+    }
+    const all = await offAll(); for (const v of all.slice(30)) await offDel(v.id);
+    try { localStorage.setItem('vibzo_offline_at', String(Date.now())); } catch (e) { }
+  } finally { offBusy = false; }
+  if (!silent) { toast(got ? `✅ ${got} vidéos prêtes à regarder sans internet` : 'Aucune nouvelle vidéo à télécharger'); if ($('#offW')) saverSheet(); }
+}
+async function saverSheet() {
+  const auto = (() => { try { return localStorage.getItem('vibzo_autodl') === '1'; } catch (e) { return false; } })();
+  sheet('📶 Petit forfait & hors ligne', `<div id="offW">${loading()}</div>`);
+  const list = await offAll().catch(() => []), total = list.reduce((a, v) => a + (v.size || 0), 0); if (!$('#offW')) return;
+  $('#offW').innerHTML = `<label class="tgl"><div class="grow"><b>Mode petit forfait</b><div class="mut small">Les vidéos ne se chargent qu’au moment où tu les regardes, les aperçus sont désactivés. Tu consommes beaucoup moins de données.</div></div><input type="checkbox" ${S.saver ? 'checked' : ''} onchange="V.setSaver(this.checked)"></label>
+  <label class="tgl"><div class="grow"><b>Télécharger automatiquement en Wi-Fi</b><div class="mut small">Quand tu ouvres Vibzo en Wi-Fi, 10 nouvelles vidéos sont gardées pour plus tard, sans internet.</div></div><input type="checkbox" ${auto ? 'checked' : ''} onchange="V.setAutoDl(this.checked)"></label>
+  <div class="lbl">📥 <span>Vidéos hors ligne</span> · ${list.length} · ${mb(total)}</div>
+  <button class="btn" onclick="V.dlOffline(10)"><span id="offProg">📥 Télécharger 10 vidéos maintenant</span></button>
+  ${list.length ? `<button class="btn ghost" onclick="V.offlinePlay(0)">▶ Regarder sans internet</button><div class="vgrid" style="margin-top:10px">${list.map((v, i) => `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.offlinePlay(${i})"><div class="vthph">▶</div><span>${esc((v.title || v.caption || '@' + v.username).slice(0, 22))}</span></button>`).join('')}</div><button class="btn sm ghost" style="margin-top:10px" onclick="V.offClear()">🗑️ Tout supprimer</button>` : '<p class="mut small">Aucune vidéo téléchargée pour l’instant.</p>'}`;
+}
+function setSaver(on) { S.saver = on; try { localStorage.setItem('vibzo_saver', on ? '1' : '0'); localStorage.setItem('vibzo_saver_asked', '1'); } catch (e) { } toast(on ? '📶 Mode petit forfait activé' : 'Mode petit forfait désactivé'); }
+function setAutoDl(on) { try { localStorage.setItem('vibzo_autodl', on ? '1' : '0'); } catch (e) { } if (on && onWifi()) dlOffline(10, true); toast(on ? 'Téléchargement auto en Wi-Fi activé' : 'Téléchargement auto désactivé'); }
+async function offClear() { if (!confirm('Supprimer toutes les vidéos hors ligne ?')) return; await offDel(null); saverSheet(); }
+let offList = [], offIdx = 0, offUrl = null;
+async function offlinePlay(i) {
+  offList = await offAll(); if (!offList.length) return toast('Aucune vidéo hors ligne'); closeSheet(); offIdx = Math.max(0, Math.min(i, offList.length - 1));
+  let ov = $('#offOv'); if (!ov) { ov = document.createElement('div'); ov.id = 'offOv'; $('#sheetBg').parentNode.appendChild(ov); }
+  document.querySelectorAll('#feed video').forEach(v => v.pause()); offShow();
+}
+function offShow() {
+  const v = offList[offIdx], ov = $('#offOv'); if (!v || !ov) return; if (offUrl) URL.revokeObjectURL(offUrl); offUrl = URL.createObjectURL(v.blob);
+  ov.innerHTML = `<video src="${offUrl}" autoplay playsinline loop onclick="this.paused?this.play():this.pause()"></video><div class="offtop"><span class="lvbadge" style="background:#0b2540">📴 HORS LIGNE</span><span>${offIdx + 1} / ${offList.length}</span><button class="ib" onclick="V.offClose()" aria-label="Fermer">${I.close}</button></div>
+  <div class="offinfo"><b>@${esc(v.username)}</b><div>${esc(v.title || v.caption || '')}</div></div><button class="offnav up" onclick="V.offNext(-1)" aria-label="Précédente">⌃</button><button class="offnav dn" onclick="V.offNext(1)" aria-label="Suivante">⌄</button><button class="offdel" onclick="V.offRemove()" aria-label="Supprimer">🗑️</button>`;
+  const vid = ov.querySelector('video'); vid.muted = !!S.muted; vid.play().catch(() => { vid.muted = true; vid.play().catch(() => { }); });
+  let y0 = null; ov.ontouchstart = e => { y0 = e.touches[0].clientY; }; ov.ontouchend = e => { if (y0 == null) return; const d = e.changedTouches[0].clientY - y0; if (Math.abs(d) > 60) offNext(d < 0 ? 1 : -1); y0 = null; };
+}
+function offNext(d) { const n = offIdx + d; if (n < 0 || n >= offList.length) return toast(d > 0 ? 'C’était la dernière vidéo hors ligne' : 'Première vidéo'); offIdx = n; offShow(); }
+async function offRemove() { const v = offList[offIdx]; await offDel(v.id); offList.splice(offIdx, 1); if (!offList.length) return offClose(); offIdx = Math.min(offIdx, offList.length - 1); offShow(); }
+function offClose() { const ov = $('#offOv'); if (ov) ov.remove(); if (offUrl) { URL.revokeObjectURL(offUrl); offUrl = null; } }
+async function offlineHome() {
+  const list = await offAll().catch(() => []);
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on')); $('#s-home').classList.add('on');
+  $('#s-home').innerHTML = `<div class="setup"><div style="font-size:48px">📴</div><h2>Pas de connexion internet</h2><p class="mut">${list.length ? `Tu as ${list.length} vidéos téléchargées : regarde-les sans internet.` : 'Reconnecte-toi pour voir les vidéos. Astuce : active le téléchargement automatique en Wi-Fi pour avoir des vidéos même sans internet.'}</p>${list.length ? `<button class="btn" onclick="V.offlinePlay(0)">▶ Regarder mes vidéos hors ligne</button>` : ''}<button class="btn ghost" onclick="location.reload()">🔄 Réessayer</button></div>`;
+}
+function saverHints() {
+  try {
+    const c = conn();
+    if (!S.saver && !localStorage.getItem('vibzo_saver_asked') && (c.saveData || /(^|-)2g|3g/.test(c.effectiveType || ''))) {
+      localStorage.setItem('vibzo_saver_asked', '1');
+      modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">📶</div><h3>Connexion lente ou forfait limité ?</h3><p class="small">Active le mode petit forfait : Vibzo consomme beaucoup moins de données.</p><button class="btn" onclick="V.setSaver(true);V.closeModal()">Activer</button><button class="btn ghost" style="margin-top:8px" onclick="V.closeModal()">Non merci</button></div>`);
+    }
+    if (localStorage.getItem('vibzo_autodl') === '1' && onWifi() && Date.now() - (+localStorage.getItem('vibzo_offline_at') || 0) > 6 * 3600e3) setTimeout(() => dlOffline(10, true), 8000);
+  } catch (e) { }
+  window.addEventListener('offline', () => toast('📴 Hors ligne : tes vidéos téléchargées restent disponibles (Paramètres › Petit forfait)'));
+}
+
+/* =====================================================================
+   LIVE COMME TIKTOK : invités à l'écran, sondage, objectif, épingle, modération, top donateurs
+   ===================================================================== */
+const hostUid = () => LV && LV.host ? (LV.host.host_id || LV.host.id) : '';
+const fromHost = p => !!p && String(p.identity || '').startsWith(hostUid() + ':');
+const isUuidIdent = s => /^[0-9a-f-]{36}:[0-9a-f-]{1,8}$/i.test(String(s || ''));
+async function liveAction(action, identity) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const r = await fetch(LIVE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ live: LV.id, action, identity }) });
+    const j = await r.json(); return !!j.ok;
+  } catch (e) { return false; }
+}
+function lvSendTo(m, identities) { try { LV.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(m)), { reliable: true, destinationIdentities: identities }); } catch (e) { } }
+// L'animateur envoie l'état du live aux nouveaux arrivants (épingle, objectif, sondage, règles du chat, invités)
+function liveStateFor(p) {
+  if (!LV || LV.role !== 'host') return;
+  lvSendTo({ t: 'state', pin: LV.pinMsg || null, goal: LV.goal || null, poll: LV.poll ? { q: LV.poll.q, o: LV.poll.o, c: LV.poll.c, id: LV.poll.id } : null, mod: LV.mod || {}, guests: [...(LV.guests || [])], prod: LV.pinned || '' }, [p.identity]);
+}
+function applyState(m) {
+  if (m.pin !== undefined) showPinMsg(m.pin);
+  if (m.goal !== undefined) { LV.goal = m.goal; showGoal(); }
+  if (m.poll !== undefined) { LV.poll = m.poll; showPoll(); }
+  if (m.mod) { LV.mod = m.mod; }
+  if (m.guests) LV.guests = new Set(m.guests);
+  if (m.prod !== undefined && LV.role !== 'host') showPinned(m.prod || null);
+}
+/* ---- commentaire épinglé ---- */
+function showPinMsg(pm) {
+  if (!LV) return; LV.pinMsg = pm || null; const el = $('#lvPin'); if (!el) return;
+  el.style.display = pm ? 'flex' : 'none';
+  el.innerHTML = pm ? `<span>📌</span><div class="grow"><b>@${esc(pm.u)}</b> ${esc(pm.m)}</div>${LV.role === 'host' ? `<button onclick="V.livePinMsg(-1)" aria-label="Retirer">✕</button>` : ''}` : '';
+}
+function livePinMsg(i) {
+  if (!LV || LV.role !== 'host') return;
+  const pm = i < 0 ? null : (LV.msgs || [])[i]; showPinMsg(pm); lvSendData({ t: 'pin', pin: pm });
+  toast(pm ? '📌 Commentaire épinglé' : 'Commentaire retiré');
+}
+/* ---- objectif de cadeaux ---- */
+function showGoal() {
+  const el = $('#lvGoal'); if (!el || !LV) return; const g = LV.goal;
+  if (!g || !g.target) { el.style.display = 'none'; return; }
+  const pct = Math.min(100, Math.round(((LV.gifts - (g.base || 0)) / g.target) * 100));
+  el.style.display = 'block';
+  el.innerHTML = `<div class="row" style="justify-content:space-between"><b>🎯 ${esc(g.label || 'Objectif')}</b><span>${fmtN(Math.max(0, LV.gifts - (g.base || 0)))} / ${fmtN(g.target)} 🪙</span></div><div class="gbar"><i style="width:${pct}%"></i></div>`;
+  if (pct >= 100 && !g.done) { g.done = true; liveSys('🎉 Objectif atteint ! Merci à tous 🙏'); giftFly('🎉', g.target); }
+}
+/* ---- sondage ---- */
+function showPoll() {
+  const el = $('#lvPoll'); if (!el || !LV) return; const p = LV.poll;
+  if (!p) { el.style.display = 'none'; return; }
+  const tot = (p.c || []).reduce((a, b) => a + b, 0) || 0;
+  el.style.display = 'block';
+  el.innerHTML = `<div class="row" style="justify-content:space-between"><b>📊 ${esc(p.q)}</b>${LV.role === 'host' ? `<button class="mut small" onclick="V.livePollEnd()">Terminer</button>` : ''}</div>${p.o.map((o, i) => { const pc = tot ? Math.round(((p.c || [])[i] || 0) * 100 / tot) : 0;
+    return `<button class="popt ${LV.myVote === i ? 'on' : ''}" ${LV.role === 'host' ? 'disabled' : `onclick="V.liveVote(${i})"`}><i style="width:${pc}%"></i><span>${esc(o)}</span><b>${pc}%</b></button>`; }).join('')}<div class="mut small" style="color:#fff;opacity:.8">${tot} <span>votes</span></div>`;
+}
+function liveVote(i) {
+  if (!LV || !LV.poll || LV.role === 'host') return; if (LV.role === 'guest') return toast('Connecte-toi pour voter');
+  if (LV.myVote === i) return; LV.myVote = i; lvSendData({ t: 'vote', id: LV.poll.id, i }); showPoll();
+}
+function livePollForm() {
+  sheet('📊 Lancer un sondage', `<div class="field"><label>Question</label><input id="pq" maxlength="80" placeholder="Ex : Quelle tenue pour demain ?"></div>
+  ${[1, 2, 3, 4].map(i => `<div class="field"><label>Choix ${i}${i > 2 ? ' (facultatif)' : ''}</label><input id="po${i}" maxlength="30"></div>`).join('')}<button class="btn" onclick="V.livePollStart()">Lancer le sondage</button>`);
+}
+function livePollStart() {
+  const q = $('#pq').value.trim(), o = [1, 2, 3, 4].map(i => $('#po' + i).value.trim()).filter(Boolean);
+  if (!q || o.length < 2) return toast('Une question et au moins 2 choix');
+  LV.poll = { id: Date.now().toString(36), q, o, c: o.map(() => 0), votes: new Map() }; closeSheet(); showPoll();
+  lvSendData({ t: 'poll', poll: { id: LV.poll.id, q, o, c: LV.poll.c } });
+}
+function livePollEnd() { if (!LV) return; LV.poll = null; showPoll(); lvSendData({ t: 'poll', poll: null }); }
+function pollTally() {
+  if (!LV || !LV.poll || !LV.poll.votes) return; const c = LV.poll.o.map(() => 0); LV.poll.votes.forEach(i => { if (c[i] !== undefined) c[i]++; });
+  LV.poll.c = c; showPoll(); clearTimeout(LV.pollT); LV.pollT = setTimeout(() => LV && LV.poll && lvSendData({ t: 'pollr', id: LV.poll.id, c: LV.poll.c }), 800);
+}
+/* ---- objectif : formulaire ---- */
+function liveGoalForm() {
+  sheet('🎯 Objectif de cadeaux', `<p class="mut small">Une barre de progression s’affiche pour tous : tes fans t’aident à l’atteindre avec leurs cadeaux.</p><div class="field"><label>Objectif</label><input id="gl" maxlength="40" placeholder="Ex : Nouveau micro 🎤"></div><div class="field"><label>Pièces à atteindre</label><select id="gt">${[500, 1000, 2000, 5000, 10000, 20000].map(n => `<option value="${n}">${fmtN(n)} 🪙</option>`).join('')}</select></div>
+  <button class="btn" onclick="V.liveGoalStart()">Afficher l’objectif</button>${LV && LV.goal ? `<button class="btn ghost" onclick="V.liveGoalStart(true)">Retirer l’objectif</button>` : ''}`);
+}
+function liveGoalStart(off) {
+  LV.goal = off ? null : { label: $('#gl').value.trim() || 'Objectif', target: +$('#gt').value, base: LV.gifts };
+  closeSheet(); showGoal(); lvSendData({ t: 'goal', goal: LV.goal });
+}
+/* ---- modération du chat ---- */
+function liveModForm() {
+  const m = LV.mod || {};
+  sheet('🛡️ Modération du chat', `<label class="tgl"><div class="grow"><b>Mode lent</b><div class="mut small">1 message toutes les 10 secondes par spectateur</div></div><input type="checkbox" id="mSlow" ${m.slow ? 'checked' : ''}></label>
+  <label class="tgl"><div class="grow"><b>Fermer le chat</b><div class="mut small">Seul toi peux écrire</div></div><input type="checkbox" id="mOff" ${m.off ? 'checked' : ''}></label>
+  <div class="field"><label>Mots interdits (séparés par des virgules)</label><input id="mWords" maxlength="200" value="${esc((m.words || []).join(', '))}" placeholder="insulte, arnaque, …"></div>
+  <p class="mut small">Les messages contenant ces mots sont cachés pour tout le monde.</p><button class="btn" onclick="V.liveModSave()">Enregistrer</button>`);
+}
+function liveModSave() {
+  LV.mod = { slow: $('#mSlow').checked, off: $('#mOff').checked, words: $('#mWords').value.split(',').map(w => w.trim().toLowerCase()).filter(w => w.length > 1).slice(0, 30) };
+  closeSheet(); lvSendData({ t: 'mod', mod: LV.mod }); toast('Règles du chat mises à jour');
+  if (LV.mod.off) liveSys('🔒 Le chat est fermé par l’animateur'); else if (LV.mod.slow) liveSys('🐢 Mode lent activé');
+}
+const badWord = txt => { const w = (LV && LV.mod && LV.mod.words) || []; const t = String(txt || '').toLowerCase(); return w.some(x => t.includes(x)); };
+/* ---- outils de l'animateur ---- */
+function liveTools() {
+  const reqs = (LV.reqs || new Map()).size;
+  sheet('✨ Outils du live', `<div class="slist" style="margin:0">
+  <button onclick="V.liveViewers()"><span class="e">👥</span>Spectateurs et invités<span class="r">${reqs ? `<b style="color:#ff2d55">✋ ${reqs}</b> ` : ''}›</span></button>
+  <button onclick="V.livePollForm()"><span class="e">📊</span>Sondage<span class="r">${LV.poll ? 'En cours' : ''} ›</span></button>
+  <button onclick="V.liveGoalForm()"><span class="e">🎯</span>Objectif de cadeaux<span class="r">${LV.goal ? 'Affiché' : ''} ›</span></button>
+  <button onclick="V.liveModForm()"><span class="e">🛡️</span>Modération du chat<span class="r">›</span></button>
+  ${S.myShop ? `<button onclick="V.liveProducts()"><span class="e">🛍️</span>Vendre un produit<span class="r">${LV.pinned ? 'Épinglé' : ''} ›</span></button>` : ''}
+  <button onclick="V.shareThing('l','${LV.id}')"><span class="e">📤</span>Partager mon live<span class="r">›</span></button></div>
+  <p class="mut small" style="margin-top:10px">Astuce : touche un commentaire pour l’épingler en haut du live.</p>`);
+}
+function liveMore() {
+  sheet('Live', `<div class="slist" style="margin:0">${LV.role === 'viewer' ? `<button onclick="V.liveRequest()"><span class="e">✋</span>${LV.onStage ? 'Quitter l’écran' : 'Demander à rejoindre l’écran'}<span class="r">›</span></button>` : ''}
+  <button onclick="V.liveViewers()"><span class="e">👥</span>Spectateurs<span class="r">›</span></button>
+  <button onclick="V.shareThing('l','${LV.id}')"><span class="e">📤</span>Partager le live<span class="r">›</span></button>
+  <button onclick="V.report('live','${LV.id}')"><span class="e">🚩</span>Signaler<span class="r">›</span></button></div>`);
+}
+/* ---- spectateurs, demandes, invités ---- */
+function liveViewers() {
+  if (!LV || !LV.room) return; const host = LV.role === 'host', reqs = LV.reqs || new Map(), guests = LV.guests || new Set();
+  const ps = [...LV.room.remoteParticipants.values()].filter(p => !fromHost(p));
+  const row = p => { const g = guests.has(p.identity), r = reqs.has(p.identity), named = isUuidIdent(p.identity);
+    return `<div class="citem"><div class="grow"><b>@${esc(p.name || 'invité')}</b>${g ? ' <span class="pill ok2">À l’écran</span>' : r ? ' <span class="pill">✋ Demande</span>' : ''}</div>${host && named ? `${g ? `<button class="btn sm ghost" style="width:auto" onclick="V.liveGuest('${p.identity}',false)">Retirer</button>` : `<button class="btn sm" style="width:auto" onclick="V.liveGuest('${p.identity}',true)">${r ? 'Accepter' : 'Inviter'}</button>`}<button class="btn sm ghost" style="width:auto" onclick="V.liveKick('${p.identity}')">Expulser</button>` : ''}</div>`; };
+  const sorted = ps.sort((a, b) => (reqs.has(b.identity) - reqs.has(a.identity)) || (guests.has(b.identity) - guests.has(a.identity)));
+  sheet(`👥 ${fmtN(ps.length)} <span>spectateurs</span>`, (host ? '<p class="mut small">Invite jusqu’à 3 personnes à l’écran avec toi. Les visiteurs non connectés ne peuvent pas être invités.</p>' : '') + (sorted.map(row).join('') || '<p class="mut small">Personne pour le moment.</p>'));
+}
+async function liveGuest(identity, on) {
+  if (!LV || LV.role !== 'host') return; LV.guests = LV.guests || new Set();
+  if (on && LV.guests.size >= 3) return toast('3 invités maximum à l’écran');
+  const ok = await liveAction(on ? 'promote' : 'demote', identity); if (!ok) return toast('Action impossible, réessaie');
+  if (on) LV.guests.add(identity); else { LV.guests.delete(identity); removeTile(identity); }
+  (LV.reqs || new Map()).delete(identity); lvSendData({ t: 'guests', guests: [...LV.guests] });
+  lvSendTo({ t: 'stage', on }, [identity]); closeSheet(); toast(on ? '🎥 Invité à l’écran' : 'Invité retiré de l’écran');
+}
+async function liveKick(identity) {
+  if (!LV || LV.role !== 'host' || !confirm('Expulser cette personne ? Elle ne pourra plus revenir dans ce live.')) return;
+  const ok = await liveAction('kick', identity); (LV.guests || new Set()).delete(identity); removeTile(identity); closeSheet(); toast(ok ? '🚫 Spectateur expulsé' : 'Action impossible, réessaie');
+}
+function liveRequest() {
+  if (!LV || LV.role !== 'viewer') return; closeSheet();
+  if (LV.onStage) { leaveStage(true); return; }
+  if (Date.now() - (LV.reqAt || 0) < 30000) return toast('Demande déjà envoyée, patiente un peu');
+  LV.reqAt = Date.now(); lvSendData({ t: 'req' }); toast('✋ Demande envoyée à l’animateur');
+}
+async function joinStage() {
+  if (!LV || LV.onStage || !LV.room) return; const LK = window.LivekitClient;
+  try {
+    const tracks = await LK.createLocalTracks({ audio: { echoCancellation: true, noiseSuppression: true }, video: { facingMode: 'user', resolution: LK.VideoPresets.h360 ? LK.VideoPresets.h360.resolution : { width: 640, height: 360 } } });
+    for (const t of tracks) await LV.room.localParticipant.publishTrack(t);
+    LV.onStage = true; LV.stageTracks = tracks; const vt = tracks.find(t => t.kind === 'video');
+    addTile(LV.room.localParticipant.identity, S.me ? S.me.username : 'moi', vt, true); liveSys('🎥 Tu es à l’écran avec l’animateur');
+  } catch (e) { toast('⚠️ Autorise la caméra et le micro pour rejoindre l’écran'); }
+}
+async function leaveStage(tell) {
+  if (!LV || !LV.onStage) return; LV.onStage = false;
+  for (const t of LV.stageTracks || []) { try { await LV.room.localParticipant.unpublishTrack(t); } catch (e) { } try { t.stop(); } catch (e) { } }
+  LV.stageTracks = []; removeTile(LV.room.localParticipant.identity); if (tell) lvSendData({ t: 'leave' });
+}
+function addTile(identity, name, track, mine) {
+  const box = $('#lvGuests'); if (!box || !track) return; removeTile(identity);
+  const d = document.createElement('div'); d.className = 'lvtile'; d.dataset.id = identity;
+  const v = document.createElement('video'); v.autoplay = true; v.playsInline = true; v.muted = true; if (mine) v.classList.add('mirror'); track.attach(v);
+  d.appendChild(v); d.insertAdjacentHTML('beforeend', `<span>@${esc(name || '')}</span>${mine ? `<button onclick="V.liveRequest()" aria-label="Quitter">✕</button>` : ''}`);
+  box.appendChild(d);
+}
+function removeTile(identity) { const el = document.querySelector(`#lvGuests .lvtile[data-id="${CSS.escape(identity)}"]`); if (el) el.remove(); }
+/* ---- suivre l'animateur, top donateurs, réactions rapides ---- */
+async function liveFollow() {
+  if (!requireAuth('Connecte-toi pour suivre.')) return; const h = hostUid(); if (!h) return;
+  const { error } = await sb.from('follows').insert({ follower_id: uid(), followee_id: h }); if (error && !/duplicate/i.test(error.message)) return fail(error);
+  const b = $('#lvFol'); if (b) b.remove(); toast('✅ Abonné'); lvSendData({ t: 'fol' });
+}
+async function liveTop() {
+  if (!LV) return; const { data } = await sb.rpc('live_top_gifters', { p_live: LV.id }); const el = $('#lvTop'); if (!el) return;
+  el.innerHTML = (data || []).map((t, i) => `<span class="lvtopi r${i}" title="@${esc(t.username)}">${esc((t.username || '?')[0].toUpperCase())}</span>`).join('');
+}
+function liveQuick(e) { const i = $('#lvMsg'); if (!i) return; i.value = e; liveSend(); }
+
 window.V = {
+  livePinMsg, liveVote, livePollForm, livePollStart, livePollEnd, liveGoalForm, liveGoalStart, liveModForm, liveModSave, liveTools, liveMore, liveViewers, liveGuest, liveKick, liveRequest, liveFollow, liveQuick,
+  shopReviews, replyReview, reviewForm, pickStars, sendReview, verifySheet, sendVerify, liveProducts, livePin, liveBuy,
+  openService, svcReviewForm, sendSvcReview, serviceForm, saveService, toggleService, delService, svcCat: c => { S.svcCat = c.replace(/’/g, "'"); go('shop'); }, shopTab: t => { S.shopTab = t; go('shop'); },
+  openChallenge, pickWinner, awardChallenge, joinChallenge, challengeForm, saveChallenge, verifyDecide, chDecide, chAutoAward,
+  saverSheet, setSaver, setAutoDl, dlOffline, offClear, offlinePlay, offNext, offRemove, offClose,
   shareThing, copyThing, nativeThing, openOfferLink, openAppsLink,
   livesSheet, goLive, startLive, openLive, closeLive, liveTap, liveHeart, liveSend, liveFlip, liveMic, liveGiftSheet, sendGiftLive, liveSound,
   isBusy: () => dlBusy || giftBusy || mfaBusy || !!LV,
@@ -2040,7 +2617,7 @@ async function start() {
     return;
   }
   applyLang();
-  try { sb = await getClient(); } catch (e) { $('#s-home').innerHTML = `<div class="setup"><h2>Connexion impossible</h2><p class="mut">Vérifie ta connexion internet puis recharge la page.</p></div>`; return; }
+  try { sb = await getClient(); } catch (e) { offlineHome(); return; }
   const { data } = await sb.auth.getSession(); S.session = data.session;
   await loadMe().catch(fail);
   checkPayReturn(); checkMfa(); setTimeout(welcome, 1500);
@@ -2051,7 +2628,7 @@ async function start() {
     if (ev === 'PASSWORD_RECOVERY') { const np = prompt('Nouveau mot de passe (8 caractères minimum)'); if (np && np.length >= 8) { const { error } = await sb.auth.updateUser({ password: np }); toast(error ? '⚠️ ' + error.message : 'Mot de passe modifié ✅'); } }
     if ((session && session.user.id) !== was) { await loadMe().catch(fail); applyLang(); if (session) checkMfa(); if (session && S.cur === 'auth') { toast('Bienvenue sur Vibzo 👋'); go('home'); } }
   });
-  go('home'); handleDeepLink(); window.addEventListener('hashchange', handleDeepLink);
+  go('home'); handleDeepLink(); saverHints(); window.addEventListener('hashchange', handleDeepLink);
   setInterval(() => { refreshUnread(); refreshNotifs(); livesStrip(); }, 30000); livesStrip(); refreshUnread();
 }
 start();

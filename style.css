@@ -437,9 +437,9 @@ a{color:var(--vio)}
 #updBar{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:3000;background:#0b2540;color:#fff;border-radius:14px;padding:8px 8px 8px 14px;display:flex;gap:10px;align-items:center;font:600 13px 'Plus Jakarta Sans',sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 #updBar button{background:#1e9be8;color:#fff;border:0;border-radius:10px;padding:8px 12px;font:700 13px 'Plus Jakarta Sans',sans-serif;cursor:pointer}
 /* ---------- LIVE ---------- */
-.lvpill{position:absolute;top:calc(68px + var(--st));left:12px;z-index:4;background:#ff2d55;color:#fff;font-weight:800;font-size:12px;letter-spacing:.5px;padding:6px 11px;border-radius:10px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.lvpill{position:absolute;top:calc(68px + var(--st));left:12px;z-index:4;background:#38b6ff;color:#fff;font-weight:800;font-size:12px;letter-spacing:.5px;padding:6px 11px;border-radius:10px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .lvpill.hot{animation:lvpulse 1.6s infinite}
-@keyframes lvpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,45,85,.7)}50%{box-shadow:0 0 0 6px rgba(255,45,85,0)}}
+@keyframes lvpulse{0%,100%{box-shadow:0 0 0 0 rgba(56,182,255,.75)}50%{box-shadow:0 0 0 7px rgba(56,182,255,0)}}
 .lvbadge{background:#ff2d55;color:#fff;font-weight:800;font-size:10.5px;letter-spacing:.4px;padding:3px 7px;border-radius:6px}
 .lvgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .lvc{position:relative;aspect-ratio:3/4;border-radius:16px;overflow:hidden;color:#fff;text-align:left;background:linear-gradient(160deg,#ff2d55,#1e9be8)!important}
@@ -481,3 +481,76 @@ a{color:var(--vio)}
 .lvbar .lvlogin{width:auto;flex:1;border-radius:22px;font-size:13.5px;font-weight:700}
 .lvheart{position:absolute;bottom:calc(80px + var(--sb));z-index:5;font-size:30px;pointer-events:none;animation:lvfloat 2.3s ease-out forwards;opacity:0}
 @keyframes lvfloat{0%{transform:translateY(0) scale(.6);opacity:0}10%{opacity:1}100%{transform:translateY(-320px) translateX(-30px) scale(1.2);opacity:0}}
+/* ---------- confiance : badge vérifié, avis ---------- */
+.vb{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#1e9be8;color:#fff;font-size:9.5px;font-weight:900;margin-left:4px;vertical-align:1px}
+.rt{color:#e0a800;font-weight:700}.rt small{color:var(--mut);font-weight:500}
+.trust{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#f3f8fd;border:1px solid #d6e9f8;border-radius:14px;padding:10px 12px;margin-top:12px}
+.trust b.ok{color:#1e9be8}.trust .r{font-size:20px;color:var(--mut)}
+.rvhead{display:flex;align-items:center;gap:12px;margin-bottom:8px}.rvhead>b{font-size:34px}
+.stars{color:#f5b301;letter-spacing:1px;font-size:16px}.stars.sm{font-size:12.5px}
+.rv{border-bottom:1px solid var(--line);padding:10px 0}.rv p{font-size:14px;margin-top:6px;line-height:1.45}
+.rvreply{background:#f4f6f8;border-radius:10px;padding:8px 10px;margin-top:8px;font-size:13px}
+.starpick{display:flex;justify-content:center;gap:6px;margin:6px 0 12px}.starpick button{font-size:38px;color:#d6dbe0;line-height:1}.starpick button.on{color:#f5b301}
+.safety.ok{background:#eaf6ff;color:#0b5a8f}
+/* ---------- services ---------- */
+.svc{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left}
+.svc .t{font-weight:700;font-size:15px}
+.svic{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#e7f4ff,#d3ecff);display:flex;align-items:center;justify-content:center;font-size:24px;flex:none}
+.svvid{border-radius:16px;overflow:hidden;background:#000;aspect-ratio:9/12;max-height:340px;margin:0 auto}
+.svvid video{width:100%;height:100%;object-fit:cover}
+/* ---------- défis sponsorisés ---------- */
+.chstrip{display:flex;gap:10px;overflow-x:auto;padding:2px 0 8px}
+.chc{flex:none;width:200px;text-align:left;color:#fff;border-radius:16px;padding:12px;background:linear-gradient(135deg,#ff9f0a,#ff2d55);display:flex;flex-direction:column;gap:3px}
+.chc .chp{background:rgba(0,0,0,.22);border-radius:8px;padding:3px 8px;align-self:flex-start;font-weight:800;font-size:13px}
+.chc b{font-size:14.5px;line-height:1.25}
+.chhero{border-radius:18px;padding:16px;color:#fff;background:linear-gradient(135deg,#ff9f0a,#ff2d55);text-align:center}
+.chhero h2{font-size:20px;margin:4px 0}.chtag{display:inline-block;background:rgba(255,255,255,.22);border-radius:10px;padding:3px 10px;font-weight:800;margin-bottom:10px}
+.chprz{display:flex;justify-content:center;gap:8px;margin-bottom:8px}.chprz div{background:rgba(255,255,255,.18);border-radius:12px;padding:6px 10px;font-size:13px}.chprz b{display:block;font-size:15px}
+.chrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.chrow.win{background:#fff8e1}.chn{width:26px;text-align:center}
+.chban{display:block;width:100%;text-align:left;margin-top:10px;padding:10px 12px;border-radius:12px;color:#fff;background:linear-gradient(135deg,#ff9f0a,#ff2d55);font-size:13.5px}
+/* ---------- achat en live ---------- */
+.lvprod{position:absolute;left:10px;right:10px;bottom:calc(64px + var(--sb));z-index:4;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.96);color:#0b2540;border-radius:14px;padding:8px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.lvprod .im{width:48px;height:48px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px}
+.lvprod b{font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.lvprod .btn{background:#ff2d55}
+.lvord{font-weight:800;color:#ff2d55;padding:0 6px}
+#liveOv.hasprod .lvchat{bottom:calc(132px + var(--sb))}
+/* ---------- petit forfait / hors ligne ---------- */
+.vthph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;color:rgba(255,255,255,.9)}
+.tgl{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.tgl input{width:22px;height:22px;flex:none}
+#offOv{position:absolute;inset:0;z-index:35;background:#000;color:#fff}
+#offOv video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.offtop{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:10px;padding:calc(10px + var(--st)) 12px 10px;background:linear-gradient(rgba(0,0,0,.5),transparent);justify-content:space-between}
+#offOv .ib{color:#fff}
+.offinfo{position:absolute;left:14px;right:70px;bottom:calc(24px + var(--sb));text-shadow:0 1px 4px rgba(0,0,0,.7);font-size:14px}
+.offnav{position:absolute;right:12px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:22px}
+.offnav.up{bottom:calc(150px + var(--sb))}.offnav.dn{bottom:calc(96px + var(--sb))}
+.offdel{position:absolute;right:12px;bottom:calc(30px + var(--sb));width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);font-size:18px}
+
+/* ---------- live comme TikTok ---------- */
+.lvbadge2{position:absolute;top:calc(64px + var(--st));right:12px;z-index:3}
+.lvfol{flex:none;background:#ff2d55;color:#fff;font-weight:800;font-size:12px;border-radius:14px;padding:5px 10px;margin-left:4px}
+.lvtop3{display:flex;gap:2px}
+.lvtopi{width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;border:2px solid #ffd60a}
+.lvtopi.r1{border-color:#d9e2ea}.lvtopi.r2{border-color:#e0a46a}
+button.lvcnt{color:#fff}
+.lvstack{position:absolute;top:calc(96px + var(--st));left:10px;right:100px;z-index:4;display:flex;flex-direction:column;gap:6px}
+.lvpin{align-items:center;gap:8px;background:rgba(0,0,0,.55);border-radius:12px;padding:7px 10px;font-size:13px}.lvpin b{color:#9fd8ff}.lvpin button{color:#fff;opacity:.8}
+.lvgoal{background:rgba(0,0,0,.55);border-radius:12px;padding:7px 10px;font-size:12.5px}
+.gbar{height:7px;border-radius:5px;background:rgba(255,255,255,.25);margin-top:5px;overflow:hidden}.gbar i{display:block;height:100%;background:linear-gradient(90deg,#ffd60a,#ff9f0a);border-radius:5px;transition:width .4s}
+.lvpoll{background:rgba(0,0,0,.6);border-radius:12px;padding:8px 10px;font-size:13px}
+.popt{position:relative;display:flex;justify-content:space-between;width:100%;margin-top:5px;padding:7px 10px;border-radius:9px;background:rgba(255,255,255,.15);color:#fff;overflow:hidden;font-size:13px}
+.popt i{position:absolute;left:0;top:0;bottom:0;background:rgba(56,182,255,.55);transition:width .4s}.popt span,.popt b{position:relative}.popt.on{outline:2px solid #38b6ff}
+.lvguests{position:absolute;top:calc(96px + var(--st));right:10px;z-index:4;display:flex;flex-direction:column;gap:6px}
+.lvtile{position:relative;width:86px;height:120px;border-radius:12px;overflow:hidden;background:#111;border:2px solid rgba(255,255,255,.8)}
+.lvtile video{width:100%;height:100%;object-fit:cover}.lvtile video.mirror{transform:scaleX(-1)}
+.lvtile span{position:absolute;left:4px;bottom:3px;font-size:10px;font-weight:700;text-shadow:0 1px 2px #000}
+.lvtile button{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:11px}
+.lvquick{position:absolute;left:10px;bottom:calc(58px + var(--sb));z-index:4;display:flex;gap:6px}
+.lvquick button{background:rgba(0,0,0,.35);border-radius:14px;padding:3px 7px;font-size:16px}
+#liveOv .lvquick ~ .lvchat,#liveOv .lvchat{bottom:calc(96px + var(--sb))}
+#liveOv.hasprod .lvchat{bottom:calc(160px + var(--sb))}
+#liveOv.hasprod .lvprod{bottom:calc(96px + var(--sb))}
+.lvchat .pinable{cursor:pointer}
+#lvToolsB.dot{position:relative}#lvToolsB.dot::after{content:'';position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:#ff2d55}
+.chips .chip{white-space:nowrap;flex:none}
