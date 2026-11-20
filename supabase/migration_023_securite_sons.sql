@@ -373,3 +373,12 @@ begin
 end $$;
 revoke all on function public.admin_sound_decide(uuid, text) from public, anon;
 grant execute on function public.admin_sound_decide(uuid, text) to authenticated;
+
+-- 023h/i : videos_feed expose sound_id ; helpers de confidentialité
+-- (videos_feed recréée avec la colonne sound_id en fin de liste, voir migration 022 pour la définition)
+create or replace function public.blocked_between(a uuid, b uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select a is not null and b is not null and auth.uid() in (a, b)
+     and exists (select 1 from blocks where (blocker_id = a and blocked_id = b) or (blocker_id = b and blocked_id = a));
+$$;
+revoke execute on function public.is_minor(uuid) from authenticated;
