@@ -1288,7 +1288,12 @@ let dScope = 'city', dMode = 'amour', dAge = 'all', dQueue = [], dMe = null, dPh
 const subPrice = (plan = 'gold') => { const cc = payPreviewCc || (S.me && S.me.country) || S.loc.country; const t = SUB_PRICES[plan === 'gold' ? 'gold' : 'vendeur']; const p = t[C[cc].z] || t.default; return { ...p, amount: p[1], local: C[cc].cur !== 'FCFA' && p.cur === 'FCFA' }; };
 const subTotal = (m, plan = 'gold') => { const p = subPrice(plan); return money(p[m] || p[1] * m, p.cur) + (p.local ? ' (ou l’équivalent en monnaie locale)' : ''); };
 const subSave = (m, plan = 'gold') => { const p = subPrice(plan); const full = p[1] * m, x = p[m] || full; return full > x ? Math.round((1 - x / full) * 100) : 0; };
+/* Application Android (Google Play) : pas d'achat de contenu numérique hors de Google Play Billing.
+   On détecte l'app Android (TWA) et on masque les achats de Gold, Vendeur, pièces et défis sponsorisés. */
+const IN_PLAY = (() => { try { const f = /[?&]src=twa\b/.test(location.search) || /^android-app:\/\//.test(document.referrer || ''); if (f) localStorage.setItem('vibzo_play', '1'); return f || localStorage.getItem('vibzo_play') === '1'; } catch (e) { return false; } })();
+const playNoBuy = () => `<div class="safety" style="margin-top:10px">📱 <span>Les achats ne sont pas encore disponibles dans l’application Android. Tous les autres services de Vibzo restent gratuits ici.</span></div>`;
 function goldBlock(plan = 'gold') {
+  if (IN_PLAY) return playNoBuy();
   const zone = C[(S.me && S.me.country) || S.loc.country].z, p = subPrice(plan);
   return `<div class="card" style="text-align:center;margin:12px 0;background:#f2f9ff"><div class="mut small">Prix</div><div style="font-size:26px;font-weight:800;color:#1e9be8">${money(p.amount, p.cur)} <span style="font-size:14px;font-weight:600">/ mois</span></div>${plan !== 'gold' ? '<div class="small" style="margin-top:4px">🎁 1er mois offert à l’ouverture</div>' : ''}</div>
   <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value,'${plan}')">${[1, 3, 12].map(m => `<option value="${m}">${m === 1 ? '1 mois' : m === 3 ? '3 mois' : '12 mois'} · ${money(p[m], p.cur)}${subSave(m, plan) ? ` (−${subSave(m, plan)} %)` : ''}</option>`).join('')}</select></div>
@@ -1301,7 +1306,7 @@ function goldHero() {
   return `<div class="hero" style="margin:0"><div class="cr">👑</div><h2>Vibzo Gold</h2><div class="perks"><div>💘 <span><b>Rencontres</b> : relation sérieuse ou sans lendemain, entre adultes, par ville, région ou pays</span></div><div>✨ <span>Badge Gold sur ton profil et tes vidéos</span></div><div>🛡️ <span>Profils 18+, signalement et blocage en un clic</span></div></div></div>`;
 }
 async function requestSub(plan) {
-  if (!requireAuth()) return;
+  if (!requireAuth()) return; if (IN_PLAY) return sheet('👑 Vibzo Gold', playNoBuy());
   const btn = $('#gBtn'); busy(btn, true);
   if (await autoPay(plan === 'gold' ? 'gold' : 'seller', +$('#gMonths').value)) return;
   const { error } = await sb.from('subscription_requests').insert({ user_id: uid(), plan, months: +$('#gMonths').value, payment: $('#gPay').value });
@@ -1702,7 +1707,7 @@ async function sendGift(id, g) {
 function giftFly(e, n) { const d = document.createElement('div'); d.className = 'gfly' + (n >= 100 ? ' big' : ''); d.textContent = e; document.body.appendChild(d); setTimeout(() => d.remove(), 1800); }
 function pickPack(n, el) { packSel = n; document.querySelectorAll('.pack').forEach(x => x.classList.toggle('on', x === el)); }
 function buyCoins() {
-  if (!requireAuth()) return; const cur = coinCur(), zone = C[myCc()].z; packSel = 500;
+  if (!requireAuth()) return; if (IN_PLAY) return sheet('🪙 Pièces', playNoBuy()); const cur = coinCur(), zone = C[myCc()].z; packSel = 500;
   sheet('🪙 Acheter des pièces', `<p class="mut small" style="margin-bottom:10px">Les pièces servent à offrir des cadeaux aux créateurs que tu aimes. 1 pièce = ${cur === '₼' ? '0,03 ₼' : '10 FCFA'}.</p>
   <div class="packs">${COIN_PACKS.map(p => `<button class="pack ${p[0] === 500 ? 'on' : ''}" onclick="V.pickPack(${p[0]},this)"><b>🪙 ${p[0].toLocaleString('fr-FR')}</b>${p[3] ? `<i>${p[3]}</i>` : ''}<span>${money(cur === '₼' ? p[2] : p[1], cur)}</span></button>`).join('')}</div>
   <div class="field"><label>Comment veux-tu payer ?</label><select id="cPay">${[...PAYZ[zone], 'Autre'].map(x => `<option>${x}</option>`).join('')}</select></div>
@@ -2339,6 +2344,7 @@ async function awardChallenge(id) {
 }
 function joinChallenge(id) { const c = S.chs.get(id); if (!requireAuth('Connecte-toi pour participer.')) return; S.draftTag = c.hashtag; closeSheet(); go('create'); toast(`Ajoute ta vidéo : #${c.hashtag} est déjà dans tes hashtags 🏆`); }
 function challengeForm() {
+  if (IN_PLAY) return sheet('🏆 Défi sponsorisé', playNoBuy());
   if (!requireAuth('Connecte-toi pour lancer un défi.')) return;
   const cur = coinCur(), az = cur === '₼';
   sheet('🏆 Lancer un défi pour ma marque', `<div class="hero" style="margin:0 0 10px;text-align:center"><div style="font-size:40px">🏆</div><p class="small">Des centaines de créateurs filment des vidéos avec ton produit et ton hashtag. Tu paies uniquement les prix des gagnants, plus 15 % de frais Vibzo.</p></div>
