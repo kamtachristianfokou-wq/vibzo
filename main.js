@@ -47,7 +47,7 @@ const avatar = (p, size = 42) => p && p.avatar_url
 
 function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2600); }
 function sheet(title, body) { $('#sheet').innerHTML = `<div class="sh-h"><span>${title}</span><button onclick="V.closeSheet()" aria-label="Fermer">${I.close}</button></div><div class="sh-b">${body}</div>`; $('#sheetBg').classList.add('on'); }
-function closeSheet() { $('#sheetBg').classList.remove('on'); }
+function closeSheet() { try { stopPreview(); } catch (e) { }  $('#sheetBg').classList.remove('on'); }
 function modal(html) { $('#modal').innerHTML = html; $('#modal').classList.add('on'); }
 function closeModal() { $('#modal').classList.remove('on'); }
 const loading = (t = 'Chargement…') => `<div class="loading"><span class="spin"></span>${t}</div>`;
@@ -122,7 +122,7 @@ async function setLang(l) {
 
 /* ---------- état ---------- */
 let sb;
-const S = { postKind: 'video', sTab: 'top', replyCm: null,
+const S = { postKind: 'video', sTab: 'top', replyCm: null, blocked: new Set(), safety: null,
   session: null, me: null, myShop: null, cur: 'home', prev: 'home', tab: 'pour', muted: (() => { try { return localStorage.getItem('vibzo_muted') === '1'; } catch (e) { return false; } })(),
   loc: { country: 'CM', region: null, zone: false, world: true },
   feed: [], feedOffset: 0, feedDone: false, feedLoading: false, override: null,
@@ -285,7 +285,7 @@ async function loadMe() {
     sb.from('shops').select('*').eq('owner_id', uid()).maybeSingle(),
   ]);
   S.me = me; S.myShop = shop;
-  if (me) { const { data: ph } = await sb.rpc('private_phone', { p_user: uid() }); me.phone = ph || null; }
+  if (me) { const { data: ph } = await sb.rpc('private_phone', { p_user: uid() }); me.phone = ph || null; loadSafety(); }
   if (me && me.needs_setup) setTimeout(setupProfile, 300);
   else if (me && pendingRef() && Date.now() - new Date(me.created_at).getTime() < 864e5) applyRefIfAny(); else if (me) { try { localStorage.removeItem('vibzo_ref'); } catch (e) { } }
   refreshNotifs();
@@ -335,7 +335,7 @@ async function loadFeed(first) {
       if (one) { data.unshift(one); }
     }
     const seen = new Set(S.feed.map(v => v.id));
-    const fresh = data.filter(v => !seen.has(v.id));
+    const fresh = data.filter(v => !seen.has(v.id) && !S.blocked.has(v.user_id));
     S.feed.push(...fresh); S.feedOffset += data.length; if (data.length < 10) S.feedDone = true;
     renderSlides(first);
   } catch (e) { fail(e); } finally { S.feedLoading = false; }
@@ -460,6 +460,7 @@ async function save(id) {
 async function follow(userId, btn) {
   if (!requireAuth('Connecte-toi pour suivre des créateurs.')) return;
   const { error } = await sb.from('follows').insert({ follower_id: uid(), followee_id: userId });
+  if (error && /row-level|policy/i.test(error.message)) return askFollow(userId);
   if (error && !/duplicate/i.test(error.message)) return fail(error);
   S.vids.forEach(v => { if (v.user_id === userId) v.following = true; });
   document.querySelectorAll('.slide').forEach(sl => { const v = S.vids.get(sl.dataset.id); if (v && v.user_id === userId) { const f = sl.querySelector('.fol'); if (f) f.remove(); } });
@@ -532,7 +533,7 @@ async function repost(id) {
 }
 function vidMore(id) {
   const v = S.vids.get(id); const mine = v.user_id === uid(), dl = mine || v.allow_download !== false;
-  sheet('Options', `<div class="slist" style="margin:0">${dl ? `<button onclick="V.downloadVid('${id}')"><span class="e">⬇️</span>${isPh(v) ? 'Enregistrer les photos' : 'Enregistrer / partager la vidéo'}</button>` : ''}${mine ? `<button onclick="V.pinVideo('${id}')"><span class="e">📌</span>${v.pinned_at ? 'Désépingler du profil' : 'Épingler sur mon profil'}</button><button onclick="V.privacySheet('${id}')"><span class="e">🔒</span>Confidentialité de la publication<span class="r">›</span></button><button onclick="V.analyticsSheet()"><span class="e">📊</span>Statistiques<span class="r">›</span></button><button onclick="V.delVideo('${id}')"><span class="e">🗑️</span>${isPh(v) ? 'Supprimer ma publication' : 'Supprimer ma vidéo'}</button>` : `<button onclick="V.notInterested('${id}')"><span class="e">🚫</span>Pas intéressé</button><button onclick="V.report('video','${id}')"><span class="e">🚩</span>Signaler la vidéo</button><button onclick="V.openProfile('${v.user_id}')"><span class="e">👤</span>Voir le profil</button>`}${isPh(v) ? '' : `<button onclick="V.closeSheet();V.speedVid('${id}')"><span class="e">⏩</span>Vitesse de lecture</button>`}<button onclick="V.shareVid('${id}');V.closeSheet()"><span class="e">🔗</span>Partager</button></div>${dl ? '' : '<p class="mut small" style="text-align:center;margin-top:10px">🔒 Le créateur a désactivé le téléchargement</p>'}`);
+  sheet('Options', `<div class="slist" style="margin:0">${dl ? `<button onclick="V.downloadVid('${id}')"><span class="e">⬇️</span>${isPh(v) ? 'Enregistrer les photos' : 'Enregistrer / partager la vidéo'}</button>` : ''}${mine ? `<button onclick="V.pinVideo('${id}')"><span class="e">📌</span>${v.pinned_at ? 'Désépingler du profil' : 'Épingler sur mon profil'}</button><button onclick="V.privacySheet('${id}')"><span class="e">🔒</span>Confidentialité de la publication<span class="r">›</span></button><button onclick="V.analyticsSheet()"><span class="e">📊</span>Statistiques<span class="r">›</span></button><button onclick="V.delVideo('${id}')"><span class="e">🗑️</span>${isPh(v) ? 'Supprimer ma publication' : 'Supprimer ma vidéo'}</button>` : `<button onclick="V.notInterested('${id}')"><span class="e">🚫</span>Pas intéressé</button><button onclick="V.report('video','${id}')"><span class="e">🚩</span>Signaler la vidéo</button><button onclick="V.blockUser('${v.user_id}','${esc(v.username)}')"><span class="e">⛔</span><span>Bloquer</span> @${esc(v.username)}</button><button onclick="V.openProfile('${v.user_id}')"><span class="e">👤</span>Voir le profil</button>`}${isPh(v) ? '' : `<button onclick="V.closeSheet();V.speedVid('${id}')"><span class="e">⏩</span>Vitesse de lecture</button>`}<button onclick="V.shareVid('${id}');V.closeSheet()"><span class="e">🔗</span>Partager</button></div>${dl ? '' : '<p class="mut small" style="text-align:center;margin-top:10px">🔒 Le créateur a désactivé le téléchargement</p>'}`);
 }
 /* ---------- Téléchargement avec la signature Vibzo (comme TikTok) ----------
    La vidéo est rejouée dans un canevas avec le logo Vibzo + @créateur qui changent de coin,
@@ -668,8 +669,8 @@ async function sendReport(type, id, i) {
 let qTimer;
 SCREENS.discover = () => {
   const pre = S.searchQ || ''; S.searchQ = null;
-  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="sTabs" style="padding-bottom:0"></div><div class="pad" id="storyStrip" style="padding-bottom:0"></div><div class="pad" id="chStrip"></div><div class="pad" id="livesStrip"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
-  loadTrends(); search(); livesStrip(); loadChallenges().catch(() => { }); loadStories().catch(() => { });
+  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="sTabs" style="padding-bottom:0"></div><div class="pad" id="storyStrip" style="padding-bottom:0"></div><div class="pad" id="chStrip"></div><div class="pad" id="livesStrip"></div><div class="pad" id="sndStrip" style="padding-top:0"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
+  loadTrends(); search(); livesStrip(); libStrip().catch(() => { }); loadChallenges().catch(() => { }); loadStories().catch(() => { });
 };
 async function loadTrends() {
   const el = $('#trends'); if (!el) return;
@@ -692,8 +693,8 @@ async function search() {
       const { data, error } = await sb.from('profile_stats').select('*').or(`username.ilike.%${w.toLowerCase()}%,display_name.ilike.%${w}%`).limit(40); if (error) return fail(error);
       html = (data || []).map(u => `<button class="mitem" style="padding:8px 0" onclick="V.openProfile('${u.id}')">${avatar(u, 48)}<div class="grow"><div class="n">${esc(u.display_name)}${vb(u.verified)}</div><div class="l">@${esc(u.username)} · ${fmtN(u.followers)} <span>abonnés</span> · ${fmtN(u.videos || 0)} <span>vidéos</span></div></div></button>`).join('');
     } else if (t === 'sounds') {
-      const { data, error } = await sb.rpc('search_sounds', { p_q: w, p_limit: 30 }); if (error) return fail(error);
-      html = (data || []).map(x => `<button class="citem" style="width:100%;text-align:left" onclick="V.openSound(${esc(JSON.stringify(x.sound))})"><div class="im" style="background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">♪</div><div class="grow"><b>${esc(x.sound)}</b><div class="mut small">${fmtN(x.videos)} <span>vidéos</span></div></div><span class="mut">›</span></button>`).join('');
+ const [{ data, error }, lib] = await Promise.all([sb.rpc('search_sounds', { p_q: w, p_limit: 30 }), sb.from('sounds_view').select('*').eq('status', 'active').or(`title.ilike.%${w}%,artist.ilike.%${w}%`).order('uses', { ascending: false }).limit(20)]); if (error) return fail(error);
+      S._snds = lib.data || []; html = S._snds.map((x, i) => sndRow(x, i, 'use')).join('') + (data || []).map(x => `<button class="citem" style="width:100%;text-align:left" onclick="V.openSound(${esc(JSON.stringify(x.sound))})"><div class="im" style="background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">♪</div><div class="grow"><b>${esc(x.sound)}</b><div class="mut small">${fmtN(x.videos)} <span>vidéos</span></div></div><span class="mut">›</span></button>`).join('');
     } else if (t === 'tags') {
       const { data, error } = await sb.rpc('search_tags', { p_q: w.replace(/^#/, ''), p_limit: 30 }); if (error) return fail(error);
       html = (data || []).map(x => `<button class="citem" style="width:100%;text-align:left" onclick="V.openTag('${esc(x.tag)}')"><div class="im" style="background:#eef4fb;color:#1e9be8;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">#</div><div class="grow"><b>${esc(x.tag)}</b><div class="mut small">${fmtN(x.videos)} <span>vidéos</span></div></div><span class="mut">›</span></button>`).join('');
@@ -858,7 +859,7 @@ async function publish() {
     }
     const cm = draft.cam || {};
     const tags = ($('#ch').value || '').toLowerCase().split(/[,\s#]+/).map(t => t.replace(/[^a-z0-9àâäéèêëïîôöùûüç_]/g, '')).filter(Boolean).slice(0, 8);
-    const row = { user_id: uid(), video_url: pub.publicUrl, title: $('#ct').value.trim(), caption: ($('#cd').value.trim() + (cm.src ? ` ${cm.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} avec @${cm.src.username || ''}` : '')).trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: cm.sound ? cm.sound.name : '', duet_of: cm.mode === 'duet' && cm.src ? cm.src.id : null, stitch_of: cm.mode === 'stitch' && cm.src ? cm.src.id : null, ...privacyVals(), reply_to: S.replyCm ? S.replyCm.id : null };
+    const row = { user_id: uid(), video_url: pub.publicUrl, title: $('#ct').value.trim(), caption: ($('#cd').value.trim() + (cm.src ? ` ${cm.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} avec @${cm.src.username || ''}` : '')).trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: cm.sound ? cm.sound.name : '', sound_id: cm.sound && cm.sound.id ? cm.sound.id : null, duet_of: cm.mode === 'duet' && cm.src ? cm.src.id : null, stitch_of: cm.mode === 'stitch' && cm.src ? cm.src.id : null, ...privacyVals(), reply_to: S.replyCm ? S.replyCm.id : null };
     const { error } = await sb.from('videos').insert(row); if (error) throw error;
     bar.style.width = '100%'; draft = null; S.draftTag = null; S.replyCm = null; toast('Vidéo publiée 🎉');
     S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc();
@@ -1149,7 +1150,7 @@ SCREENS.profile = async () => {
   const { data: p, error } = await sb.from('profile_stats').select('*').eq('id', id).maybeSingle();
   if (error) throw error; if (!p) { $('#s-profile').innerHTML = hdr('Profil', '', 'home') + '<div class="empty">Profil introuvable.</div>'; return; }
   const tab = own ? S.profTab : 'videos';
-  $('#s-profile').innerHTML = hdr('@' + esc(p.username), own ? `<button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button><button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.settings()" aria-label="Paramètres">${I.gear}</button>` : `<button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.report('profile','${p.id}')" aria-label="Signaler">🚩</button>`, own ? '' : (S.prev && S.prev !== 'profile' ? S.prev : 'home')) + `
+  $('#s-profile').innerHTML = hdr('@' + esc(p.username), own ? `<button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button><button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.settings()" aria-label="Paramètres">${I.gear}</button>` : `<button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.userMore('${p.id}','${esc(p.username)}')" aria-label="Plus">⋯</button>`, own ? '' : (S.prev && S.prev !== 'profile' ? S.prev : 'home')) + `
   <div class="ptop"><div class="pav ${p.is_vip ? 'gold' : ''}" onclick="V.openUserStories('${p.id}')" style="${p.avatar_url ? '' : gbg(gfor(p.username))}">${p.avatar_url ? `<img class="avimg" src="${esc(p.avatar_url)}" alt="">` : esc(p.display_name[0].toUpperCase())}${p.is_vip ? '<span class="gb">👑</span>' : ''}</div>
   <h2 style="margin-top:12px;font-size:19px">${esc(p.display_name)}${vb(p.verified)}${p.is_creator ? ' <span class="crb">💰 Créateur</span>' : ''}</h2>${p.bio ? `<p class="mut" style="font-size:14px;margin-top:4px">${esc(p.bio)}</p>` : ''}
   <div class="tags" style="justify-content:center"><span>📍 ${esc(p.region || '')} ${esc((C[p.country] || {}).f || '')} ${esc((C[p.country] || {}).n || '')}</span>${p.is_vip ? '<span style="color:#a87800">👑 Gold</span>' : ''}</div>
@@ -1158,7 +1159,7 @@ SCREENS.profile = async () => {
   ${own ? startChecklist(p) : ''}
   ${own ? `<button class="crcta" onclick="V.creatorSheet()">💰 <b>Programme Créateurs</b> · gagne de l’argent avec tes vidéos ›</button>` : ''}
   <div class="pbtns">${own ? `<button class="btn sm ghost grow" onclick="V.editProfile()">Modifier le profil</button><button class="btn sm ghost" style="width:auto" onclick="V.analyticsSheet()" aria-label="Statistiques">📊</button><button class="btn sm ghost" style="width:auto" onclick="V.go('orders')">📦 Commandes</button>`
-      : `<button class="btn sm grow ${p.followed_by_me ? 'ghost' : ''}" onclick="V.toggleFollow('${p.id}',${p.followed_by_me})">${p.followed_by_me ? 'Abonné ✓' : 'Suivre'}</button><button class="btn sm ghost grow" onclick="V.chatWith('${p.id}','dm','',null)">💬 Message</button>`}</div></div>
+      : `<button class="btn sm grow ${p.followed_by_me ? 'ghost' : ''}" id="folBtn" onclick="V.toggleFollow('${p.id}',${p.followed_by_me})">${p.followed_by_me ? 'Abonné ✓' : p.is_private ? '🔒 Demander à suivre' : 'Suivre'}</button><button class="btn sm ghost grow" onclick="V.chatWith('${p.id}','dm','',null)">💬 Message</button>`}</div></div>
   ${own ? `<div class="ptabs"><button class="${tab === 'videos' ? 'on' : ''}" onclick="V.profTab('videos')">Mes vidéos</button><button class="${tab === 'saved' ? 'on' : ''}" onclick="V.profTab('saved')">Favoris</button></div>` : '<div class="ptabs"><button class="on">Vidéos</button></div>'}
   <div class="vgrid" id="pgridv">${loading()}</div>`;
   let vids = [];
@@ -1170,6 +1171,8 @@ SCREENS.profile = async () => {
     const { data, error: e2 } = await sb.from('videos_feed').select('*').eq('user_id', id).order('created_at', { ascending: false }).limit(60); if (e2) throw e2; vids = [...data.filter(x => x.pinned_at).sort((a, b) => a.pinned_at < b.pinned_at ? 1 : -1), ...data.filter(x => !x.pinned_at)];
   }
   S._grid = vids;
+  if (!own && p.is_private && !p.followed_by_me && !vids.length) { $('#pgridv').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">🔒</div><b>Ce compte est privé</b><p class="mut small">Abonne-toi pour voir ses vidéos.</p></div>`; checkFollowReq(p.id); return; }
+  if (S.blocked.has(id)) { $('#pgridv').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">⛔</div><b>Tu as bloqué ce compte</b><button class="btn sm" style="width:auto" onclick="V.unblock('${id}')">Débloquer</button></div>`; return; }
   $('#pgridv').innerHTML = vids.length ? vids.map(v => thumb(v, null, tab === 'videos')).join('') : `<div class="empty" style="grid-column:1/-1">${own && tab === 'videos' ? 'Publie ta première vidéo avec le bouton ＋' : 'Rien ici pour le moment.'}</div>`;
 };
 const SOC = { instagram: ['Instagram', 'https://instagram.com/', '#E1306C', '📸'], tiktok: ['TikTok', 'https://www.tiktok.com/@', '#111', '🎵'], youtube: ['YouTube', 'https://www.youtube.com/@', '#FF0000', '▶️'] };
@@ -1179,6 +1182,7 @@ function openProfile(id) { closeSheet(); go('profile', { user: id === uid() ? nu
 async function toggleFollow(id, on) {
   if (!requireAuth('Connecte-toi pour suivre des créateurs.')) return;
   const { error } = on ? await sb.from('follows').delete().eq('follower_id', uid()).eq('followee_id', id) : await sb.from('follows').insert({ follower_id: uid(), followee_id: id });
+  if (error && !on && /row-level|policy/i.test(error.message)) { await askFollow(id); return go('profile', { user: id }); }
   if (error) return fail(error); S.vids.forEach(v => { if (v.user_id === id) v.following = !on; }); go('profile', { user: id });
 }
 function editProfile() {
@@ -1242,6 +1246,8 @@ function settings() {
   <button onclick="V.closeSheet();${S.myShop ? 'V.myShopSheet()' : 'V.shopForm()'}"><span class="e">🏪</span>Ma boutique<span class="r">${S.myShop ? (ST[S.myShop.status] || [''])[0] : 'Ouvrir'} ›</span></button>
   <button onclick="V.myCV()"><span class="e">📄</span>Mon profil candidat<span class="r">›</span></button>
   <button onclick="V.verifySheet()"><span class="e">✔️</span>Badge vérifié<span class="r">${S.me.verified ? '✅' : 'Obtenir'} ›</span></button>
+  <button onclick="V.safetySheet()"><span class="e">🛡️</span>Sécurité et confidentialité<span class="r">${S.safety && S.safety.is_private ? '🔒 ' : ''}›</span></button>
+  <button onclick="V.mySounds()"><span class="e">🎵</span>Vibzo Sons · publier ma musique<span class="r">›</span></button>
   <button onclick="V.analyticsSheet()"><span class="e">📊</span>Statistiques créateur<span class="r">›</span></button>
   <button onclick="V.historySheet()"><span class="e">🕒</span>Historique de visionnage<span class="r">›</span></button>
   <button onclick="V.wellSheet()"><span class="e">🧘</span>Bien-être et temps d’écran<span class="r">${WB.limit ? WB.limit + ' min/j' : ''} ›</span></button>
@@ -1495,7 +1501,7 @@ async function refreshUnread() {
 /* =====================================================================
    NOTIFICATIONS ET PARRAINAGE
    ===================================================================== */
-const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''], match: ['💘', ''], order: ['🛍️', ''], order_status: ['📦', ''], application: ['💼', ''], offer_ok: ['✅', ''], live: ['🔴', ''], review: ['⭐', ''], verified: ['✔️', ''], service: ['🛠️', ''], challenge: ['🏆', ''] };
+const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''], match: ['💘', ''], order: ['🛍️', ''], order_status: ['📦', ''], application: ['💼', ''], offer_ok: ['✅', ''], live: ['🔴', ''], review: ['⭐', ''], verified: ['✔️', ''], service: ['🛠️', ''], challenge: ['🏆', ''], follow_request: ['🔒', 'veut s’abonner à ton compte privé'], sound: ['🎵', ''], login: ['🛡️', ''] };
 async function refreshNotifs() {
   if (!uid()) return;
   const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false);
@@ -1520,6 +1526,8 @@ async function openNotif(type, vid, actor, ref) {
   if (type === 'verified') return verifySheet();
   if (type === 'service' && ref) return openService(ref);
   if (type === 'challenge' && ref) return openChallenge(ref);
+  if (type === 'follow_request' || type === 'login') return safetySheet();
+  if (type === 'sound') return mySounds();
   if (vid) { const { data } = await sb.from('videos_feed').select('*').eq('id', vid).maybeSingle(); if (data) { S.override = { list: [data], start: vid }; go('home', { keepOverride: true }); if (type === 'comment' || type === 'reply' || type === 'mention' || type === 'comment_like') setTimeout(() => openComments(vid), 400); return; } }
   if (actor) openProfile(actor);
 }
@@ -1756,6 +1764,7 @@ SCREENS.admin = async () => {
   (offers.data || []).forEach(o => S.offers.set(o.id, o));
   $('#adm').innerHTML = `<div class="stats">${[['Utilisateurs', s.users], ['Nouveaux (7 j)', s.users_7d], ['Vidéos', s.videos], ['Membres Gold', s.vip], ['Profils rencontre', s.dating], ['Matchs', s.matches], ['Demandes d’abonnement', s.requests], ['Boutiques actives', s.shops_active], ['Boutiques en attente', s.shops_pending], ['Offres en ligne', s.offers_open], ['Offres à valider', s.offers_pending], ['Commandes', s.orders], ['Signalements ouverts', s.reports_open]].map(([l, v]) => `<div class="stat"><b>${fmtN(v)}</b><span>${l}</span></div>`).join('')}</div>
   <div class="lbl">Utilisateurs par pays</div><div class="tags">${Object.entries(s.by_country || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${(C[k] || {}).f || ''} ${esc((C[k] || {}).n || k)} : ${n}</span>`).join('')}</div>
+  <div class="lbl">🎵 Vibzo Sons à vérifier</div><div id="admS">${loading()}</div>
   <div class="lbl">✔️ Vérifications et 🏆 défis sponsorisés</div><div id="admV">${loading()}</div>
   <div class="lbl">🎁 Cadeaux : pièces à valider et retraits à payer</div><div id="admW">${loading()}</div>
   <div class="lbl">💰 Programme Créateurs (vues sur 30 jours)</div><button class="btn sm gold" style="margin-bottom:8px" onclick="V.payCalc()">🧮 Calculer les gains du mois</button><div id="admCr">${loading()}</div>
@@ -1765,7 +1774,7 @@ SCREENS.admin = async () => {
   <div class="lbl">Offrir des pièces (gagnants d’un défi, créateurs fondateurs)</div><div class="row"><input id="gcu" placeholder="nom d’utilisateur"><input id="gcn" type="number" value="500" min="1" max="10000" style="width:90px"><button class="btn sm" style="width:auto" onclick="V.giveCoins()">Offrir</button></div>
   <div class="lbl">Offres à valider (${(offers.data || []).length})</div>${(offers.data || []).map(o => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(o.title)}</b><div class="mut small">${esc(o.company)} · ${esc((C[o.country] || {}).n || '')} · par ${esc(o.poster_name)}</div><button class="mut small" onclick="V.offerDetail('${o.id}')" style="text-decoration:underline">Lire</button></div><div class="acts"><button class="ok" onclick="V.modOffer('${o.id}','open')">Publier</button><button class="ko" onclick="V.modOffer('${o.id}','rejected')">Refuser</button></div></div>`).join('') || '<p class="mut small">Rien à valider.</p>'}
   <div class="lbl">Boutiques</div>${(shops.data || []).map(sh => `<div class="mq"><div class="grow"><b style="font-size:14px">${esc(sh.name)}</b> ${pill(sh.status)}<div class="mut small">${esc((C[sh.country] || {}).n || '')} · ${esc(sh.platform)}${sh.whatsapp ? ' · ' + esc(sh.whatsapp) : ''}${sh.paid_until ? ' · payé jusqu’au ' + new Date(sh.paid_until).toLocaleDateString('fr-FR') : ''}</div></div><div class="acts"><button class="ok" onclick="V.modShop('${sh.id}','active')">+30 j</button>${sh.status !== 'suspended' ? `<button class="ko" onclick="V.modShop('${sh.id}','suspended')">Suspendre</button>` : ''}</div></div>`).join('') || '<p class="mut small">Aucune boutique.</p>'}
-  <div class="lbl">Signalements (${(reports.data || []).length})</div>${(reports.data || []).map(r => `<div class="mq"><span class="k">🚩</span><div class="grow"><b style="font-size:14px">${esc(r.reason)}</b><div class="mut small">${esc(r.target_type)} · ${ago(r.created_at)}</div></div><div class="acts">${r.target_type === 'video' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','hide')">Masquer</button>` : r.target_type === 'comment' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','delc')">Supprimer</button>` : r.target_type === 'profile' ? `<button class="ok" onclick="V.openProfile('${esc(r.target_id)}')">Voir</button>` : r.target_type === 'live' ? `<button class="ok" onclick="V.openLive('${esc(r.target_id)}')">Voir</button><button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','endlive')">Couper le live</button>` : ''}<button class="ok" onclick="V.modReport('${r.id}','','ok')">Classer</button></div></div>`).join('') || '<p class="mut small">Aucun signalement 🎉</p>'}`;
+  <div class="lbl">Signalements (${(reports.data || []).length})</div>${(reports.data || []).map(r => `<div class="mq"><span class="k">🚩</span><div class="grow"><b style="font-size:14px">${esc(r.reason)}</b><div class="mut small">${esc(r.target_type)} · ${ago(r.created_at)}</div></div><div class="acts">${r.target_type === 'video' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','hide')">Masquer</button>` : r.target_type === 'comment' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','delc')">Supprimer</button>` : r.target_type === 'profile' ? `<button class="ok" onclick="V.openProfile('${esc(r.target_id)}')">Voir</button>` : r.target_type === 'sound' ? `<button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','snd')">Retirer le son</button>` : r.target_type === 'live' ? `<button class="ok" onclick="V.openLive('${esc(r.target_id)}')">Voir</button><button class="ko" onclick="V.modReport('${r.id}','${esc(r.target_id)}','endlive')">Couper le live</button>` : ''}<button class="ok" onclick="V.modReport('${r.id}','','ok')">Classer</button></div></div>`).join('') || '<p class="mut small">Aucun signalement 🎉</p>'}`;
   loadAdminCreators(); loadAdminWallet(); loadAdminTrust();
 };
 async function modOffer(id, st) { closeSheet(); const { error } = await sb.from('job_offers').update({ status: st }).eq('id', id); if (error) return fail(error); toast(st === 'open' ? 'Offre publiée' : 'Offre refusée'); go('admin'); }
@@ -1776,6 +1785,7 @@ async function modShop(id, st) {
 async function modReport(id, target, action) {
   if (action === 'hide') { const { error } = await sb.from('videos').update({ status: 'hidden' }).eq('id', target); if (error) return fail(error); }
   if (action === 'endlive') { const { error } = await sb.rpc('end_live', { p_live: target }); if (error && !/termin/i.test(error.message)) return fail(error); }
+  if (action === 'snd') { const { error } = await sb.rpc('admin_sound_decide', { p_id: target, p_status: 'removed' }); if (error) return fail(error); }
   if (action === 'delc') { const { error } = await sb.from('comments').delete().eq('id', target); if (error) return fail(error); }
   const { error } = await sb.from('reports').update({ status: 'resolved' }).eq('id', id); if (error) return fail(error); toast('Signalement traité'); go('admin');
 }
@@ -2352,6 +2362,7 @@ async function tagChallengeBanner(tag) {
    ADMIN : vérifications et défis
    ===================================================================== */
 async function loadAdminTrust() {
+  loadAdminSounds().catch(() => { });
   const el = $('#admV'); if (!el) return;
   const [vq, ch] = await Promise.all([sb.rpc('admin_verification_queue'), sb.from('challenges_view').select('*').in('status', ['pending', 'active']).order('created_at')]);
   const ended = (ch.data || []).filter(c => c.status === 'active' && Date.now() - new Date(c.ends_at) > 7 * 864e5);
@@ -2797,22 +2808,21 @@ function camTextAdd() { const t = ($('#ctxT').value || '').trim(); if (!t) retur
 function camTextClear() { CAM.texts = []; closeSheet(); }
 async function camSoundPick() {
   if (!CAM || CAM.recording || CAM.elapsed > 0 || CAM.src) return;
-  sheet('♪ Ajouter un son', `<p class="mut small">Choisis un son tendance : il sera ajouté à ta vidéo pendant que tu filmes.</p><div id="sndL">${loading()}</div>`);
-  const { data } = await sb.rpc('trending_sounds', { p_limit: 20 }); if (!$('#sndL')) return;
-  const rows = data || []; S._snds = rows;
-  $('#sndL').innerHTML = (rows.length ? rows.map((s, i) => `<button class="citem" style="width:100%;text-align:left" onclick="V.camSoundUse(${i})"><div class="im" style="background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">♪</div><div class="grow"><b>${esc(s.sound || 'Son')}</b><div class="mut small">${fmtN(s.videos || 0)} <span>vidéos</span></div></div></button>`).join('') : '<p class="mut small">Aucun son tendance pour le moment.</p>') + (CAM.sound ? `<button class="btn ghost" onclick="V.camSoundUse(-1)">Retirer le son</button>` : '');
+  soundPicker('cam', !!CAM.sound);
 }
 async function camSoundUse(i) {
   closeSheet(); if (!CAM) return;
   if (i < 0) { if (CAM.sndEl) { CAM.sndEl.pause(); CAM.sndEl = null; } CAM.sound = null; $('#camSndT').textContent = 'Ajouter un son'; return; }
-  const s = (S._snds || [])[i]; if (!s) return; const name = s.sound || s.name;
-  const { data } = await sb.from('videos').select('video_url').eq('sound', name).eq('status', 'published').order('created_at').limit(1).maybeSingle();
-  if (!data) return toast('Son indisponible');
+  const s = (S._snds || [])[i]; if (!s) return;
+  let url = s.audio_url, name = s.audio_url ? `${s.title} · ${s.artist}` : (s.sound || s.name);
+  if (!url) { const { data } = await sb.from('videos').select('video_url').eq('sound', name).eq('status', 'published').eq('photos', '{}').order('created_at').limit(1).maybeSingle(); if (!data) return toast('Son indisponible'); url = data.video_url; }
   if (CAM.ac) return toast('Recommence la vidéo pour changer de son');
-  try { await camLoadSound(data.video_url); CAM.sound = { name, url: data.video_url }; $('#camSndT').textContent = name; toast('♪ Son ajouté'); } catch (e) { toast('Impossible de charger le son'); }
+  try { await camLoadSound(url); CAM.sound = { name, url, id: s.audio_url ? s.id : null }; $('#camSndT').textContent = name; toast('♪ Son ajouté'); } catch (e) { toast('Impossible de charger le son'); }
 }
 async function useSound(name) {
-  const { data } = await sb.from('videos').select('video_url').eq('sound', name).eq('status', 'published').order('created_at').limit(1).maybeSingle();
+  const lib = await libByName(name);
+  if (lib) return openCamera({ mode: 'video', sound: { name, url: lib.audio_url, id: lib.id } });
+  const { data } = await sb.from('videos').select('video_url').eq('sound', name).eq('status', 'published').eq('photos', '{}').order('created_at').limit(1).maybeSingle();
   if (!data) return toast('Son indisponible'); openCamera({ mode: 'video', sound: { name, url: data.video_url } });
 }
 function duetWith(id) { const v = S.vids.get(id); if (!v) return; closeSheet(); openCamera({ mode: 'duet', src: v }); }
@@ -2884,13 +2894,14 @@ async function phStart(car, id) {
   phStop(car); car._t = setInterval(() => phStep(car, 1), 3500);
   car._vw = setTimeout(() => { if (!viewed.has(id)) { viewed.add(id); sb.rpc('record_view', { p_video: id, p_key: viewerKey }).then(() => { }, () => { }); histAdd(id); } }, 3000);
   const v = S.vids.get(id); if (!v || !v.sound || S.saver) return;
-  let url = sndUrl.get(v.sound);
+  let url = sndUrl.get(v.sound_id || v.sound);
+  if (url === undefined && v.sound_id) { const { data } = await sb.from('sounds').select('audio_url').eq('id', v.sound_id).maybeSingle().then(r => r, () => ({})); url = data ? data.audio_url : null; sndUrl.set(v.sound_id, url); }
   if (url === undefined) { const { data } = await sb.from('videos').select('video_url').eq('sound', v.sound).eq('status', 'published').eq('photos', '{}').order('created_at').limit(1).maybeSingle().then(r => r, () => ({})); url = data ? data.video_url : null; sndUrl.set(v.sound, url); }
   if (!url || !car._t) return;
   if (!PHA) PHA = new Audio(); PHA.src = url; PHA.loop = true; PHA.muted = S.muted || soundBlocked; PHA._car = car; PHA.play().catch(() => { });
 }
 function phStop(car) { clearInterval(car._t); car._t = null; clearTimeout(car._vw); if (PHA && PHA._car === car) PHA.pause(); }
-let PHD = [], PHS = '';
+let PHD = [], PHS = '', PHSID = null;
 function pickPhotos(inp) {
   const fs = [...inp.files].filter(f => /^image\//.test(f.type)); inp.value = '';
   if (PHD.length + fs.length > 10) toast('10 photos au maximum');
@@ -2898,12 +2909,8 @@ function pickPhotos(inp) {
   go('create');
 }
 function phRemove(i) { PHD.splice(i, 1); go('create'); }
-async function phSoundPick() {
-  sheet('♪ Ajouter un son', `<div id="sndL">${loading()}</div>`);
-  const { data } = await sb.rpc('trending_sounds', { p_limit: 20 }); if (!$('#sndL')) return; S._snds = data || [];
-  $('#sndL').innerHTML = (S._snds.length ? S._snds.map((x, i) => `<button class="citem" style="width:100%;text-align:left" onclick="V.phSoundUse(${i})"><div class="im" style="background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">♪</div><div class="grow"><b>${esc(x.sound)}</b><div class="mut small">${fmtN(x.videos || 0)} <span>vidéos</span></div></div></button>`).join('') : '<p class="mut small">Aucun son tendance pour le moment.</p>') + (PHS ? `<button class="btn ghost" onclick="V.phSoundUse(-1)">Retirer le son</button>` : '');
-}
-function phSoundUse(i) { PHS = i < 0 ? '' : ((S._snds || [])[i] || {}).sound || ''; closeSheet(); if (PHS) toast('♪ Son ajouté'); go('create'); }
+async function phSoundPick() { soundPicker('ph', !!PHS); }
+function phSoundUse(i) { const x = i < 0 ? null : (S._snds || [])[i]; PHS = x ? (x.audio_url ? `${x.title} · ${x.artist}` : x.sound) : ''; PHSID = x && x.audio_url ? x.id : null; closeSheet(); if (PHS) toast('♪ Son ajouté'); go('create'); }
 function shrinkImg(file, max = 1440) {
   return new Promise((ok, ko) => {
     const im = new Image(), u = URL.createObjectURL(file);
@@ -2925,9 +2932,9 @@ async function publishPhotos() {
       urls.push(sb.storage.from('images').getPublicUrl(path).data.publicUrl); bar.style.width = Math.round((i + 1) / PHD.length * 90) + '%';
     }
     const tags = ($('#ch').value || '').toLowerCase().split(/[,\s#]+/).map(t => t.replace(/[^a-z0-9àâäéèêëïîôöùûüç_]/g, '')).filter(Boolean).slice(0, 8);
-    const { error } = await sb.from('videos').insert({ user_id: uid(), video_url: urls[0], photos: urls, title: $('#ct').value.trim(), caption: $('#cd').value.trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: PHS, ...privacyVals() });
+    const { error } = await sb.from('videos').insert({ user_id: uid(), video_url: urls[0], photos: urls, title: $('#ct').value.trim(), caption: $('#cd').value.trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: PHS, sound_id: PHSID, ...privacyVals() });
     if (error) throw error;
-    bar.style.width = '100%'; PHD = []; PHS = ''; S.draftTag = null; S.postKind = 'video'; toast('Photos publiées 🎉');
+    bar.style.width = '100%'; PHD = []; PHS = ''; PHSID = null; S.draftTag = null; S.postKind = 'video'; toast('Photos publiées 🎉');
     S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc(); go('profile');
   } catch (e) { fail(e); } finally { busy(btn, false); }
 }
@@ -3038,6 +3045,181 @@ function wellSheet() {
 function wellSet(k, m) { WB[k] = m; wbSave(); wellSheet(); toast(m ? '✅ Enregistré' : 'Désactivé'); }
 
 /* =====================================================================
+   SÉCURITÉ : blocage, compte privé, messages, filtres, mineurs, appareils
+   ===================================================================== */
+const deviceKey = (() => { try { let k = localStorage.getItem('vibzo_dk'); if (!k) { k = 'd' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('vibzo_dk', k); } return k; } catch (e) { return 'd' + Math.random().toString(36).slice(2, 14); } })();
+const deviceLabel = () => { const u = navigator.userAgent; const os = /Android/i.test(u) ? 'Android' : /iPhone|iPad/i.test(u) ? 'iPhone/iPad' : /Windows/i.test(u) ? 'Windows' : /Mac/i.test(u) ? 'Mac' : /Linux/i.test(u) ? 'Linux' : 'Appareil'; const br = /Edg\//.test(u) ? 'Edge' : /OPR\//.test(u) ? 'Opera' : /SamsungBrowser/.test(u) ? 'Samsung Internet' : /Chrome\//.test(u) ? 'Chrome' : /Safari\//.test(u) ? 'Safari' : /Firefox\//.test(u) ? 'Firefox' : 'navigateur'; return `${br} · ${os}`; };
+async function loadSafety() {
+  const [{ data: sf }, { data: bl }] = await Promise.all([sb.rpc('my_safety'), sb.from('blocks').select('blocked_id').eq('blocker_id', uid())]);
+  S.safety = sf || {}; S.blocked = new Set((bl || []).map(b => b.blocked_id));
+  sb.rpc('register_device', { p_key: deviceKey, p_label: deviceLabel() }).then(() => { refreshNotifs(); }, () => { });
+  if (S.safety && !S.safety.birth_year && !sessionStorage.getItem('vibzo_age')) setTimeout(ageAsk, 4000);
+}
+function ageAsk() {
+  if (!S.me || (S.safety && S.safety.birth_year) || $('#modal').classList.contains('on')) return;
+  try { sessionStorage.setItem('vibzo_age', '1'); } catch (e) { }
+  const y = new Date().getFullYear();
+  modal(`<div class="card" style="max-width:330px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">🛡️</div><h3>Quelle est ton année de naissance ?</h3><p class="mut small">Vibzo protège automatiquement les moins de 18 ans (compte privé, messages limités aux amis, pas de cadeaux). Elle n’est jamais affichée et ne peut plus être changée ensuite.</p>
+  <div class="field"><select id="byY"><option value="">—</option>${[...Array(90)].map((_, i) => `<option>${y - 10 - i}</option>`).join('')}</select></div>
+  <button class="btn" onclick="V.saveAge()">Valider</button><button class="btn ghost" onclick="V.closeModal()">Plus tard</button></div>`);
+}
+async function saveAge() {
+  const y = +($('#byY') || {}).value; if (!y) return toast('Choisis ton année');
+  const { error } = await sb.from('profiles').update({ birth_year: y }).eq('id', uid()); if (error) return fail(error);
+  closeModal(); await loadSafety(); toast(S.safety.minor ? '🛡️ Protections jeunes activées' : '✅ Enregistré');
+}
+async function askFollow(userId) {
+  const { error } = await sb.from('follow_requests').insert({ requester_id: uid(), target_id: userId });
+  if (error && !/duplicate/i.test(error.message)) return fail(error);
+  toast('🔒 Compte privé : demande envoyée');
+}
+async function checkFollowReq(id) {
+  const { data } = await sb.from('follow_requests').select('target_id').eq('requester_id', uid()).eq('target_id', id).maybeSingle();
+  const b = $('#folBtn'); if (data && b) { b.textContent = 'Demande envoyée'; b.classList.add('ghost'); b.onclick = () => V.cancelReq(id); }
+}
+async function cancelReq(id) { await sb.from('follow_requests').delete().eq('requester_id', uid()).eq('target_id', id); toast('Demande annulée'); go('profile', { user: id }); }
+function userMore(id, username) {
+  const bl = S.blocked.has(id);
+  sheet('@' + username, `<div class="slist" style="margin:0"><button onclick="V.${bl ? 'unblock' : 'blockUser'}('${id}','${esc(username)}')"><span class="e">⛔</span>${bl ? 'Débloquer' : 'Bloquer ce compte'}</button><button onclick="V.report('profile','${id}')"><span class="e">🚩</span>Signaler le compte</button><button onclick="V.closeSheet();V.shareThing('u','${id}','${esc(username)}')"><span class="e">📤</span>Partager le profil</button></div>`);
+}
+function blockUser(id, username) {
+  if (!requireAuth()) return;
+  sheet('⛔ Bloquer @' + username + ' ?', `<div class="perks"><div>🙈 <span>Tu ne verras plus ses vidéos, stories ni lives</span></div><div>💬 <span>Cette personne ne pourra plus te contacter, commenter tes vidéos ni te suivre</span></div><div>🤫 <span>Elle ne sera pas prévenue</span></div></div><button class="btn" style="background:#d81f45" onclick="V.doBlock('${id}')">Bloquer</button><button class="btn ghost" onclick="V.closeSheet()">Annuler</button>`);
+}
+async function doBlock(id) {
+  const { error } = await sb.from('blocks').insert({ blocker_id: uid(), blocked_id: id }); if (error && !/duplicate/i.test(error.message)) return fail(error);
+  S.blocked.add(id); closeSheet(); toast('⛔ Compte bloqué');
+  document.querySelectorAll('#feed .slide').forEach(sl => { const v = S.vids.get(sl.dataset.id); if (v && v.user_id === id) sl.remove(); });
+  S.feed = S.feed.filter(v => v.user_id !== id); if (S.cur === 'profile') go('profile', { user: id });
+}
+async function unblock(id) {
+  const { error } = await sb.from('blocks').delete().eq('blocker_id', uid()).eq('blocked_id', id); if (error) return fail(error);
+  S.blocked.delete(id); closeSheet(); toast('Compte débloqué'); if (S.cur === 'profile') go('profile', { user: id });
+}
+const DMR = [['all', 'Tout le monde'], ['followers', 'Les personnes que je suis'], ['mutual', 'Mes amis (abonnés mutuels)'], ['none', 'Personne']];
+async function safetySheet() {
+  if (!requireAuth()) return;
+  sheet('🛡️ Sécurité et confidentialité', loading());
+  await loadSafety(); const sf = S.safety || {};
+  const [{ data: reqs }, { data: bl }, { data: dev }] = await Promise.all([
+    sb.from('follow_requests').select('requester_id,created_at').eq('target_id', uid()).order('created_at', { ascending: false }).limit(50),
+    sb.from('blocks').select('blocked_id,created_at').eq('blocker_id', uid()).order('created_at', { ascending: false }).limit(100),
+    sb.from('login_devices').select('*').eq('user_id', uid()).order('last_seen', { ascending: false })]);
+  const ids = [...new Set([...(reqs || []).map(r => r.requester_id), ...(bl || []).map(b => b.blocked_id)])];
+  const ppl = new Map(); if (ids.length) { const { data } = await sb.from('profiles').select('id,username,display_name,avatar_url').in('id', ids); (data || []).forEach(p => ppl.set(p.id, p)); }
+  const who = id => { const p = ppl.get(id) || { username: '?', display_name: '?' }; return `${avatar(p, 38)}<div class="grow" style="text-align:left"><b>${esc(p.display_name)}</b><div class="mut small">@${esc(p.username)}</div></div>`; };
+  if (!$('#sheet .sh-b')) return;
+  $('#sheet .sh-b').innerHTML = `${sf.minor ? '<div class="safety ok2" style="margin-bottom:10px">🧒 <span>Protections jeunes actives : compte privé conseillé, messages limités à tes amis, pas de cadeaux ni de rencontres.</span></div>' : ''}
+  <label class="check"><input type="checkbox" id="sfP" ${sf.is_private ? 'checked' : ''}> <span><b>Compte privé</b> · seules les personnes que tu acceptes voient tes vidéos et stories</span></label>
+  <div class="lbl">💬 Qui peut m’envoyer des messages privés</div><div class="field"><select id="sfD">${DMR.filter(([k]) => !sf.minor || k === 'mutual' || k === 'none').map(([k, l]) => `<option value="${k}" ${sf.dm_from === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+  <div class="lbl">🧹 Filtre des commentaires</div>
+  <label class="check"><input type="checkbox" id="sfI" ${sf.filter_insults !== false ? 'checked' : ''}> <span>Bloquer automatiquement les insultes</span></label>
+  <div class="field"><label>Mots interdits sous mes vidéos (séparés par des virgules)</label><input id="sfW" maxlength="600" placeholder="Ex : arnaque, spam" value="${esc((sf.comment_filter || []).join(', '))}"></div>
+  ${sf.birth_year ? `<p class="mut small">🎂 <span>Année de naissance enregistrée</span> · ${sf.birth_year}</p>` : `<div class="field"><label>🎂 Année de naissance (jamais affichée)</label><select id="sfY"><option value="">—</option>${[...Array(90)].map((_, i) => `<option>${new Date().getFullYear() - 10 - i}</option>`).join('')}</select></div>`}
+  <button class="btn" id="sfBtn" onclick="V.saveSafety()">Enregistrer</button>
+  ${sf.is_private || (reqs || []).length ? `<div class="lbl">🔒 Demandes d’abonnement <span>(${(reqs || []).length})</span></div>${(reqs || []).map(r => `<div class="mitem" style="padding:6px 0">${who(r.requester_id)}<button class="btn sm" style="width:auto" onclick="V.respondFollow('${r.requester_id}',true)">Accepter</button><button class="btn sm ghost" style="width:auto" onclick="V.respondFollow('${r.requester_id}',false)">✕</button></div>`).join('') || '<p class="mut small">Aucune demande.</p>'}` : ''}
+  <div class="lbl">⛔ Comptes bloqués <span>(${(bl || []).length})</span></div>${(bl || []).map(b => `<div class="mitem" style="padding:6px 0">${who(b.blocked_id)}<button class="btn sm ghost" style="width:auto" onclick="V.unblock('${b.blocked_id}');setTimeout(V.safetySheet,400)">Débloquer</button></div>`).join('') || '<p class="mut small">Aucun compte bloqué.</p>'}
+  <div class="lbl">📱 Appareils connectés</div>${(dev || []).map(d => `<div class="mitem" style="padding:6px 0"><span class="nic">${d.device_key === deviceKey ? '✅' : '📱'}</span><div class="grow" style="text-align:left"><b>${esc(d.label || 'Appareil')}</b><div class="mut small">${d.device_key === deviceKey ? '<span>Cet appareil</span>' : '<span>Vu</span> ' + ago(d.last_seen)}</div></div>${d.device_key === deviceKey ? '' : `<button class="btn sm ghost" style="width:auto" onclick="V.removeDevice('${esc(d.device_key)}')">Retirer</button>`}</div>`).join('')}
+  <p class="mut small" style="margin-top:6px">Un appareil inconnu ? Change ton mot de passe et active la validation en 2 étapes.</p><button class="btn ghost" onclick="V.mfaSheet()">🔐 Validation en 2 étapes</button>`;
+}
+async function saveSafety() {
+  const btn = $('#sfBtn'); busy(btn, true);
+  const row = { is_private: $('#sfP').checked, dm_from: $('#sfD').value, filter_insults: $('#sfI').checked, comment_filter: $('#sfW').value.split(',').map(w => w.trim().toLowerCase()).filter(w => w.length >= 2).slice(0, 50) };
+  if ($('#sfY') && $('#sfY').value) row.birth_year = +$('#sfY').value;
+  const { error } = await sb.from('profiles').update(row).eq('id', uid()); busy(btn, false); if (error) return fail(error);
+  toast('✅ Enregistré'); safetySheet();
+}
+async function respondFollow(rid, ok) { const { error } = await sb.rpc('respond_follow', { p_requester: rid, p_ok: ok }); if (error) return fail(error); toast(ok ? '✅ Demande acceptée' : 'Demande refusée'); safetySheet(); }
+async function removeDevice(k) { const { error } = await sb.from('login_devices').delete().eq('user_id', uid()).eq('device_key', k); if (error) return fail(error); toast('Appareil retiré de la liste'); safetySheet(); }
+
+/* =====================================================================
+   VIBZO SONS : la musique des artistes, publiée par eux-mêmes
+   ===================================================================== */
+const SGEN = ['Afrobeats', 'Makossa', 'Coupé-décalé', 'Ndombolo', 'Bongo Flava', 'Amapiano', 'Gospel', 'Rap', 'Zouk', 'Mugham', 'Pop', 'Autre'];
+let SPV = null;
+const sndRow = (x, i, mode) => `<div class="citem sndrow"><button class="im sndplay" onclick="V.sndPreview(this,${esc(JSON.stringify(x.audio_url))})" style="${x.cover_url ? `background:url('${esc(x.cover_url)}') center/cover` : 'background:var(--grad)'}" aria-label="Écouter">▶</button><div class="grow" style="text-align:left"><b>${esc(x.title)}</b><div class="mut small">${esc(x.artist)}${vb(x.verified)} · ${fmtN(x.uses || 0)} <span>vidéos</span>${x.genre ? ' · ' + esc(x.genre) : ''}</div></div>${mode === 'use' ? `<button class="btn sm" style="width:auto" onclick="V.useLib(${i})">Utiliser</button>` : mode === 'useTop' ? `<button class="btn sm" style="width:auto" onclick="V.useTop(${i})">Utiliser</button>` : `<button class="btn sm" style="width:auto" onclick="V.${mode}(${i})">Choisir</button>`}<button class="ib" style="width:30px;height:30px;font-size:14px" onclick="V.report('sound','${x.id}')" aria-label="Signaler">🚩</button></div>`;
+function sndPreview(btn, url) {
+  if (SPV && SPV._btn === btn && !SPV.paused) { SPV.pause(); btn.textContent = '▶'; return; }
+  if (SPV) { SPV.pause(); if (SPV._btn) SPV._btn.textContent = '▶'; }
+  SPV = new Audio(url); SPV._btn = btn; btn.textContent = '⏸'; SPV.play().catch(() => { btn.textContent = '▶'; }); SPV.onended = () => { btn.textContent = '▶'; };
+}
+const stopPreview = () => { if (SPV) { SPV.pause(); if (SPV._btn) SPV._btn.textContent = '▶'; SPV = null; } };
+async function soundPicker(kind, hasSound, tab = 'lib', q = '') {
+  const use = kind === 'cam' ? 'camSoundUse' : 'phSoundUse';
+  sheet('♪ Ajouter un son', `<div class="seg" style="margin-bottom:10px"><button class="${tab === 'lib' ? 'on' : ''}" onclick="V.soundPicker('${kind}',${hasSound},'lib')">🎵 Vibzo Sons</button><button class="${tab === 'trend' ? 'on' : ''}" onclick="V.soundPicker('${kind}',${hasSound},'trend')">🔥 Tendances</button></div>
+  ${tab === 'lib' ? `<div class="search" style="margin-bottom:8px">${I.search}<input id="sndQ" placeholder="Titre, artiste…" value="${esc(q)}" onchange="V.soundPicker('${kind}',${hasSound},'lib',this.value)"></div>` : '<p class="mut small">Les sons les plus utilisés dans les vidéos Vibzo ce mois-ci.</p>'}
+  <div id="sndL">${loading()}</div>${hasSound ? `<button class="btn ghost" onclick="V.${use}(-1)">Retirer le son</button>` : ''}`);
+  let rows;
+  if (tab === 'lib') {
+    let qq = sb.from('sounds_view').select('*').eq('status', 'active'); const w = q.replace(/[,()%*]/g, ' ').trim();
+    if (w) qq = qq.or(`title.ilike.%${w}%,artist.ilike.%${w}%`);
+    const { data } = await qq.order('uses', { ascending: false }).limit(40); rows = data || [];
+  } else { const { data } = await sb.rpc('trending_sounds', { p_limit: 20 }); rows = data || []; }
+  S._snds = rows; if (!$('#sndL')) return;
+  $('#sndL').innerHTML = rows.length ? (tab === 'lib' ? rows.map((x, i) => sndRow(x, i, use)).join('') : rows.map((x, i) => `<button class="citem" style="width:100%;text-align:left" onclick="V.${use}(${i})"><div class="im" style="background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">♪</div><div class="grow"><b>${esc(x.sound || 'Son')}</b><div class="mut small">${fmtN(x.videos || 0)} <span>vidéos</span></div></div></button>`).join(''))
+    : `<div class="empty">${tab === 'lib' ? 'Aucun son pour le moment. Tu es artiste ? Publie ta musique depuis Paramètres → Vibzo Sons.' : 'Aucun son tendance pour le moment.'}</div>`;
+}
+async function libByName(name) {
+  const i = (name || '').lastIndexOf(' · '); if (i < 0) return null;
+  const { data } = await sb.from('sounds').select('id,audio_url').eq('status', 'active').eq('title', name.slice(0, i)).eq('artist', name.slice(i + 3)).limit(1).maybeSingle().then(r => r, () => ({}));
+  return data || null;
+}
+function useLib(i) { const x = (S._snds || [])[i]; if (!x) return; stopPreview(); closeSheet(); openCamera({ mode: 'video', sound: { name: `${x.title} · ${x.artist}`, url: x.audio_url, id: x.id } }); }
+async function mySounds() {
+  if (!requireAuth()) return; stopPreview();
+  sheet('🎵 Vibzo Sons', loading());
+  const { data } = await sb.from('sounds_view').select('*').eq('owner_id', uid()).neq('status', 'removed').order('created_at', { ascending: false });
+  const SS = { pending: ['⏳ En vérification', 'warn'], active: ['✅ En ligne', 'ok2'], rejected: ['Refusé', 'bad'] };
+  if (!$('#sheet .sh-b')) return;
+  $('#sheet .sh-b').innerHTML = `<div class="hero" style="margin:0;text-align:center"><div style="font-size:38px">🎤</div><h2>Fais danser l’Afrique sur ta musique</h2><p class="small" style="margin-top:6px">Publie tes propres morceaux : tout le monde pourra les utiliser dans ses vidéos, avec ton nom affiché. Chaque vidéo te fait de la promotion.</p></div>
+  <div class="field"><label>Fichier audio (MP3, M4A, WAV · 15 Mo max)</label><input type="file" id="snF" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg"></div>
+  <div class="field"><label>Titre du morceau</label><input id="snT" maxlength="60" placeholder="Ex : Douala by night"></div>
+  <div class="field"><label>Nom d’artiste</label><input id="snA" maxlength="60" value="${esc(S.me.display_name || '')}"></div>
+  <div class="field"><label>Genre</label><select id="snG">${SGEN.map(g => `<option>${g}</option>`).join('')}</select></div>
+  <div class="field"><label>Pochette (facultatif)</label><input type="file" id="snC" accept="image/*"></div>
+  <label class="check"><input type="checkbox" id="snR"> <span>Je certifie être l’auteur ou détenir tous les droits de ce morceau (paroles, musique, enregistrement). Je n’envoie pas la chanson d’un autre artiste. Je sais que Vibzo retire tout son signalé comme copié et peut fermer le compte.</span></label>
+  <button class="btn" id="snBtn" onclick="V.uploadSound()">🎵 Envoyer mon son</button>
+  <p class="mut small" style="margin-top:8px">Chaque son est écouté par l’équipe Vibzo avant d’être mis en ligne.</p>
+  <div class="lbl">Mes sons</div>${(data || []).map(x => `<div class="citem sndrow"><button class="im sndplay" onclick="V.sndPreview(this,${esc(JSON.stringify(x.audio_url))})" style="background:var(--grad)">▶</button><div class="grow" style="text-align:left"><b>${esc(x.title)}</b><div class="mut small">${pillS(SS[x.status])} · ${fmtN(x.uses)} <span>vidéos</span></div></div><button class="btn sm ghost" style="width:auto" onclick="V.removeSound('${x.id}')">Retirer</button></div>`).join('') || '<p class="mut small">Tu n’as pas encore publié de son.</p>'}`;
+}
+const pillS = s => s ? `<span class="pill ${s[1]}">${s[0]}</span>` : '';
+const AUDIO_T = { mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav', ogg: 'audio/ogg', webm: 'audio/webm' };
+async function uploadSound() {
+  const f = $('#snF').files[0], c = $('#snC').files[0], title = $('#snT').value.trim(), artist = $('#snA').value.trim();
+  if (!f) return toast('Choisis un fichier audio'); if (f.size > 15 * 1024 * 1024) return toast('Fichier trop lourd (15 Mo max)');
+  if (title.length < 2 || artist.length < 2) return toast('Indique le titre et le nom d’artiste');
+  if (!$('#snR').checked) return toast('Coche la case des droits d’auteur');
+  const ext = (f.name.split('.').pop() || 'mp3').toLowerCase().replace(/[^a-z0-9]/g, ''), type = (f.type && f.type.startsWith('audio/')) ? f.type : (AUDIO_T[ext] || 'audio/mpeg');
+  const dur = await new Promise(ok => { const a = new Audio(); a.preload = 'metadata'; a.onloadedmetadata = () => ok(Math.round(a.duration || 0)); a.onerror = () => ok(0); a.src = URL.createObjectURL(f); setTimeout(() => ok(0), 8000); });
+  if (dur && (dur < 3 || dur > 600)) return toast('Le son doit durer entre 3 secondes et 10 minutes');
+  const btn = $('#snBtn'); busy(btn, true, 'Envoi…');
+  try {
+    const base = `${uid()}/${Date.now()}`;
+    const { error: e1 } = await sb.storage.from('sounds').upload(`${base}.${AUDIO_T[ext] ? ext : 'mp3'}`, f, { contentType: type, upsert: false }); if (e1) throw e1;
+    const audio_url = sb.storage.from('sounds').getPublicUrl(`${base}.${AUDIO_T[ext] ? ext : 'mp3'}`).data.publicUrl;
+    let cover_url = null;
+    if (c) { const blob = await shrinkImg(c, 600); const { error: e2 } = await sb.storage.from('sounds').upload(`${base}.jpg`, blob, { contentType: 'image/jpeg', upsert: false }); if (e2) throw e2; cover_url = sb.storage.from('sounds').getPublicUrl(`${base}.jpg`).data.publicUrl; }
+    const { error } = await sb.from('sounds').insert({ owner_id: uid(), title, artist, genre: $('#snG').value, country: S.me.country, audio_url, cover_url, duration: dur || null, rights_confirmed: true });
+    if (error) throw error;
+    toast('🎵 Son envoyé ! Il sera en ligne après vérification'); mySounds();
+  } catch (e) { fail(e); } finally { busy(btn, false); }
+}
+async function removeSound(id) { const { error } = await sb.from('sounds').update({ status: 'removed' }).eq('id', id); if (error) return fail(error); toast('Son retiré'); mySounds(); }
+async function loadAdminSounds() {
+  const el = $('#admS'); if (!el) return;
+  const { data } = await sb.from('sounds_view').select('*').eq('status', 'pending').order('created_at').limit(50);
+  el.innerHTML = (data || []).map(x => `<div class="mq"><button class="k sndplay" onclick="V.sndPreview(this,${esc(JSON.stringify(x.audio_url))})">▶</button><div class="grow"><b style="font-size:14px">${esc(x.title)} · ${esc(x.artist)}</b><div class="mut small">@${esc(x.username)} · ${esc(x.genre)} · ${x.duration ? x.duration + ' s' : ''} · ${ago(x.created_at)}</div></div><div class="acts"><button class="ok" onclick="V.sndDecide('${x.id}','active')">Valider</button><button class="ko" onclick="V.sndDecide('${x.id}','rejected')">Refuser</button></div></div>`).join('') || '<p class="mut small">Aucun son en attente.</p>';
+}
+async function sndDecide(id, st) { stopPreview(); const { error } = await sb.rpc('admin_sound_decide', { p_id: id, p_status: st }); if (error) return fail(error); toast(st === 'active' ? '🎵 Son en ligne' : 'Son refusé'); loadAdminSounds(); }
+async function libStrip() {
+  const el = $('#sndStrip'); if (!el) return;
+  const { data } = await sb.from('sounds_view').select('*').eq('status', 'active').order('uses', { ascending: false }).limit(8);
+  S._libTop = data || []; if (!$('#sndStrip')) return;
+  el.innerHTML = S._libTop.length ? `<div class="lbl">🎵 <span>Vibzo Sons</span> · <span>musique des artistes</span></div>${S._libTop.map((x, i) => sndRow(x, i, 'useTop')).join('')}` : '';
+}
+function useTop(i) { S._snds = S._libTop; useLib(i); }
+
+/* =====================================================================
    ORDINATEUR ET TABLETTE : raccourcis clavier
    ===================================================================== */
 window.addEventListener('keydown', e => {
@@ -3056,6 +3238,7 @@ window.addEventListener('keydown', e => {
 });
 
 window.V = {
+  saveAge, cancelReq, userMore, blockUser, doBlock, unblock, safetySheet, saveSafety, respondFollow, removeDevice, soundPicker, sndPreview, useLib, useTop, mySounds, uploadSound, removeSound, sndDecide,
   pickPhotos, phRemove, phSoundPick, phSoundUse, replyVideo, cancelReplyVideo, privacySheet, savePrivacy, pinVideo, historySheet, clearHistory, histPause, analyticsSheet, wellSheet, wellSet, wellGo, sTab: t => { S.sTab = t; search(); },
   openCamera, closeCamera, camRecord, camRedo, camDone, camFlip, camTimer, camFilters, camFilter, camDur, camMic, camClip, camText, camTextAdd, camTextClear, camSoundPick, camSoundUse, useSound, duetWith, stitchWith,
   openStories, storyStep, closeStories, storyDel, storyReply, openUserStories, postKind: k => { S.postKind = k; go('create'); },

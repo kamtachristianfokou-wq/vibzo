@@ -661,3 +661,7 @@ button.lvcnt{color:#fff}
 .anv video,.anv img{width:46px;height:62px;border-radius:8px;object-fit:cover;background:#0b2540;flex:0 0 46px}
 .seg.wrap{flex-wrap:wrap}.seg.wrap button{flex:1 0 auto}
 @media (min-width:900px){.pdots{bottom:40px}}
+/* ---------- Vibzo Sons & sécurité ---------- */
+.sndrow{display:flex;align-items:center;gap:10px;width:100%;padding:8px 0}
+.sndplay{width:46px;height:46px;border-radius:10px;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex:0 0 46px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.mq .sndplay{width:36px;height:36px;flex:0 0 36px;background:var(--grad);border-radius:50%}
