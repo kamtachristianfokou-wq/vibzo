@@ -211,7 +211,7 @@ SCREENS.auth = () => {
   ${authMode === 'signup' ? `<div class="field"><label>Ton nom</label><input id="aName" maxlength="40" required placeholder="Ex : Christian K."></div>
   <div class="field"><label>Nom d’utilisateur</label><input id="aUser" maxlength="24" required placeholder="ex : christian.k" pattern="[a-zA-Z0-9_.]{3,24}" title="3 à 24 caractères : lettres, chiffres, . et _"></div>` : ''}
   <div class="field"><label>E-mail</label><input id="aEmail" type="email" required autocomplete="email" placeholder="toi@exemple.com"></div>
-  <div class="field"><label>Mot de passe</label><input id="aPass" type="password" required minlength="8" autocomplete="${authMode === 'signup' ? 'new-password' : 'current-password'}" placeholder="8 caractères minimum"></div>
+  <div class="field"><label>Mot de passe</label><input id="aPass" type="password" required minlength="8" autocomplete="${authMode === 'signup' ? 'new-password' : 'current-password'}" placeholder="${authMode === 'signup' ? '8 caractères, lettres et chiffres' : '8 caractères minimum'}"></div>
   ${authMode === 'signup' ? `<div class="field"><label>Pays</label><select id="aCc" onchange="V.authRegions()">${ccOpts}</select></div>
   <div class="field"><label>Région</label><select id="aRg"></select></div>
   <div class="field"><label>Téléphone (facultatif)</label><div class="row"><span class="chip" id="aInd" style="flex:none">${C[S.loc.country].tel}</span><input id="aTel" type="tel" inputmode="tel" placeholder="6 12 34 56 78"></div></div>
@@ -224,6 +224,19 @@ SCREENS.auth = () => {
 };
 function authRegions() { const cc = $('#aCc').value; if (!savedLang() && langFor(cc) !== getLang()) { S.loc.country = cc; initI18n(langFor(cc)); } $('#aRg').innerHTML = C[cc].r.map(r => `<option>${esc(r)}</option>`).join(''); $('#aInd').textContent = C[cc].tel; }
 function authTab(m) { authMode = m; SCREENS.auth(); }
+/* Mot de passe : 8 caractères, lettres et chiffres, et jamais vu dans une fuite de données.
+   Vérification HaveIBeenPwned par k-anonymat : seuls les 5 premiers caractères de l'empreinte SHA-1 quittent l'appareil. */
+async function pwProblem(pw) {
+  if (!pw || pw.length < 8) return 'Le mot de passe doit faire au moins 8 caractères';
+  if (!/[A-Za-zÀ-ÿ]/.test(pw) || !/\d/.test(pw)) return 'Le mot de passe doit contenir des lettres et des chiffres';
+  try {
+    const h = [...new Uint8Array(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(pw)))].map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 5000);
+    const r = await fetch('https://api.pwnedpasswords.com/range/' + h.slice(0, 5), { headers: { 'Add-Padding': 'true' }, signal: ctl.signal }); clearTimeout(tm);
+    if (r.ok) { const txt = await r.text(), suf = h.slice(5); if (txt.split('\n').some(l => { const [x, n] = l.trim().split(':'); return x === suf && +n > 0; })) return 'Ce mot de passe est apparu dans une fuite de données sur internet. Choisis-en un autre, que tu n’utilises nulle part ailleurs'; }
+  } catch (e) { }
+  return '';
+}
 async function submitAuth() {
   const btn = $('#aBtn'), err = $('#aErr'); err.textContent = '';
   const email = $('#aEmail').value.trim(), password = $('#aPass').value;
@@ -231,6 +244,7 @@ async function submitAuth() {
   try {
     if (authMode === 'signup') {
       const cc = $('#aCc').value, tel = $('#aTel').value.replace(/[^\d]/g, '');
+      const weak = await pwProblem(password); if (weak) throw new Error(weak);
       const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.href.split('#')[0], data: { username: $('#aUser').value.trim().toLowerCase(), display_name: $('#aName').value.trim(), country: cc, region: $('#aRg').value, phone: tel ? C[cc].tel + tel : '', ref: pendingRef() } } });
       if (error) throw error;
       S.loc = worldLoc(cc); saveLoc();
@@ -3238,6 +3252,7 @@ window.addEventListener('keydown', e => {
 });
 
 window.V = {
+  pwProblem,
   saveAge, cancelReq, userMore, blockUser, doBlock, unblock, safetySheet, saveSafety, respondFollow, removeDevice, soundPicker, sndPreview, useLib, useTop, mySounds, uploadSound, removeSound, sndDecide,
   pickPhotos, phRemove, phSoundPick, phSoundUse, replyVideo, cancelReplyVideo, privacySheet, savePrivacy, pinVideo, historySheet, clearHistory, histPause, analyticsSheet, wellSheet, wellSet, wellGo, sTab: t => { S.sTab = t; search(); },
   openCamera, closeCamera, camRecord, camRedo, camDone, camFlip, camTimer, camFilters, camFilter, camDur, camMic, camClip, camText, camTextAdd, camTextClear, camSoundPick, camSoundUse, useSound, duetWith, stitchWith,
@@ -3289,7 +3304,7 @@ async function start() {
   applyLang();
   sb.auth.onAuthStateChange(async (ev, session) => {
     const was = uid(); S.session = session;
-    if (ev === 'PASSWORD_RECOVERY') { const np = prompt('Nouveau mot de passe (8 caractères minimum)'); if (np && np.length >= 8) { const { error } = await sb.auth.updateUser({ password: np }); toast(error ? '⚠️ ' + error.message : 'Mot de passe modifié ✅'); } }
+    if (ev === 'PASSWORD_RECOVERY') { const np = prompt('Nouveau mot de passe (8 caractères minimum, lettres et chiffres)'); const wk = np ? await pwProblem(np) : 'x'; if (np && wk) toast('⚠️ ' + wk); if (np && !wk) { const { error } = await sb.auth.updateUser({ password: np }); toast(error ? '⚠️ ' + error.message : 'Mot de passe modifié ✅'); } }
     if ((session && session.user.id) !== was) { await loadMe().catch(fail); applyLang(); if (session) checkMfa(); if (session && S.cur === 'auth') { toast('Bienvenue sur Vibzo 👋'); go('home'); } }
   });
   go('home'); handleDeepLink(); saverHints(); window.addEventListener('hashchange', handleDeepLink);
