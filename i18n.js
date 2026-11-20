@@ -426,6 +426,53 @@ Prestataire non vérifié : ne paie jamais tout à l’avance. Paie après le tr
 Choix 1|Choice 1|Opção 1|Opción 1|الخيار 1|Chaguo 1|ምርጫ 1|Seçim 1
 Choix 2|Choice 2|Opção 2|Opción 2|الخيار 2|Chaguo 2|ምርጫ 2|Seçim 2
 1 message toutes les 10 secondes par spectateur|1 message every 10 seconds per viewer|1 mensagem a cada 10 segundos por espectador|1 mensaje cada 10 segundos por espectador|رسالة واحدة كل 10 ثوانٍ لكل مشاهد|Ujumbe 1 kila sekunde 10 kwa kila mtazamaji|በየ10 ሰከንዱ 1 መልእክት ለእያንዳንዱ ተመልካች|Hər izləyiçi üçün 10 saniyədə 1 mesaj
+Aa Ajouter un texte|Aa Add text|Aa Adicionar texto|Aa Añadir texto|Aa أضف نصًا|Aa Ongeza maandishi|Aa ጽሑፍ ጨምር|Aa Mətn əlavə et
+Ajouter|Add|Adicionar|Añadir|أضف|Ongeza|ጨምር|Əlavə et
+Ajouter un son|Add a sound|Adicionar um som|Añadir un sonido|أضف صوتًا|Ongeza sauti|ድምፅ ጨምር|Səs əlavə et
+Choisis un son tendance : il sera ajouté à ta vidéo pendant que tu filmes|Pick a trending sound: it will be added to your video while you film|Escolhe um som em alta: será adicionado ao teu vídeo enquanto filmas|Elige un sonido en tendencia: se añadirá a tu vídeo mientras grabas|اختر صوتًا رائجًا: سيُضاف إلى فيديوك أثناء التصوير|Chagua sauti inayovuma: itaongezwa kwenye video yako unaporekodi|ተወዳጅ ድምፅ ምረጥ፦ ስትቀርጽ ወደ ቪዲዮህ ይጨመራል|Trend səs seç: çəkərkən videona əlavə olunacaq
+Effets, minuteur, texte, sons tendance|Effects, timer, text, trending sounds|Efeitos, temporizador, texto, sons em alta|Efectos, temporizador, texto, sonidos en tendencia|مؤثرات، مؤقت، نص، أصوات رائجة|Madoido, kipima muda, maandishi, sauti zinazovuma|ውጤቶች፣ ሰዓት ቆጣሪ፣ ጽሑፍ፣ ተወዳጅ ድምፆች|Effektlər, taymer, mətn, trend səslər
+Ex : Ma journée à Douala|E.g. My day in Douala|Ex.: O meu dia em Douala|Ej.: Mi día en Douala|مثال: يومي في دوالا|Mfano: Siku yangu Douala|ምሳሌ፦ በዱዋላ ቀኔ|Məs.: Dualada günüm
+Ex : Mon premier challenge|E.g. My first challenge|Ex.: O meu primeiro desafio|Ej.: Mi primer reto|مثال: أول تحدٍ لي|Mfano: Changamoto yangu ya kwanza|ምሳሌ፦ የመጀመሪያ ፈተናዬ|Məs.: İlk çağırışım
+Ex : Regarde jusqu’à la fin|E.g. Watch till the end|Ex.: Vê até ao fim|Ej.: Mira hasta el final|مثال: شاهد حتى النهاية|Mfano: Tazama hadi mwisho|ምሳሌ፦ እስከ መጨረሻው ተመልከት|Məs.: Sona qədər bax
+Faire un Collage|Make a Stitch|Fazer um Stitch|Hacer un Stitch|اصنع Stitch|Tengeneza Stitch|Stitch ስራ|Stitch et
+Faire un Duo|Make a Duet|Fazer um Dueto|Hacer un Dúo|اصنع ثنائيًا|Tengeneza Duet|ዱዌት ስራ|Duet et
+Filmer avec Vibzo|Film with Vibzo|Filmar com o Vibzo|Grabar con Vibzo|صوّر مع Vibzo|Rekodi na Vibzo|በVibzo ቅረጽ|Vibzo ilə çək
+Minuteur|Timer|Temporizador|Temporizador|المؤقت|Kipima muda|ሰዓት ቆጣሪ|Taymer
+Filtres|Filters|Filtros|Filtros|المرشحات|Vichujio|ማጣሪያዎች|Filtrlər
+Micro|Mic|Microfone|Micrófono|الميكروفون|Maikrofoni|ማይክ|Mikrofon
+Extrait|Clip|Excerto|Fragmento|مقطع|Kipande|ቅንጭብ|Fraqment
+Ouverture de la caméra|Opening the camera|A abrir a câmara|Abriendo la cámara|جارٍ فتح الكاميرا|Inafungua kamera|ካሜራውን በመክፈት ላይ|Kamera açılır
+Publier la story|Post the story|Publicar a story|Publicar la historia|انشر القصة|Chapisha hadithi|ታሪኩን ለጥፍ|Hekayəni paylaş
+Republier pour mes abonnés|Repost to my followers|Republicar para os meus seguidores|Republicar para mis seguidores|أعد النشر لمتابعيّ|Chapisha tena kwa wafuasi wangu|ለተከታዮቼ እንደገና ለጥፍ|İzləyicilərim üçün yenidən paylaş
+Annuler la republication|Undo repost|Anular republicação|Deshacer republicación|ألغِ إعادة النشر|Tendua kuchapisha tena|ዳግም መለጠፉን ሰርዝ|Yenidən paylaşmanı ləğv et
+Retourner|Flip|Virar|Girar|اقلب|Geuza|ቀይር|Çevir
+Son · toutes les vidéos avec ce son|Sound · all videos with this sound|Som · todos os vídeos com este som|Sonido · todos los vídeos con este sonido|صوت · كل الفيديوهات بهذا الصوت|Sauti · video zote zenye sauti hii|ድምፅ · ይህ ድምፅ ያላቸው ሁሉም ቪዲዮዎች|Səs · bu səsli bütün videolar
+Ta story|Your story|A tua story|Tu historia|قصتك|Hadithi yako|ታሪክህ|Hekayən
+Ta story est visible 24 heures par tes abonnés, puis elle disparaît|Your story is visible to your followers for 24 hours, then it disappears|A tua story fica visível 24 horas para os teus seguidores e depois desaparece|Tu historia es visible 24 horas para tus seguidores y luego desaparece|قصتك مرئية لمتابعيك 24 ساعة ثم تختفي|Hadithi yako inaonekana kwa wafuasi wako kwa saa 24, kisha inatoweka|ታሪክህ ለተከታዮችህ ለ24 ሰዓት ይታያል፣ ከዚያ ይጠፋል|Hekayən izləyicilərinə 24 saat görünür, sonra yox olur
+Ta vidéo sera visible par tous dans ta région. Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs de façon inappropriée|Your video will be visible to everyone in your region. Forbidden: nudity, violence, scams, content showing minors inappropriately|O teu vídeo ficará visível para todos na tua região. Proibido: nudez, violência, burlas, conteúdos que mostrem menores de forma inapropriada|Tu vídeo será visible para todos en tu región. Prohibido: desnudos, violencia, estafas, contenidos que muestren a menores de forma inapropiada|سيكون فيديوك مرئيًا للجميع في منطقتك. ممنوع: العري والعنف والاحتيال والمحتوى الذي يُظهر القاصرين بشكل غير لائق|Video yako itaonekana kwa kila mtu katika eneo lako. Imekatazwa: uchi, vurugu, utapeli, maudhui yanayoonyesha watoto isivyofaa|ቪዲዮህ በክልልህ ላሉ ሁሉ ይታያል። የተከለከለ፦ እርቃን፣ ሁከት፣ ማጭበርበር፣ ልጆችን አግባብ ባልሆነ መንገድ የሚያሳይ ይዘት|Videon bölgəndəki hər kəsə görünəcək. Qadağandır: çılpaqlıq, zorakılıq, fırıldaq, azyaşlıları yersiz göstərən məzmun
+Texte|Text|Texto|Texto|نص|Maandishi|ጽሑፍ|Mətn
+Texte de la story (facultatif|Story text (optional|Texto da story (opcional|Texto de la historia (opcional|نص القصة (اختياري|Maandishi ya hadithi (si lazima|የታሪኩ ጽሑፍ (አማራጭ|Hekayənin mətni (könüllü
+Utiliser ce son|Use this sound|Usar este som|Usar este sonido|استخدم هذا الصوت|Tumia sauti hii|ይህን ድምፅ ተጠቀም|Bu səsdən istifadə et
+Utiliser|Use|Usar|Usar|استخدم|Tumia|ተጠቀም|İstifadə et
+vidéos|videos|vídeos|vídeos|فيديوهات|video|ቪዲዮዎች|video
+vues|views|visualizações|vistas|مشاهدات|mitazamo|እይታዎች|baxış
+Story 24 h|Story 24 h|Story 24 h|Historia 24 h|قصة 24 س|Hadithi saa 24|ታሪክ 24 ሰ|Hekayə 24 s
+Position|Position|Posição|Posición|الموضع|Mahali|ቦታ|Mövqe
+En haut|Top|Em cima|Arriba|في الأعلى|Juu|ከላይ|Yuxarıda
+Au milieu|Middle|Ao meio|En medio|في الوسط|Katikati|በመሃል|Ortada
+En bas|Bottom|Em baixo|Abajo|في الأسفل|Chini|ከታች|Aşağıda
+Retirer les textes|Remove texts|Remover textos|Quitar textos|أزل النصوص|Ondoa maandishi|ጽሑፎቹን አስወግድ|Mətnləri götür
+Retirer le son|Remove sound|Remover som|Quitar sonido|أزل الصوت|Ondoa sauti|ድምፁን አስወግድ|Səsi götür
+avec|with|com|con|مع|na|ከ|ilə
+Duo|Duet|Dueto|Dúo|ثنائي|Duet|ዱዌት|Duet
+Collage|Stitch|Stitch|Stitch|Stitch|Stitch|Stitch|Stitch
+Story publiée ⏱ Elle reste 24 heures|Story posted ⏱ It stays for 24 hours|Story publicada ⏱ Fica 24 horas|Historia publicada ⏱ Se queda 24 horas|تم نشر القصة ⏱ تبقى 24 ساعة|Hadithi imechapishwa ⏱ Inakaa saa 24|ታሪኩ ተለጥፏል ⏱ ለ24 ሰዓት ይቆያል|Hekayə paylaşıldı ⏱ 24 saat qalır
+Son ajouté|Sound added|Som adicionado|Sonido añadido|تمت إضافة الصوت|Sauti imeongezwa|ድምፅ ተጨምሯል|Səs əlavə olundu
+Autorise la caméra et le micro pour filmer|Allow camera and microphone to film|Permite a câmara e o microfone para filmar|Permite la cámara y el micrófono para grabar|اسمح بالكاميرا والميكروفون للتصوير|Ruhusu kamera na maikrofoni ili kurekodi|ለመቅረጽ ካሜራና ማይክሮፎን ፍቀድ|Çəkmək üçün kamera və mikrofona icazə ver
+Recommencer depuis le début|Start over from the beginning|Recomeçar do início|Empezar de nuevo|البدء من جديد|Anza upya tangu mwanzo|ከመጀመሪያው እንደገና ጀምር|Əvvəldən başla
+Supprimer cette story|Delete this story|Apagar esta story|Eliminar esta historia|احذف هذه القصة|Futa hadithi hii|ይህን ታሪክ ሰርዝ|Bu hekayəni sil
+Story supprimée|Story deleted|Story apagada|Historia eliminada|تم حذف القصة|Hadithi imefutwa|ታሪኩ ተሰርዟል|Hekayə silindi
+Micro coupé : seul le son sera enregistré|Mic off: only the sound will be recorded|Microfone desligado: só o som será gravado|Micrófono apagado: solo se grabará el sonido|الميكروفون مغلق: سيُسجَّل الصوت فقط|Maikrofoni imezimwa: sauti tu itarekodiwa|ማይክ ጠፍቷል፦ ድምፁ ብቻ ይቀረጻል|Mikrofon söndürülüb: yalnız səs yazılacaq
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)

@@ -554,3 +554,77 @@ button.lvcnt{color:#fff}
 .lvchat .pinable{cursor:pointer}
 #lvToolsB.dot{position:relative}#lvToolsB.dot::after{content:'';position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:#ff2d55}
 .chips .chip{white-space:nowrap;flex:none}
+/* ---------- studio caméra ---------- */
+.golive.cam{background:linear-gradient(90deg,#1e9be8,#38b6ff)}
+#camOv{position:absolute;inset:0;z-index:32;background:#000;color:#fff;overflow:hidden}
+#camCv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.camwait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#000;z-index:3}
+.camprog{position:absolute;top:calc(6px + var(--st));left:10px;right:10px;height:5px;border-radius:3px;background:rgba(255,255,255,.3);z-index:4;overflow:hidden}
+.camprog i{display:block;height:100%;width:0;background:#38b6ff}
+.camprog b{position:absolute;top:0;bottom:0;width:2px;background:#fff}
+.camtop{position:absolute;top:calc(16px + var(--st));left:8px;right:8px;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:8px}
+#camOv .ib{color:#fff}
+.camsnd{background:rgba(0,0,0,.45);color:#fff;border-radius:16px;padding:7px 14px;font-weight:700;font-size:13.5px;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cammode{background:#38b6ff;border-radius:10px;padding:4px 10px;font-weight:800;font-size:12px}
+.camside{position:absolute;right:8px;top:calc(70px + var(--st));z-index:4;display:flex;flex-direction:column;gap:12px}
+.camside button{display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.camside b{font-size:22px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);border-radius:50%;font-size:17px}
+.camside span{font-size:10.5px;font-weight:700}
+.camfil{position:absolute;left:0;right:0;bottom:calc(120px + var(--sb));z-index:4;display:flex;gap:8px;overflow-x:auto;padding:0 12px}
+.camfil button{flex:none;background:rgba(0,0,0,.45);color:#fff;border-radius:14px;padding:7px 12px;font-size:13px;font-weight:700}
+.camfil button.on{background:#38b6ff}
+.camcount{position:absolute;inset:0;z-index:5;align-items:center;justify-content:center;font-size:110px;font-weight:900;text-shadow:0 4px 20px rgba(0,0,0,.6)}
+.cambot{position:absolute;left:0;right:0;bottom:calc(24px + var(--sb));z-index:4;display:flex;align-items:center;justify-content:space-evenly}
+.camrec{width:78px;height:78px;border-radius:50%;border:5px solid rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center}
+.camrec i{width:58px;height:58px;border-radius:50%;background:#ff2d55;transition:.2s}
+.camrec.on i{width:30px;height:30px;border-radius:8px}
+.camsm{width:46px;height:46px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.camsm.ok{background:#38b6ff;font-weight:900}
+.camsm.gal{order:-1}
+/* ---------- stories ---------- */
+.ststrip{display:flex;gap:14px;overflow-x:auto;padding:4px 0 6px}
+.ststrip button{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px}
+.ststrip small{font-size:11.5px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.string{position:relative;padding:3px;border-radius:50%;background:linear-gradient(45deg,#38b6ff,#1e9be8,#7c4dff)}
+.string.seen{background:#c8d3dd}
+.string>*:first-child{border:3px solid #fff;border-radius:50%}
+.string.add{background:#e6edf3}.string.add span{position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;border-radius:50%;background:#1e9be8;color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px}
+#stOv{position:absolute;inset:0;z-index:33;background:#000;color:#fff}
+#stOv video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.stbars{position:absolute;top:calc(8px + var(--st));left:8px;right:8px;z-index:3;display:flex;gap:4px}
+.stbars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.35);overflow:hidden}.stbars i.done{background:#fff}.stbars b{display:block;height:100%;width:0;background:#fff}
+.sthead{position:absolute;top:calc(20px + var(--st));left:10px;right:6px;z-index:3;display:flex;align-items:center;gap:8px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.sthead b{display:block;font-size:14px}.sthead small{opacity:.85;font-size:12px}
+#stOv .ib{color:#fff}
+.stcap{position:absolute;left:16px;right:16px;bottom:calc(80px + var(--sb));z-index:3;text-align:center;font-weight:700;font-size:17px;text-shadow:0 2px 6px rgba(0,0,0,.8)}
+.stnav{position:absolute;top:80px;bottom:80px;z-index:2;width:35%}.stnav.l{left:0}.stnav.r{right:0}
+.stfoot{position:absolute;left:0;right:0;bottom:calc(20px + var(--sb));z-index:3;display:flex;justify-content:center}
+.stfoot button{background:rgba(255,255,255,.2);color:#fff;border-radius:20px;padding:9px 18px;font-weight:700}
+.pav{cursor:pointer}
+/* ---------- tablette ---------- */
+@media (min-width:600px) and (max-width:899px){#app{max-width:600px;box-shadow:0 0 40px rgba(0,0,0,.12)}}
+/* ---------- ordinateur : barre de navigation à gauche, vidéo au centre ---------- */
+@media (min-width:900px){
+  body{background:#0b2540}
+  #app{max-width:none;margin:0}
+  #nav{top:0;bottom:0;right:auto;width:230px;height:auto;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;padding:22px 14px;border-top:0;border-right:1px solid var(--line)}
+  #nav::before{content:'Vibzo';font-weight:900;font-size:28px;color:#1e9be8;padding:4px 14px 18px;letter-spacing:-.5px}
+  #nav button{flex-direction:row;width:100%;font-size:15.5px;gap:14px;padding:11px 14px;border-radius:12px;justify-content:flex-start;color:#4b6378}
+  #nav button:hover{background:#f1f7fd}
+  #nav button.on{background:#eaf5fe}
+  #nav .plus{width:40px;height:30px}
+  #nav .navlbl{display:inline;font-weight:700;color:#0b2540}
+  .screen{inset:0 0 0 230px;background:var(--bg)}
+  .screen:not(#s-home)>*{max-width:680px;margin-left:auto;margin-right:auto}
+  #s-home{background:#0b2540}
+  #s-home #feed{max-width:calc(100vh * 9 / 16 + 130px);margin:0 auto}
+  #s-home #topbar{left:50%;right:auto;transform:translateX(-50%);width:min(100%,calc(100vh * 9 / 16 + 130px))}
+  #s-home .lvpill{left:max(12px,calc(50% - (100vh * 9 / 16 + 130px) / 2 + 12px))}
+  #s-home .mute{right:max(12px,calc(50% - (100vh * 9 / 16 + 130px) / 2 + 12px))}
+  #sheetBg #sheet{left:calc(50% + 115px);right:auto;width:560px;transform:translate(-50%,100%)}
+  #sheetBg.on #sheet{transform:translate(-50%,0)}
+  #liveOv,#camOv,#stOv,#offOv{left:calc(230px + (100vw - 230px - 100vh * 9 / 16) / 2);right:auto;width:calc(100vh * 9 / 16)}
+  .slide video{object-fit:contain}
+}
+
+.navlbl{display:none}

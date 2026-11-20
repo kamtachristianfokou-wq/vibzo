@@ -122,7 +122,7 @@ async function setLang(l) {
 
 /* ---------- état ---------- */
 let sb;
-const S = {
+const S = { postKind: 'video',
   session: null, me: null, myShop: null, cur: 'home', prev: 'home', tab: 'pour', muted: (() => { try { return localStorage.getItem('vibzo_muted') === '1'; } catch (e) { return false; } })(),
   loc: { country: 'CM', region: null, zone: false, world: true },
   feed: [], feedOffset: 0, feedDone: false, feedLoading: false, override: null,
@@ -146,11 +146,11 @@ function requireAuth(msg) {
 }
 
 /* ---------- navigation ---------- */
-const NAV = [['home', 'Accueil', I.home], ['shop', 'Boutique', I.bag], ['create', '', I.plus], ['dating', 'Rencontres', I.heart], ['jobs', 'Emplois', I.brief], ['profile', 'Profil', I.user]];
+const NAV = [['home', 'Accueil', I.home], ['shop', 'Boutique', I.bag], ['create', 'Publier', I.plus], ['dating', 'Rencontres', I.heart], ['jobs', 'Emplois', I.brief], ['profile', 'Profil', I.user]];
 function renderNav() {
   $('#nav').style.display = S.cur === 'auth' || S.cur === 'chat' ? 'none' : 'flex';
   $('#nav').innerHTML = NAV.map(([k, l, ic]) => k === 'create'
-    ? `<button onclick="V.go('create')" aria-label="Publier"><span class="plus">${ic}</span></button>`
+    ? `<button onclick="V.go('create')" aria-label="Publier"><span class="plus">${ic}</span><span class="navlbl">${l}</span></button>`
     : `<button class="${S.cur === k ? 'on' : ''}" onclick="V.go('${k}')">${ic}<span>${l}</span></button>`).join('');
 }
 const SCREENS = {};
@@ -515,7 +515,7 @@ function shareVid(id) {
   const T = [['whatsapp', '💬', 'WhatsApp', '#25D366', `https://wa.me/?text=${full}`], ['facebook', 'f', 'Facebook', '#1877F2', `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`], ['telegram', '✈️', 'Telegram', '#2AABEE', `https://t.me/share/url?url=${enc(url)}&text=${enc(txt)}`], ['x', '𝕏', 'X', '#111', `https://twitter.com/intent/tweet?text=${full}`], ['sms', '✉️', 'SMS', '#34C759', `sms:?&body=${full}`]];
   sheet('Partager', `<div class="shgrid">${T.map(t => `<a href="${t[4]}" target="_blank" rel="noopener" onclick="V.shared('${id}')"><span style="background:${t[3]}">${t[1]}</span>${t[2]}</a>`).join('')}
   <button onclick="V.copyShare('${id}')"><span style="background:#8a9bb0">🔗</span>Copier le lien</button>${navigator.share ? `<button onclick="V.nativeShare('${id}')"><span style="background:#1e9be8">⋯</span>Plus</button>` : ''}</div>
-  <div class="slist" style="margin:14px 0 0"><button onclick="V.repost('${id}')"><span class="e">${v.reposted_by_me ? '↩️' : '🔁'}</span>${v.reposted_by_me ? 'Annuler la republication' : 'Republier pour mes abonnés'}<span class="r">${v.repost_count ? fmtN(v.repost_count) : ''}</span></button>${S.me ? `<button onclick="V.inviteSheet()"><span class="e">🎁</span>Inviter des amis · gagne du Gold<span class="r">›</span></button>` : ''}</div>`);
+  <div class="slist" style="margin:14px 0 0"><button onclick="V.duetWith('${id}')"><span class="e">🎭</span>Faire un Duo<span class="r">›</span></button><button onclick="V.stitchWith('${id}')"><span class="e">✂️</span>Faire un Collage<span class="r">›</span></button>${v.sound ? `<button onclick="V.closeSheet();V.useSound(${esc(JSON.stringify(v.sound))})"><span class="e">🎵</span>Utiliser ce son<span class="r">›</span></button>` : ''}<button onclick="V.repost('${id}')"><span class="e">${v.reposted_by_me ? '↩️' : '🔁'}</span>${v.reposted_by_me ? 'Annuler la republication' : 'Republier pour mes abonnés'}<span class="r">${v.repost_count ? fmtN(v.repost_count) : ''}</span></button>${S.me ? `<button onclick="V.inviteSheet()"><span class="e">🎁</span>Inviter des amis · gagne du Gold<span class="r">›</span></button>` : ''}</div>`);
 }
 function shared(id) { const v = S.vids.get(id); if (v) { v.share_count = (v.share_count || 0) + 1; updShare(id); } sb.rpc('record_share', { p_video: id }).then(() => { }, () => { }); }
 function updShare(id) { const v = S.vids.get(id), b = $('#sh' + id); if (v && b) { b.classList.toggle('on3', !!v.reposted_by_me); b.querySelector('span').textContent = fmtN((v.share_count || 0) + (v.repost_count || 0)); } }
@@ -665,13 +665,13 @@ async function sendReport(type, id, i) {
 let qTimer;
 SCREENS.discover = () => {
   const pre = S.searchQ || ''; S.searchQ = null;
-  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="chStrip"></div><div class="pad" id="livesStrip"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
-  loadTrends(); search(); livesStrip(); loadChallenges().catch(() => { });
+  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="storyStrip" style="padding-bottom:0"></div><div class="pad" id="chStrip"></div><div class="pad" id="livesStrip"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
+  loadTrends(); search(); livesStrip(); loadChallenges().catch(() => { }); loadStories().catch(() => { });
 };
 async function loadTrends() {
   const el = $('#trends'); if (!el) return;
   const q = ($('#q') ? $('#q').value : '').trim();
-  if (q) { el.innerHTML = q.startsWith('#') ? `<div class="taghead"><div class="big">#</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Hashtag · publie ta vidéo avec #${esc(q.slice(1))} pour participer au défi</div></div><button class="btn sm" style="width:auto" onclick="V.go('create')">＋ Participer</button></div>` : q.startsWith('♪') ? `<div class="taghead"><div class="big">♪</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Son · toutes les vidéos avec ce son</div></div></div>` : ''; if (q.startsWith('#') && q.length > 1) tagChallengeBanner(q.slice(1)).catch(() => { }); return; }
+  if (q) { el.innerHTML = q.startsWith('#') ? `<div class="taghead"><div class="big">#</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Hashtag · publie ta vidéo avec #${esc(q.slice(1))} pour participer au défi</div></div><button class="btn sm" style="width:auto" onclick="V.go('create')">＋ Participer</button></div>` : q.startsWith('♪') ? `<div class="taghead"><div class="big">♪</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Son · toutes les vidéos avec ce son</div></div><button class="btn sm" style="width:auto" onclick="V.useSound(${esc(JSON.stringify(q.slice(1)))})">🎵 Utiliser</button></div>` : ''; if (q.startsWith('#') && q.length > 1) tagChallengeBanner(q.slice(1)).catch(() => { }); return; }
   const [{ data: tags }, { data: snds }] = await Promise.all([sb.rpc('trending_tags', { p_limit: 12 }), sb.rpc('trending_sounds', { p_limit: 6 })]);
   el.innerHTML = (tags || []).length || (snds || []).length ? `<div class="lbl">🔥 Tendances de la semaine</div><div class="trend">${(tags || []).map((t, i) => `<button onclick="V.openTag('${esc(t.tag)}')"><b>${i < 3 ? ['🥇', '🥈', '🥉'][i] : '#'}</b> ${esc(t.tag)} <span>${fmtN(t.videos)}</span></button>`).join('')}${(snds || []).map(s => `<button onclick="V.openSound('${esc(s.sound.replace(/'/g, '’'))}')">♪ ${esc(s.sound)} <span>${fmtN(s.videos)}</span></button>`).join('')}</div>` : '';
 }
@@ -705,16 +705,19 @@ SCREENS.create = async () => {
   let prods = [];
   if (S.myShop) { const { data } = await sb.from('products').select('id,name,price,currency').eq('shop_id', S.myShop.id).eq('active', true); prods = data || []; }
   $('#s-create').innerHTML = hdr('Nouvelle vidéo', `<span class="loc">📍 ${esc((C[S.me.country] || {}).f || '')} ${esc(S.me.region || '')}</span>`) + `<div class="pad">
-  <button class="golive" onclick="V.goLive()"><span>🔴</span><div><b>Lancer un live</b><small>Filme-toi en direct, reçois des cœurs et des cadeaux</small></div><i>›</i></button>
+  <div class="seg" style="margin-bottom:10px"><button class="${S.postKind === 'story' ? '' : 'on'}" onclick="V.postKind('video')">🎬 Vidéo</button><button class="${S.postKind === 'story' ? 'on' : ''}" onclick="V.postKind('story')">⏱ Story 24 h</button></div>
+  <button class="golive cam" onclick="V.openCamera({mode:'${S.postKind === 'story' ? 'story' : 'video'}'})"><span>🎥</span><div><b>Filmer avec Vibzo</b><small>Effets, minuteur, texte, sons tendance</small></div><i>›</i></button>
+  ${S.postKind === 'story' ? '' : `<button class="golive" onclick="V.goLive()"><span>🔴</span><div><b>Lancer un live</b><small>Filme-toi en direct, reçois des cœurs et des cadeaux</small></div><i>›</i></button>`}
   <label class="up"><input type="file" accept="video/*" style="display:none" onchange="V.pickVid(this)"><div class="big">📹</div><b>${draft ? 'Changer de vidéo' : 'Choisir une vidéo'}</b><div class="mut small" style="margin-top:4px">Depuis ta galerie ou ta caméra · tous formats · 3 minutes maximum</div></label>
   <div class="prev" id="prev" style="${draft ? '' : 'display:none'};background:#0b2540">${draft ? `<video src="${draft.url}" autoplay loop muted playsinline></video>` : ''}</div>
-  <div class="field"><label>Titre à l’écran (facultatif)</label><input id="ct" maxlength="80" placeholder="Ex : Mon premier challenge 🔥"></div>
+  ${draft && draft.cam && draft.cam.sound ? `<div class="mut small" style="margin-top:8px">♪ ${esc(draft.cam.sound.name)}</div>` : ''}${draft && draft.cam && draft.cam.src ? `<div class="mut small" style="margin-top:8px">${draft.cam.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} <span>avec</span> @${esc(draft.cam.src.username || '')}</div>` : ''}
+  ${S.postKind === 'story' ? `<div class="field"><label>Texte de la story (facultatif)</label><input id="cd" maxlength="150" placeholder="Ex : Ma journée à Douala ☀️"></div><p class="mut small" style="margin-top:8px">Ta story est visible 24 heures par tes abonnés, puis elle disparaît.</p>` : `<div class="field"><label>Titre à l’écran (facultatif)</label><input id="ct" maxlength="80" placeholder="Ex : Mon premier challenge 🔥"></div>
   <div class="field"><label>Description</label><textarea id="cd" rows="2" maxlength="300" placeholder="Décris ta vidéo…"></textarea></div>
-  <div class="field"><label>Hashtags</label><input id="ch" placeholder="danse, humour, cuisine" value="${esc(S.draftTag || '')}"></div>
-  ${prods.length ? `<div class="field"><label>🛍️ Taguer un produit de ma boutique</label><select id="cp"><option value="">Aucun</option>${prods.map(p => `<option value="${p.id}">${esc(p.name)} · ${money(p.price, p.currency)}</option>`).join('')}</select></div>` : ''}
+  <div class="field"><label>Hashtags</label><input id="ch" placeholder="danse, humour, cuisine" value="${esc(S.draftTag || '')}"></div>`}
+  ${prods.length && S.postKind !== 'story' ? `<div class="field"><label>🛍️ Taguer un produit de ma boutique</label><select id="cp"><option value="">Aucun</option>${prods.map(p => `<option value="${p.id}">${esc(p.name)} · ${money(p.price, p.currency)}</option>`).join('')}</select></div>` : ''}
   <p class="mut small" style="margin-top:12px">Ta vidéo sera visible par tous dans ta région. Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs de façon inappropriée.</p>
   <div class="progress" id="prog" style="display:none"><i></i></div>
-  <button class="btn" id="pubBtn" onclick="V.publish()">Publier</button></div>`;
+  <button class="btn" id="pubBtn" onclick="V.publish()">${S.postKind === 'story' ? 'Publier la story' : 'Publier'}</button></div>`;
 };
 /* =====================================================================
    CONVERSION VIDÉO : tout format → MP4 H.264 + AAC, 720p max, lisible partout
@@ -808,13 +811,18 @@ async function publish() {
     if (body.size > 50 * 1024 * 1024) throw new Error('Vidéo trop lourde après préparation (50 Mo max). Raccourcis-la.');
     btn.innerHTML = '<span class="spin"></span> Envoi en cours…'; pct = 70; bar.style.width = '70%';
     const timer2 = setInterval(() => { pct = Math.min(95, pct + (95 - pct) * 0.08); bar.style.width = pct + '%'; }, 400);
-    const path = `${uid()}/${Date.now()}.${ext}`;
+    const story = S.postKind === 'story', path = `${uid()}/${story ? 'stories/' : ''}${Date.now()}.${ext}`;
     const { error: upErr } = await sb.storage.from('videos').upload(path, body, { contentType: type, upsert: false });
     clearInterval(timer2);
     if (upErr) throw upErr;
     const { data: pub } = sb.storage.from('videos').getPublicUrl(path);
+    if (story) {
+      const { error: se } = await sb.from('stories').insert({ user_id: uid(), media_url: pub.publicUrl, caption: ($('#cd').value || '').trim().slice(0, 150) }); if (se) throw se;
+      bar.style.width = '100%'; draft = null; S.postKind = 'video'; toast('Story publiée ⏱ Elle reste 24 heures'); go('discover'); return;
+    }
+    const cm = draft.cam || {};
     const tags = ($('#ch').value || '').toLowerCase().split(/[,\s#]+/).map(t => t.replace(/[^a-z0-9àâäéèêëïîôöùûüç_]/g, '')).filter(Boolean).slice(0, 8);
-    const row = { user_id: uid(), video_url: pub.publicUrl, title: $('#ct').value.trim(), caption: $('#cd').value.trim(), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null };
+    const row = { user_id: uid(), video_url: pub.publicUrl, title: $('#ct').value.trim(), caption: ($('#cd').value.trim() + (cm.src ? ` ${cm.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} avec @${cm.src.username || ''}` : '')).trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: cm.sound ? cm.sound.name : '', duet_of: cm.mode === 'duet' && cm.src ? cm.src.id : null, stitch_of: cm.mode === 'stitch' && cm.src ? cm.src.id : null };
     const { error } = await sb.from('videos').insert(row); if (error) throw error;
     bar.style.width = '100%'; draft = null; S.draftTag = null; toast('Vidéo publiée 🎉');
     S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc();
@@ -1106,7 +1114,7 @@ SCREENS.profile = async () => {
   if (error) throw error; if (!p) { $('#s-profile').innerHTML = hdr('Profil', '', 'home') + '<div class="empty">Profil introuvable.</div>'; return; }
   const tab = own ? S.profTab : 'videos';
   $('#s-profile').innerHTML = hdr('@' + esc(p.username), own ? `<button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button><button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.settings()" aria-label="Paramètres">${I.gear}</button>` : `<button class="ib" onclick="V.shareThing('u','${p.id}','${esc(p.username)}')" aria-label="Partager">📤</button><button class="ib" onclick="V.report('profile','${p.id}')" aria-label="Signaler">🚩</button>`, own ? '' : (S.prev && S.prev !== 'profile' ? S.prev : 'home')) + `
-  <div class="ptop"><div class="pav ${p.is_vip ? 'gold' : ''}" style="${p.avatar_url ? '' : gbg(gfor(p.username))}">${p.avatar_url ? `<img class="avimg" src="${esc(p.avatar_url)}" alt="">` : esc(p.display_name[0].toUpperCase())}${p.is_vip ? '<span class="gb">👑</span>' : ''}</div>
+  <div class="ptop"><div class="pav ${p.is_vip ? 'gold' : ''}" onclick="V.openUserStories('${p.id}')" style="${p.avatar_url ? '' : gbg(gfor(p.username))}">${p.avatar_url ? `<img class="avimg" src="${esc(p.avatar_url)}" alt="">` : esc(p.display_name[0].toUpperCase())}${p.is_vip ? '<span class="gb">👑</span>' : ''}</div>
   <h2 style="margin-top:12px;font-size:19px">${esc(p.display_name)}${vb(p.verified)}${p.is_creator ? ' <span class="crb">💰 Créateur</span>' : ''}</h2>${p.bio ? `<p class="mut" style="font-size:14px;margin-top:4px">${esc(p.bio)}</p>` : ''}
   <div class="tags" style="justify-content:center"><span>📍 ${esc(p.region || '')} ${esc((C[p.country] || {}).f || '')} ${esc((C[p.country] || {}).n || '')}</span>${p.is_vip ? '<span style="color:#a87800">👑 Gold</span>' : ''}</div>
   ${socials(p)}
@@ -2577,7 +2585,268 @@ async function liveTop() {
 }
 function liveQuick(e) { const i = $('#lvMsg'); if (!i) return; i.value = e; liveSend(); }
 
+/* =====================================================================
+   STUDIO : caméra intégrée, effets, minuteur, texte, sons, Duo et Collage
+   ===================================================================== */
+const CAM_FILTERS = [['Normal', 'none'], ['Lumineux', 'brightness(1.15) contrast(1.05) saturate(1.1)'], ['Doux', 'brightness(1.08) contrast(.92) saturate(1.05) blur(.6px)'], ['Chaud', 'sepia(.25) saturate(1.3) brightness(1.05)'], ['Froid', 'hue-rotate(-12deg) saturate(1.1) brightness(1.03)'], ['Vintage', 'sepia(.5) contrast(1.1) brightness(.95)'], ['N&B', 'grayscale(1) contrast(1.15)'], ['Pop', 'saturate(1.8) contrast(1.15)']];
+let CAM = null;
+const camMime = () => ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+async function openCamera(o = {}) {
+  if (!requireAuth('Connecte-toi pour filmer.')) return;
+  if (!navigator.mediaDevices || !window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return toast('Ton navigateur ne permet pas de filmer ici : choisis une vidéo de ta galerie');
+  closeSheet(); await closeCamera();
+  CAM = { mode: o.mode || 'video', src: o.src || null, sound: o.sound || null, facing: 'user', filter: 0, timer: 0, max: o.mode === 'story' ? 60 : 60, texts: [], elapsed: 0, recording: false, segs: [], mic: true, clipLen: 5 };
+  if (CAM.src) CAM.max = Math.min(180, Math.max(5, Math.ceil(CAM.src.duration || 60)));
+  const d = document.createElement('div'); d.id = 'camOv';
+  const modeName = { video: '', story: 'Story', duet: 'Duo', stitch: 'Collage' }[CAM.mode];
+  d.innerHTML = `<canvas id="camCv" width="720" height="1280"></canvas><div class="camwait" id="camWait">${loading()}<div>Ouverture de la caméra…</div></div>
+  <div class="camprog" id="camProg"><i></i></div>
+  <div class="camtop"><button class="ib" onclick="V.closeCamera()" aria-label="Fermer">${I.close}</button>
+    <button class="camsnd" onclick="V.camSoundPick()">♪ <span id="camSndT">${CAM.sound ? esc(CAM.sound.name) : CAM.src ? esc('@' + (CAM.src.username || '')) : 'Ajouter un son'}</span></button>${modeName ? `<span class="cammode">${modeName}</span>` : '<span style="width:36px"></span>'}</div>
+  <div class="camside">
+    <button onclick="V.camFlip()" aria-label="Retourner"><b>🔄</b><span>Retourner</span></button>
+    <button onclick="V.camTimer()" aria-label="Minuteur"><b id="camTimB">⏱</b><span id="camTimT">Minuteur</span></button>
+    <button onclick="V.camFilters()" aria-label="Filtres"><b>✨</b><span id="camFilT">Filtres</span></button>
+    <button onclick="V.camText()" aria-label="Texte"><b>Aa</b><span>Texte</span></button>
+    ${CAM.mode === 'video' || CAM.mode === 'story' ? `<button onclick="V.camDur()" aria-label="Durée"><b id="camDurB">60s</b><span>Durée</span></button>` : ''}
+    ${CAM.sound || CAM.src ? `<button onclick="V.camMic()" aria-label="Micro"><b id="camMicB">🎙️</b><span>Micro</span></button>` : ''}
+    ${CAM.mode === 'stitch' ? `<button onclick="V.camClip()" aria-label="Extrait"><b id="camClipB">5s</b><span>Extrait</span></button>` : ''}
+  </div>
+  <div class="camfil" id="camFil" style="display:none">${CAM_FILTERS.map((f, i) => `<button onclick="V.camFilter(${i})" class="${i === 0 ? 'on' : ''}">${f[0]}</button>`).join('')}</div>
+  <div class="camcount" id="camCount" style="display:none"></div>
+  <div class="cambot"><button class="camsm" id="camRedo" onclick="V.camRedo()" style="visibility:hidden" aria-label="Recommencer">↺</button>
+    <button class="camrec" id="camRec" onclick="V.camRecord()" aria-label="Filmer"><i></i></button>
+    <button class="camsm ok" id="camDone" onclick="V.camDone()" style="visibility:hidden" aria-label="Terminer">✓</button>
+    ${CAM.mode === 'video' ? `<label class="camsm gal" aria-label="Galerie"><input type="file" accept="video/*" style="display:none" onchange="V.closeCamera();V.go('create');setTimeout(()=>V.pickVid(this),300)">🖼️</label>` : ''}</div>`;
+  $('#sheetBg').parentNode.appendChild(d);
+  document.querySelectorAll('#feed video').forEach(v => v.pause());
+  try { await camStart(); } catch (e) { closeCamera(); return toast('⚠️ Autorise la caméra et le micro pour filmer'); }
+  if (CAM.src) { try { await camLoadSrc(CAM.src.video_url); } catch (e) { toast('Impossible de charger la vidéo d’origine'); } }
+  if (CAM.sound) { try { await camLoadSound(CAM.sound.url); } catch (e) { toast('Impossible de charger le son'); } }
+  $('#camWait').style.display = 'none'; camLoop();
+}
+async function camStart() {
+  if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
+  CAM.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: CAM.facing, width: { ideal: 720 }, height: { ideal: 1280 } }, audio: { echoCancellation: true, noiseSuppression: true } });
+  if (!CAM.vid) { CAM.vid = document.createElement('video'); CAM.vid.muted = true; CAM.vid.playsInline = true; }
+  CAM.vid.srcObject = new MediaStream(CAM.stream.getVideoTracks()); await CAM.vid.play().catch(() => { });
+  if (CAM.ac && CAM.micNode) { try { CAM.micNode.disconnect(); } catch (e) { } CAM.micNode = CAM.ac.createMediaStreamSource(new MediaStream(CAM.stream.getAudioTracks())); CAM.micNode.connect(CAM.micGain); }
+}
+function camAudio() {
+  if (CAM.ac) return; const AC = window.AudioContext || window.webkitAudioContext; CAM.ac = new AC(); CAM.dest = CAM.ac.createMediaStreamDestination();
+  CAM.micGain = CAM.ac.createGain(); CAM.micGain.gain.value = CAM.mic ? 1 : 0; CAM.micGain.connect(CAM.dest);
+  CAM.micNode = CAM.ac.createMediaStreamSource(new MediaStream(CAM.stream.getAudioTracks())); CAM.micNode.connect(CAM.micGain);
+  const hook = el => { const n = CAM.ac.createMediaElementSource(el); n.connect(CAM.dest); n.connect(CAM.ac.destination); };
+  if (CAM.srcEl) hook(CAM.srcEl); if (CAM.sndEl) hook(CAM.sndEl);
+}
+function camLoadSrc(url) {
+  return new Promise((ok, ko) => { const v = document.createElement('video'); v.crossOrigin = 'anonymous'; v.playsInline = true; v.preload = 'auto'; v.src = url;
+    v.onloadeddata = () => { CAM.srcEl = v; if (v.duration && isFinite(v.duration)) CAM.max = Math.min(180, CAM.mode === 'stitch' ? 60 : Math.ceil(v.duration)); ok(); }; v.onerror = ko; });
+}
+function camLoadSound(url) {
+  return new Promise((ok, ko) => { const a = document.createElement('video'); a.crossOrigin = 'anonymous'; a.playsInline = true; a.preload = 'auto'; a.src = url; a.onloadeddata = () => { CAM.sndEl = a; ok(); }; a.onerror = ko; });
+}
+function drawCover(ctx, el, x, y, w, h, mirror) {
+  const vw = el.videoWidth || 720, vh = el.videoHeight || 1280; if (!vw || !vh) return;
+  const s = Math.max(w / vw, h / vh), dw = vw * s, dh = vh * s;
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  if (mirror) { ctx.translate(x + w, y); ctx.scale(-1, 1); ctx.drawImage(el, (w - dw) / 2, (h - dh) / 2, dw, dh); }
+  else ctx.drawImage(el, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+  ctx.restore();
+}
+function camLoop() {
+  if (!CAM) return; const cv = $('#camCv'); if (!cv) return; const ctx = cv.getContext('2d'), W = 720, H = 1280, mir = CAM.facing === 'user';
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const f = CAM_FILTERS[CAM.filter][1];
+  const cam = (x, y, w, h) => { ctx.filter = f; drawCover(ctx, CAM.vid, x, y, w, h, mir); ctx.filter = 'none'; };
+  if (CAM.mode === 'duet' && CAM.srcEl) { cam(0, 0, W / 2, H); drawCover(ctx, CAM.srcEl, W / 2, 0, W / 2, H, false); ctx.fillStyle = '#fff'; ctx.fillRect(W / 2 - 1, 0, 2, H); }
+  else if (CAM.mode === 'stitch' && CAM.srcEl && CAM.inClip) drawCover(ctx, CAM.srcEl, 0, 0, W, H, false);
+  else cam(0, 0, W, H);
+  CAM.texts.forEach(t => { ctx.font = '800 54px "Plus Jakarta Sans", Arial, sans-serif'; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(0,0,0,.75)'; ctx.fillStyle = '#fff';
+    const y = t.pos === 'top' ? 260 : t.pos === 'mid' ? H / 2 : H - 330; wrapText(t.txt, 620).forEach((l, i, a) => { const yy = y + (i - (a.length - 1) / 2) * 64; ctx.strokeText(l, W / 2, yy); ctx.fillText(l, W / 2, yy); }); });
+  if (CAM.recording) {
+    const now = performance.now(); CAM.elapsed += (now - CAM.t0) / 1000; CAM.t0 = now;
+    if (CAM.mode === 'stitch' && CAM.inClip && CAM.srcEl && CAM.srcEl.currentTime >= CAM.clipLen) { CAM.inClip = false; CAM.srcEl.pause(); }
+    if (CAM.elapsed >= CAM.max) { camPause(); camDone(); }
+    const p = $('#camProg i'); if (p) p.style.width = Math.min(100, CAM.elapsed / CAM.max * 100) + '%';
+    if (CAM && CAM.elapsed >= 1) { const dn = $('#camDone'); if (dn && dn.style.visibility !== 'visible') dn.style.visibility = 'visible'; }
+  }
+  CAM.raf = requestAnimationFrame(camLoop);
+}
+function wrapText(t, max) {
+  const ctx = $('#camCv').getContext('2d'), words = String(t).split(' '), lines = []; let cur = '';
+  words.forEach(w => { const test = cur ? cur + ' ' + w : w; if (ctx.measureText(test).width > max && cur) { lines.push(cur); cur = w; } else cur = test; }); if (cur) lines.push(cur); return lines.slice(0, 4);
+}
+function camRecord() {
+  if (!CAM) return;
+  if (CAM.recording) { camPause(); return; }
+  if (CAM.elapsed >= CAM.max) return;
+  if (CAM.timer && !CAM.counting) {
+    CAM.counting = true; let n = CAM.timer; const el = $('#camCount'); el.style.display = 'flex'; el.textContent = n;
+    const it = setInterval(() => { n--; if (!CAM) return clearInterval(it); if (n <= 0) { clearInterval(it); el.style.display = 'none'; CAM.counting = false; camGo(); } else el.textContent = n; }, 1000);
+    return;
+  }
+  camGo();
+}
+function camGo() {
+  if (!CAM) return; camAudio(); if (CAM.ac.state === 'suspended') CAM.ac.resume();
+  if (!CAM.rec) {
+    const cs = $('#camCv').captureStream(30), st = new MediaStream([...cs.getVideoTracks(), ...CAM.dest.stream.getAudioTracks()]);
+    CAM.mime = camMime(); CAM.chunks = [];
+    CAM.rec = new MediaRecorder(st, CAM.mime ? { mimeType: CAM.mime, videoBitsPerSecond: 2_500_000 } : undefined);
+    CAM.rec.ondataavailable = e => { if (e.data && e.data.size) CAM.chunks.push(e.data); };
+    CAM.rec.start(500);
+    if (CAM.mode === 'stitch' && CAM.srcEl) { CAM.inClip = true; CAM.srcEl.currentTime = 0; }
+  } else if (CAM.rec.state === 'paused') CAM.rec.resume();
+  if (CAM.srcEl && (CAM.mode === 'duet' || CAM.inClip)) CAM.srcEl.play().catch(() => { });
+  if (CAM.sndEl) CAM.sndEl.play().catch(() => { });
+  CAM.recording = true; CAM.t0 = performance.now(); CAM.segs.push(CAM.elapsed);
+  $('#camRec').classList.add('on'); $('#camRedo').style.visibility = 'hidden'; $('#camDone').style.visibility = CAM.elapsed >= 1 ? 'visible' : 'hidden';
+  document.querySelectorAll('#camOv .camside, #camOv .camtop .camsnd').forEach(e => e.style.opacity = '.35');
+}
+function camPause() {
+  if (!CAM || !CAM.recording) return; CAM.recording = false;
+  try { if (CAM.rec && CAM.rec.state === 'recording') CAM.rec.pause(); } catch (e) { }
+  if (CAM.srcEl) CAM.srcEl.pause(); if (CAM.sndEl) CAM.sndEl.pause();
+  $('#camRec').classList.remove('on'); $('#camRedo').style.visibility = 'visible'; $('#camDone').style.visibility = CAM.elapsed >= 1 ? 'visible' : 'hidden';
+  document.querySelectorAll('#camOv .camside, #camOv .camtop .camsnd').forEach(e => e.style.opacity = '1');
+  const pg = $('#camProg'); if (pg) pg.insertAdjacentHTML('beforeend', `<b style="left:${Math.min(100, CAM.elapsed / CAM.max * 100)}%"></b>`);
+}
+function camRedo() {
+  if (!CAM || !confirm('Recommencer depuis le début ?')) return;
+  try { if (CAM.rec && CAM.rec.state !== 'inactive') CAM.rec.stop(); } catch (e) { }
+  CAM.rec = null; CAM.chunks = []; CAM.elapsed = 0; CAM.segs = []; CAM.inClip = false;
+  if (CAM.srcEl) { CAM.srcEl.pause(); CAM.srcEl.currentTime = 0; } if (CAM.sndEl) { CAM.sndEl.pause(); CAM.sndEl.currentTime = 0; }
+  const pg = $('#camProg'); if (pg) pg.innerHTML = '<i></i>'; $('#camRedo').style.visibility = 'hidden'; $('#camDone').style.visibility = 'hidden';
+}
+async function camDone() {
+  if (!CAM || !CAM.rec || CAM.done) return; CAM.done = true; camPause();
+  const rec = CAM.rec, mime = CAM.mime || 'video/webm';
+  await new Promise(r => { rec.onstop = r; try { rec.state !== 'inactive' ? rec.stop() : r(); } catch (e) { r(); } });
+  const blob = new Blob(CAM.chunks, { type: mime.split(';')[0] }), ext = /mp4/.test(mime) ? 'mp4' : 'webm';
+  const file = new File([blob], `vibzo-${Date.now()}.${ext}`, { type: blob.type });
+  const meta = { mode: CAM.mode, src: CAM.src, sound: CAM.sound };
+  await closeCamera();
+  draft = { file, url: URL.createObjectURL(file), cam: meta };
+  S.postKind = meta.mode === 'story' ? 'story' : 'video';
+  if (meta.mode === 'duet' && meta.src) S.draftTag = 'duo';
+  if (meta.mode === 'stitch' && meta.src) S.draftTag = 'collage';
+  go('create');
+}
+async function closeCamera() {
+  if (!CAM) return; const c = CAM; CAM = null; cancelAnimationFrame(c.raf);
+  try { if (c.rec && c.rec.state !== 'inactive') c.rec.stop(); } catch (e) { }
+  if (c.stream) c.stream.getTracks().forEach(t => t.stop());
+  [c.srcEl, c.sndEl].forEach(e => { if (e) { e.pause(); e.removeAttribute('src'); e.load(); } });
+  if (c.ac) c.ac.close().catch(() => { });
+  const ov = $('#camOv'); if (ov) ov.remove();
+}
+async function camFlip() { if (!CAM || CAM.recording) return; CAM.facing = CAM.facing === 'user' ? 'environment' : 'user'; try { await camStart(); } catch (e) { toast('Impossible de changer de caméra'); } }
+function camTimer() { if (!CAM) return; CAM.timer = CAM.timer === 0 ? 3 : CAM.timer === 3 ? 10 : 0; $('#camTimT').textContent = CAM.timer ? CAM.timer + ' s' : 'Minuteur'; $('#camTimB').textContent = CAM.timer ? '⏱' + CAM.timer : '⏱'; }
+function camFilters() { const f = $('#camFil'); if (f) f.style.display = f.style.display === 'none' ? 'flex' : 'none'; }
+function camFilter(i) { if (!CAM) return; CAM.filter = i; document.querySelectorAll('#camFil button').forEach((b, k) => b.classList.toggle('on', k === i)); $('#camFilT').textContent = i ? CAM_FILTERS[i][0] : 'Filtres'; }
+function camDur() { if (!CAM || CAM.elapsed > 0) return; const opts = CAM.mode === 'story' ? [15, 60] : [15, 60, 180]; CAM.max = opts[(opts.indexOf(CAM.max) + 1) % opts.length]; $('#camDurB').textContent = CAM.max >= 60 ? (CAM.max / 60) + ' min' : CAM.max + 's'; }
+function camMic() { if (!CAM) return; CAM.mic = !CAM.mic; if (CAM.micGain) CAM.micGain.gain.value = CAM.mic ? 1 : 0; $('#camMicB').textContent = CAM.mic ? '🎙️' : '🔇'; toast(CAM.mic ? 'Micro activé' : 'Micro coupé : seul le son sera enregistré'); }
+function camClip() { if (!CAM || CAM.elapsed > 0) return; CAM.clipLen = CAM.clipLen >= 5 ? 1 : CAM.clipLen + 1; $('#camClipB').textContent = CAM.clipLen + 's'; }
+function camText() {
+  if (!CAM || CAM.recording) return;
+  sheet('Aa Ajouter un texte', `<div class="field"><label>Texte</label><input id="ctxT" maxlength="60" placeholder="Ex : Regarde jusqu’à la fin 😱"></div>
+  <div class="field"><label>Position</label><select id="ctxP"><option value="top">En haut</option><option value="mid">Au milieu</option><option value="bot" selected>En bas</option></select></div>
+  <button class="btn" onclick="V.camTextAdd()">Ajouter</button>${CAM.texts.length ? `<button class="btn ghost" onclick="V.camTextClear()">Retirer les textes</button>` : ''}`);
+}
+function camTextAdd() { const t = ($('#ctxT').value || '').trim(); if (!t) return toast('Écris ton texte'); CAM.texts.push({ txt: t, pos: $('#ctxP').value }); closeSheet(); }
+function camTextClear() { CAM.texts = []; closeSheet(); }
+async function camSoundPick() {
+  if (!CAM || CAM.recording || CAM.elapsed > 0 || CAM.src) return;
+  sheet('♪ Ajouter un son', `<p class="mut small">Choisis un son tendance : il sera ajouté à ta vidéo pendant que tu filmes.</p><div id="sndL">${loading()}</div>`);
+  const { data } = await sb.rpc('trending_sounds', { p_limit: 20 }); if (!$('#sndL')) return;
+  const rows = data || []; S._snds = rows;
+  $('#sndL').innerHTML = (rows.length ? rows.map((s, i) => `<button class="citem" style="width:100%;text-align:left" onclick="V.camSoundUse(${i})"><div class="im" style="background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">♪</div><div class="grow"><b>${esc(s.sound || 'Son')}</b><div class="mut small">${fmtN(s.videos || 0)} <span>vidéos</span></div></div></button>`).join('') : '<p class="mut small">Aucun son tendance pour le moment.</p>') + (CAM.sound ? `<button class="btn ghost" onclick="V.camSoundUse(-1)">Retirer le son</button>` : '');
+}
+async function camSoundUse(i) {
+  closeSheet(); if (!CAM) return;
+  if (i < 0) { if (CAM.sndEl) { CAM.sndEl.pause(); CAM.sndEl = null; } CAM.sound = null; $('#camSndT').textContent = 'Ajouter un son'; return; }
+  const s = (S._snds || [])[i]; if (!s) return; const name = s.sound || s.name;
+  const { data } = await sb.from('videos').select('video_url').eq('sound', name).eq('status', 'published').order('created_at').limit(1).maybeSingle();
+  if (!data) return toast('Son indisponible');
+  if (CAM.ac) return toast('Recommence la vidéo pour changer de son');
+  try { await camLoadSound(data.video_url); CAM.sound = { name, url: data.video_url }; $('#camSndT').textContent = name; toast('♪ Son ajouté'); } catch (e) { toast('Impossible de charger le son'); }
+}
+async function useSound(name) {
+  const { data } = await sb.from('videos').select('video_url').eq('sound', name).eq('status', 'published').order('created_at').limit(1).maybeSingle();
+  if (!data) return toast('Son indisponible'); openCamera({ mode: 'video', sound: { name, url: data.video_url } });
+}
+function duetWith(id) { const v = S.vids.get(id); if (!v) return; closeSheet(); openCamera({ mode: 'duet', src: v }); }
+function stitchWith(id) { const v = S.vids.get(id); if (!v) return; closeSheet(); openCamera({ mode: 'stitch', src: v }); }
+
+/* =====================================================================
+   STORIES (24 h)
+   ===================================================================== */
+async function loadStories() {
+  const el = $('#storyStrip'); if (!el || !uid()) { if (el) el.innerHTML = ''; return; }
+  const { data } = await sb.from('stories_feed').select('*').eq('mine_or_followed', true).order('created_at', { ascending: true }).limit(200);
+  if (!$('#storyStrip')) return;
+  const by = new Map(); (data || []).forEach(s => { if (!by.has(s.user_id)) by.set(s.user_id, []); by.get(s.user_id).push(s); });
+  S.storyGroups = [...by.values()].sort((a, b) => (a[0].user_id === uid() ? -1 : b[0].user_id === uid() ? 1 : 0) || (a.every(x => x.seen) - b.every(x => x.seen)));
+  const mine = by.get(uid());
+  el.innerHTML = `<div class="ststrip">${mine ? '' : `<button onclick="V.openCamera({mode:'story'})"><div class="string add">${avatar(S.me, 58)}<span>＋</span></div><small>Ta story</small></button>`}${S.storyGroups.map((g, i) => `<button onclick="V.openStories(${i})"><div class="string ${g.every(x => x.seen) ? 'seen' : ''}">${avatar(g[0], 58)}</div><small>${g[0].user_id === uid() ? '<span>Ta story</span>' : '@' + esc(g[0].username)}</small></button>`).join('')}</div>`;
+}
+let STV = null;
+function openStories(gi, si = 0) {
+  const groups = S.storyGroups || []; if (!groups[gi]) return; STV && clearTimeout(STV.t);
+  STV = { gi, si: Math.min(si, groups[gi].length - 1) };
+  let ov = $('#stOv'); if (!ov) { ov = document.createElement('div'); ov.id = 'stOv'; $('#sheetBg').parentNode.appendChild(ov); }
+  document.querySelectorAll('#feed video').forEach(v => v.pause()); stShow();
+}
+function stShow() {
+  const g = (S.storyGroups || [])[STV.gi], s = g && g[STV.si], ov = $('#stOv'); if (!s || !ov) return closeStories();
+  const mine = s.user_id === uid();
+  ov.innerHTML = `<div class="stbars">${g.map((x, i) => `<i class="${i < STV.si ? 'done' : ''}"><b id="${i === STV.si ? 'stCur' : ''}"></b></i>`).join('')}</div>
+  <div class="sthead">${avatar(s, 34)}<div class="grow"><b>${esc(s.display_name)}${vb(s.verified)}</b><small>${ago(s.created_at)}</small></div>${mine ? `<button onclick="V.storyDel('${s.id}')" aria-label="Supprimer">🗑️</button>` : ''}<button class="ib" onclick="V.closeStories()" aria-label="Fermer">${I.close}</button></div>
+  <video id="stVid" src="${esc(s.media_url)}" playsinline autoplay ${S.muted ? 'muted' : ''}></video>
+  ${s.caption ? `<div class="stcap">${esc(s.caption)}</div>` : ''}
+  <div class="stnav l" onclick="V.storyStep(-1)"></div><div class="stnav r" onclick="V.storyStep(1)"></div>
+  ${mine ? `<div class="stfoot">👁 ${fmtN(s.view_count || 0)} <span>vues</span></div>` : `<div class="stfoot"><button onclick="V.storyReply('${s.user_id}')">💬 <span>Répondre</span></button></div>`}`;
+  const v = $('#stVid'); v.onended = () => storyStep(1);
+  v.ontimeupdate = () => { const b = $('#stCur'); if (b && v.duration) b.style.width = (v.currentTime / v.duration * 100) + '%'; };
+  v.play().catch(() => { v.muted = true; v.play().catch(() => { }); });
+  if (!s.seen && !mine) { s.seen = true; sb.from('story_views').insert({ story_id: s.id, user_id: uid() }).then(() => { }, () => { }); }
+}
+function storyStep(d) {
+  if (!STV) return; const groups = S.storyGroups || [], g = groups[STV.gi];
+  let si = STV.si + d, gi = STV.gi;
+  if (si >= g.length) { gi++; si = 0; } else if (si < 0) { gi--; si = gi >= 0 ? groups[gi].length - 1 : 0; }
+  if (gi < 0 || gi >= groups.length) return closeStories();
+  STV.gi = gi; STV.si = si; stShow();
+}
+function closeStories() { const ov = $('#stOv'); if (ov) ov.remove(); STV = null; loadStories().catch(() => { }); }
+async function storyDel(id) { if (!confirm('Supprimer cette story ?')) return; await sb.from('stories').delete().eq('id', id); closeStories(); toast('Story supprimée'); }
+function storyReply(userId) { closeStories(); chatWith(userId, 'dm', '', null); }
+async function openUserStories(userId) {
+  await loadStories(); const gi = (S.storyGroups || []).findIndex(g => g[0].user_id === userId);
+  if (gi >= 0) openStories(gi); else openProfile(userId);
+}
+
+/* =====================================================================
+   ORDINATEUR ET TABLETTE : raccourcis clavier
+   ===================================================================== */
+window.addEventListener('keydown', e => {
+  if (S.cur !== 'home' || CAM || LV || STV || $('#sheetBg').classList.contains('on') || /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) {
+    if (STV && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { e.preventDefault(); storyStep(e.key === 'ArrowRight' ? 1 : -1); }
+    if (STV && e.key === 'Escape') closeStories();
+    return;
+  }
+  const feed = $('#feed'); if (!feed) return;
+  if (e.key === 'ArrowDown' || e.key === 'j' || e.key === 'PageDown') { e.preventDefault(); feed.scrollBy({ top: feed.clientHeight, behavior: 'smooth' }); }
+  else if (e.key === 'ArrowUp' || e.key === 'k' || e.key === 'PageUp') { e.preventDefault(); feed.scrollBy({ top: -feed.clientHeight, behavior: 'smooth' }); }
+  else if (e.key === ' ') { e.preventDefault(); const i = Math.round(feed.scrollTop / feed.clientHeight), sl = feed.children[i], v = sl && sl.querySelector('video'); if (v) v.paused ? v.play().catch(() => { }) : v.pause(); }
+  else if (e.key === 'm' || e.key === 'M') toggleMute();
+  else if (e.key === 'l' || e.key === 'L') { const i = Math.round(feed.scrollTop / feed.clientHeight), sl = feed.children[i]; if (sl && sl.dataset.id) like(sl.dataset.id); }
+});
+
 window.V = {
+  openCamera, closeCamera, camRecord, camRedo, camDone, camFlip, camTimer, camFilters, camFilter, camDur, camMic, camClip, camText, camTextAdd, camTextClear, camSoundPick, camSoundUse, useSound, duetWith, stitchWith,
+  openStories, storyStep, closeStories, storyDel, storyReply, openUserStories, postKind: k => { S.postKind = k; go('create'); },
   livePinMsg, liveVote, livePollForm, livePollStart, livePollEnd, liveGoalForm, liveGoalStart, liveModForm, liveModSave, liveTools, liveMore, liveViewers, liveGuest, liveKick, liveRequest, liveFollow, liveQuick,
   shopReviews, replyReview, reviewForm, pickStars, sendReview, verifySheet, sendVerify, liveProducts, livePin, liveBuy,
   openService, svcReviewForm, sendSvcReview, serviceForm, saveService, toggleService, delService, svcCat: c => { S.svcCat = c.replace(/’/g, "'"); go('shop'); }, shopTab: t => { S.shopTab = t; go('shop'); },
@@ -2585,7 +2854,7 @@ window.V = {
   saverSheet, setSaver, setAutoDl, dlOffline, offClear, offlinePlay, offNext, offRemove, offClose,
   shareThing, copyThing, nativeThing, openOfferLink, openAppsLink,
   livesSheet, goLive, startLive, openLive, closeLive, liveTap, liveHeart, liveSend, liveFlip, liveMic, liveGiftSheet, sendGiftLive, liveSound,
-  isBusy: () => dlBusy || giftBusy || mfaBusy || !!LV,
+  isBusy: () => dlBusy || giftBusy || mfaBusy || !!LV || !!CAM,
   wvSound, wvClose,
   downloadVid,
   giveCoins,
