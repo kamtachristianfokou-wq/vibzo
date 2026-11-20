@@ -122,7 +122,7 @@ async function setLang(l) {
 
 /* ---------- état ---------- */
 let sb;
-const S = { postKind: 'video',
+const S = { postKind: 'video', sTab: 'top', replyCm: null,
   session: null, me: null, myShop: null, cur: 'home', prev: 'home', tab: 'pour', muted: (() => { try { return localStorage.getItem('vibzo_muted') === '1'; } catch (e) { return false; } })(),
   loc: { country: 'CM', region: null, zone: false, world: true },
   feed: [], feedOffset: 0, feedDone: false, feedLoading: false, override: null,
@@ -344,8 +344,8 @@ function slideHTML(v) {
   S.vids.set(v.id, v);
   const mine = v.user_id === uid();
   return `<div class="slide" data-id="${v.id}">
-  <div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" loop playsinline ${S.muted || soundBlocked ? 'muted' : ''} preload="${S.saver ? 'none' : 'metadata'}" onloadedmetadata="V.noImg(this)"></video></div>
-  ${v.title ? `<div class="vtitle" style="top:auto;bottom:150px">${esc(v.title)}</div>` : ''}
+  ${isPh(v) ? photoHTML(v) : `<div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" loop playsinline ${S.muted || soundBlocked ? 'muted' : ''} preload="${S.saver ? 'none' : 'metadata'}" onloadedmetadata="V.noImg(this)"></video></div>`}
+  ${v.title ? `<div class="vtitle" style="top:auto;bottom:150px">${esc(v.title)}</div>` : ''}${v.reply_text ? `<div class="rstk"><small>💬 <span>Réponse à</span></small>${esc(v.reply_text)}</div>` : ''}
   <div class="vtap" onclick="V.tapVid(event,'${v.id}')" onpointerdown="V.holdStart(event,this)" onpointerup="V.holdEnd(this)" onpointerleave="V.holdEnd(this)" onpointercancel="V.holdEnd(this)" oncontextmenu="return false"></div><div class="pauseIc">▶</div><div class="spd">2x ⏩</div>
   <div class="vprog" onpointerdown="V.seek(event,this)"><i></i></div>
   <div class="rail">
@@ -381,7 +381,7 @@ const viewerKey = (() => { try { let k = localStorage.getItem('vibzo_vk'); if (!
 const viewed = new Set();
 function watchView(v, id) {
   if (!id || viewed.has(id) || v._vw) return; v._vw = true;
-  const h = () => { if (v.currentTime >= 3 && !viewed.has(id)) { viewed.add(id); v.removeEventListener('timeupdate', h); sb.rpc('record_view', { p_video: id, p_key: viewerKey }).then(() => { }, () => { }); } };
+  const h = () => { if (v.currentTime >= 3 && !viewed.has(id)) { viewed.add(id); v.removeEventListener('timeupdate', h); sb.rpc('record_view', { p_video: id, p_key: viewerKey }).then(() => { }, () => { }); histAdd(id); } };
   v.addEventListener('timeupdate', h);
 }
 /* Barre de progression, appui long = vitesse x2, temps de visionnage */
@@ -410,13 +410,14 @@ function observe() {
   if (io) io.disconnect();
   io = new IntersectionObserver(es => es.forEach(e => {
     if (e.target.id === 'moreSlide') { if (e.isIntersecting) loadFeed(false); return; }
+    const car = e.target.querySelector('.pcar'); if (car) { if (e.isIntersecting && S.cur === 'home') phStart(car, e.target.dataset.id); else phStop(car); return; }
     const v = e.target.querySelector('video'); if (!v) return;
     if (e.isIntersecting && S.cur === 'home' && !e.target.classList.contains('paused')) { playV(v); watchView(v, e.target.dataset.id); bindProg(v, e.target); } else { v.pause(); v.playbackRate = 1; flushWatch(v, e.target.dataset.id); }
   }), { threshold: .6 });
   document.querySelectorAll('#feed .slide').forEach(s => io.observe(s));
 }
 function setTab(t) { S.tab = t; go('home'); }
-function toggleMute() { soundBlocked = false; S.muted = !S.muted; try { localStorage.setItem('vibzo_muted', S.muted ? '1' : '0'); } catch (e) { } document.querySelectorAll('#feed video').forEach(v => v.muted = S.muted); muteIcon(); }
+function toggleMute() { soundBlocked = false; S.muted = !S.muted; try { localStorage.setItem('vibzo_muted', S.muted ? '1' : '0'); } catch (e) { } document.querySelectorAll('#feed video').forEach(v => v.muted = S.muted); if (PHA) PHA.muted = S.muted; muteIcon(); }
 /* Son automatique : on essaie de lire avec le son. Si le navigateur l'interdit avant toute action
    de la personne, la vidéo part en muet et le son s'active au premier toucher, n'importe où. */
 let soundBlocked = false;
@@ -439,7 +440,7 @@ function tapVid(e, id) {
   if (e.currentTarget._held) return;
   const now = Date.now(), sl = e.currentTarget.parentElement;
   if (now - lastTap < 300) { clearTimeout(tapT); lastTap = 0; const v = S.vids.get(id); if (v && !v.liked_by_me) like(id); const r = sl.getBoundingClientRect(), h = document.createElement('div'); h.className = 'burst'; h.textContent = '❤️'; h.style.left = (e.clientX - r.left) + 'px'; h.style.top = (e.clientY - r.top) + 'px'; sl.appendChild(h); setTimeout(() => h.remove(), 800); return; }
-  lastTap = now; tapT = setTimeout(() => { sl.classList.toggle('paused'); const v = sl.querySelector('video'); if (v) sl.classList.contains('paused') ? v.pause() : v.play().catch(() => { }); }, 300);
+  lastTap = now; const cx = e.clientX; tapT = setTimeout(() => { const car = sl.querySelector('.pcar'); if (car) { const r = sl.getBoundingClientRect(); phStep(car, cx < r.left + r.width * .3 ? -1 : 1, true); return; } sl.classList.toggle('paused'); const v = sl.querySelector('video'); if (v) sl.classList.contains('paused') ? v.pause() : v.play().catch(() => { }); }, 300);
 }
 async function like(id) {
   if (!requireAuth('Connecte-toi pour aimer les vidéos.')) return;
@@ -467,13 +468,13 @@ async function follow(userId, btn) {
 }
 let replyTo = null;
 const cmHTML = (c, vid, v, child) => `<div class="cm ${child ? 'reply' : ''}" id="c-${c.id}">${avatar(c, child ? 26 : 34)}<div class="grow"><div class="n">${esc(c.display_name)}${v && c.user_id === v.user_id ? ' <span class="crea">Créateur</span>' : ''} · @${esc(c.username)}</div><div class="t">${richText(c.body)}</div>
-  <div class="n" style="font-weight:500;margin-top:4px">${ago(c.created_at)} · <button class="mut small" onclick="V.replyC('${c.parent_id || c.id}','${esc(c.username)}')">Répondre</button>${c.user_id === uid() || (v && v.user_id === uid()) ? ` · <button class="mut small" onclick="V.delComment('${c.id}','${vid}')">Supprimer</button>` : uid() ? ` · <button class="mut small" onclick="V.report('comment','${c.id}')">Signaler</button>` : ''}</div>
+  <div class="n" style="font-weight:500;margin-top:4px">${ago(c.created_at)} · <button class="mut small" onclick="V.replyC('${c.parent_id || c.id}','${esc(c.username)}')">Répondre</button>${v && v.user_id === uid() && c.user_id !== uid() ? ` · <button class="mut small" onclick="V.replyVideo('${c.id}')">🎥 <span>Répondre en vidéo</span></button>` : ''}${c.user_id === uid() || (v && v.user_id === uid()) ? ` · <button class="mut small" onclick="V.delComment('${c.id}','${vid}')">Supprimer</button>` : uid() ? ` · <button class="mut small" onclick="V.report('comment','${c.id}')">Signaler</button>` : ''}</div>
   ${!child && c.reply_count ? `<button class="morerep" onclick="V.showReplies('${c.id}','${vid}',this)">— Voir ${c.reply_count} réponse${c.reply_count > 1 ? 's' : ''}</button><div id="rep-${c.id}"></div>` : ''}</div>
   <button class="clike ${c.liked_by_me ? 'on' : ''}" onclick="V.likeComment('${c.id}',this)">${I.heart}<span>${c.like_count ? fmtN(c.like_count) : ''}</span></button></div>`;
 async function openComments(id) {
   replyTo = null;
-  const v = S.vids.get(id);
-  sheet(`${fmtN(v ? v.comment_count : 0)} commentaires`, `<div class="clist" id="clist">${loading()}</div><div id="replyBar" class="replybar" style="display:none"></div><form class="cinput" onsubmit="event.preventDefault();V.addComment('${id}')"><input id="cIn" placeholder="${uid() ? 'Ajouter un commentaire… (@ pour mentionner)' : 'Connecte-toi pour commenter'}" maxlength="500" autocomplete="off"><button aria-label="Envoyer">${I.send}</button></form>`);
+  const v = S.vids.get(id), cOff = v && v.allow_comments === false && v.user_id !== uid();
+  sheet(`${fmtN(v ? v.comment_count : 0)} commentaires`, `<div class="clist" id="clist">${loading()}</div><div id="replyBar" class="replybar" style="display:none"></div>${cOff ? '<p class="mut small" style="text-align:center;padding:12px">🔒 Le créateur a désactivé les commentaires</p>' : ''}<form class="cinput" style="${cOff ? 'display:none' : ''}" onsubmit="event.preventDefault();V.addComment('${id}')"><input id="cIn" placeholder="${uid() ? 'Ajouter un commentaire… (@ pour mentionner)' : 'Connecte-toi pour commenter'}" maxlength="500" autocomplete="off"><button aria-label="Envoyer">${I.send}</button></form>`);
   const { data, error } = await sb.from('comments_view').select('*').eq('video_id', id).is('parent_id', null).order('like_count', { ascending: false }).order('created_at', { ascending: false }).limit(100);
   if (error) return fail(error);
   $('#clist').innerHTML = data.length ? data.map(c => cmHTML(c, id, v)).join('') : '<p class="mut small" style="text-align:center;padding:20px">Aucun commentaire. Sois le premier !</p>';
@@ -515,7 +516,7 @@ function shareVid(id) {
   const T = [['whatsapp', '💬', 'WhatsApp', '#25D366', `https://wa.me/?text=${full}`], ['facebook', 'f', 'Facebook', '#1877F2', `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`], ['telegram', '✈️', 'Telegram', '#2AABEE', `https://t.me/share/url?url=${enc(url)}&text=${enc(txt)}`], ['x', '𝕏', 'X', '#111', `https://twitter.com/intent/tweet?text=${full}`], ['sms', '✉️', 'SMS', '#34C759', `sms:?&body=${full}`]];
   sheet('Partager', `<div class="shgrid">${T.map(t => `<a href="${t[4]}" target="_blank" rel="noopener" onclick="V.shared('${id}')"><span style="background:${t[3]}">${t[1]}</span>${t[2]}</a>`).join('')}
   <button onclick="V.copyShare('${id}')"><span style="background:#8a9bb0">🔗</span>Copier le lien</button>${navigator.share ? `<button onclick="V.nativeShare('${id}')"><span style="background:#1e9be8">⋯</span>Plus</button>` : ''}</div>
-  <div class="slist" style="margin:14px 0 0"><button onclick="V.duetWith('${id}')"><span class="e">🎭</span>Faire un Duo<span class="r">›</span></button><button onclick="V.stitchWith('${id}')"><span class="e">✂️</span>Faire un Collage<span class="r">›</span></button>${v.sound ? `<button onclick="V.closeSheet();V.useSound(${esc(JSON.stringify(v.sound))})"><span class="e">🎵</span>Utiliser ce son<span class="r">›</span></button>` : ''}<button onclick="V.repost('${id}')"><span class="e">${v.reposted_by_me ? '↩️' : '🔁'}</span>${v.reposted_by_me ? 'Annuler la republication' : 'Republier pour mes abonnés'}<span class="r">${v.repost_count ? fmtN(v.repost_count) : ''}</span></button>${S.me ? `<button onclick="V.inviteSheet()"><span class="e">🎁</span>Inviter des amis · gagne du Gold<span class="r">›</span></button>` : ''}</div>`);
+  <div class="slist" style="margin:14px 0 0">${isPh(v) || v.allow_duet === false ? '' : `<button onclick="V.duetWith('${id}')"><span class="e">🎭</span>Faire un Duo<span class="r">›</span></button><button onclick="V.stitchWith('${id}')"><span class="e">✂️</span>Faire un Collage<span class="r">›</span></button>`}${v.sound ? `<button onclick="V.closeSheet();V.useSound(${esc(JSON.stringify(v.sound))})"><span class="e">🎵</span>Utiliser ce son<span class="r">›</span></button>` : ''}<button onclick="V.repost('${id}')"><span class="e">${v.reposted_by_me ? '↩️' : '🔁'}</span>${v.reposted_by_me ? 'Annuler la republication' : 'Republier pour mes abonnés'}<span class="r">${v.repost_count ? fmtN(v.repost_count) : ''}</span></button>${S.me ? `<button onclick="V.inviteSheet()"><span class="e">🎁</span>Inviter des amis · gagne du Gold<span class="r">›</span></button>` : ''}</div>`);
 }
 function shared(id) { const v = S.vids.get(id); if (v) { v.share_count = (v.share_count || 0) + 1; updShare(id); } sb.rpc('record_share', { p_video: id }).then(() => { }, () => { }); }
 function updShare(id) { const v = S.vids.get(id), b = $('#sh' + id); if (v && b) { b.classList.toggle('on3', !!v.reposted_by_me); b.querySelector('span').textContent = fmtN((v.share_count || 0) + (v.repost_count || 0)); } }
@@ -530,8 +531,8 @@ async function repost(id) {
   toast(on ? '🔁 Republiée : tes abonnés la verront dans « Abonnements »' : 'Republication annulée');
 }
 function vidMore(id) {
-  const v = S.vids.get(id); const mine = v.user_id === uid();
-  sheet('Options', `<div class="slist" style="margin:0"><button onclick="V.downloadVid('${id}')"><span class="e">⬇️</span>Enregistrer / partager la vidéo</button>${mine ? `<button onclick="V.delVideo('${id}')"><span class="e">🗑️</span>Supprimer ma vidéo</button>` : `<button onclick="V.notInterested('${id}')"><span class="e">🚫</span>Pas intéressé</button><button onclick="V.report('video','${id}')"><span class="e">🚩</span>Signaler la vidéo</button><button onclick="V.openProfile('${v.user_id}')"><span class="e">👤</span>Voir le profil</button>`}<button onclick="V.closeSheet();V.speedVid('${id}')"><span class="e">⏩</span>Vitesse de lecture</button><button onclick="V.shareVid('${id}');V.closeSheet()"><span class="e">🔗</span>Partager</button></div>`);
+  const v = S.vids.get(id); const mine = v.user_id === uid(), dl = mine || v.allow_download !== false;
+  sheet('Options', `<div class="slist" style="margin:0">${dl ? `<button onclick="V.downloadVid('${id}')"><span class="e">⬇️</span>${isPh(v) ? 'Enregistrer les photos' : 'Enregistrer / partager la vidéo'}</button>` : ''}${mine ? `<button onclick="V.pinVideo('${id}')"><span class="e">📌</span>${v.pinned_at ? 'Désépingler du profil' : 'Épingler sur mon profil'}</button><button onclick="V.privacySheet('${id}')"><span class="e">🔒</span>Confidentialité de la publication<span class="r">›</span></button><button onclick="V.analyticsSheet()"><span class="e">📊</span>Statistiques<span class="r">›</span></button><button onclick="V.delVideo('${id}')"><span class="e">🗑️</span>${isPh(v) ? 'Supprimer ma publication' : 'Supprimer ma vidéo'}</button>` : `<button onclick="V.notInterested('${id}')"><span class="e">🚫</span>Pas intéressé</button><button onclick="V.report('video','${id}')"><span class="e">🚩</span>Signaler la vidéo</button><button onclick="V.openProfile('${v.user_id}')"><span class="e">👤</span>Voir le profil</button>`}${isPh(v) ? '' : `<button onclick="V.closeSheet();V.speedVid('${id}')"><span class="e">⏩</span>Vitesse de lecture</button>`}<button onclick="V.shareVid('${id}');V.closeSheet()"><span class="e">🔗</span>Partager</button></div>${dl ? '' : '<p class="mut small" style="text-align:center;margin-top:10px">🔒 Le créateur a désactivé le téléchargement</p>'}`);
 }
 /* ---------- Téléchargement avec la signature Vibzo (comme TikTok) ----------
    La vidéo est rejouée dans un canevas avec le logo Vibzo + @créateur qui changent de coin,
@@ -569,6 +570,8 @@ function drawOutro(ctx, W, H, t, user) {
 function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 async function downloadVid(id) {
   closeSheet(); const v = S.vids.get(id); if (!v || dlBusy) return;
+  if (v.allow_download === false && v.user_id !== uid()) return toast('Le créateur a désactivé le téléchargement');
+  if (isPh(v)) return savePhotos(v);
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { window.open(v.video_url, '_blank'); return; }
   dlBusy = true; let cancel = false; window.__dlCancel = () => { cancel = true; };
   modal(`<div class="card" style="max-width:320px;width:100%;background:#fff;text-align:center"><div style="font-size:36px">🎬</div><h3>Préparation de la vidéo…</h3><p class="mut small">Ajout de la signature Vibzo. Garde l’écran allumé.</p><div class="rbar"><i id="dlBar" style="width:0"></i></div><div class="mut small" id="dlPct">0 %</div><button class="btn ghost" style="margin-top:10px" onclick="window.__dlCancel()">Annuler</button></div>`);
@@ -665,7 +668,7 @@ async function sendReport(type, id, i) {
 let qTimer;
 SCREENS.discover = () => {
   const pre = S.searchQ || ''; S.searchQ = null;
-  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="storyStrip" style="padding-bottom:0"></div><div class="pad" id="chStrip"></div><div class="pad" id="livesStrip"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
+  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="sTabs" style="padding-bottom:0"></div><div class="pad" id="storyStrip" style="padding-bottom:0"></div><div class="pad" id="chStrip"></div><div class="pad" id="livesStrip"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
   loadTrends(); search(); livesStrip(); loadChallenges().catch(() => { }); loadStories().catch(() => { });
 };
 async function loadTrends() {
@@ -676,8 +679,31 @@ async function loadTrends() {
   el.innerHTML = (tags || []).length || (snds || []).length ? `<div class="lbl">🔥 Tendances de la semaine</div><div class="trend">${(tags || []).map((t, i) => `<button onclick="V.openTag('${esc(t.tag)}')"><b>${i < 3 ? ['🥇', '🥈', '🥉'][i] : '#'}</b> ${esc(t.tag)} <span>${fmtN(t.videos)}</span></button>`).join('')}${(snds || []).map(s => `<button onclick="V.openSound('${esc(s.sound.replace(/'/g, '’'))}')">♪ ${esc(s.sound)} <span>${fmtN(s.videos)}</span></button>`).join('')}</div>` : '';
 }
 function searchDebounced() { clearTimeout(qTimer); qTimer = setTimeout(search, 350); }
+const STABS = [['top', 'Top'], ['videos', 'Vidéos'], ['users', 'Comptes'], ['sounds', 'Sons'], ['tags', 'Hashtags'], ['live', 'Live']];
 async function search() {
-  const q = ($('#q') ? $('#q').value : '').trim();
+  const q = ($('#q') ? $('#q').value : '').trim(), plain = !!q && !q.startsWith('#') && !q.startsWith('♪');
+  const tb = $('#sTabs'); if (tb) tb.innerHTML = plain ? `<div class="stabs">${STABS.map(([k, l]) => `<button class="${S.sTab === k ? 'on' : ''}" onclick="V.sTab('${k}')">${l}</button>`).join('')}</div>` : '';
+  const t = plain ? S.sTab : 'top', grid = $('#dres'), lb = $('#dlbl'), us = $('#users');
+  const list = ['users', 'sounds', 'tags', 'live'].includes(t);
+  grid.style.display = list ? 'none' : ''; lb.style.display = list ? 'none' : '';
+  if (list) {
+    us.innerHTML = loading(); const w = q.replace(/^@/, '').replace(/[,()%*]/g, ' ').trim(); let html = '';
+    if (t === 'users') {
+      const { data, error } = await sb.from('profile_stats').select('*').or(`username.ilike.%${w.toLowerCase()}%,display_name.ilike.%${w}%`).limit(40); if (error) return fail(error);
+      html = (data || []).map(u => `<button class="mitem" style="padding:8px 0" onclick="V.openProfile('${u.id}')">${avatar(u, 48)}<div class="grow"><div class="n">${esc(u.display_name)}${vb(u.verified)}</div><div class="l">@${esc(u.username)} · ${fmtN(u.followers)} <span>abonnés</span> · ${fmtN(u.videos || 0)} <span>vidéos</span></div></div></button>`).join('');
+    } else if (t === 'sounds') {
+      const { data, error } = await sb.rpc('search_sounds', { p_q: w, p_limit: 30 }); if (error) return fail(error);
+      html = (data || []).map(x => `<button class="citem" style="width:100%;text-align:left" onclick="V.openSound(${esc(JSON.stringify(x.sound))})"><div class="im" style="background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">♪</div><div class="grow"><b>${esc(x.sound)}</b><div class="mut small">${fmtN(x.videos)} <span>vidéos</span></div></div><span class="mut">›</span></button>`).join('');
+    } else if (t === 'tags') {
+      const { data, error } = await sb.rpc('search_tags', { p_q: w.replace(/^#/, ''), p_limit: 30 }); if (error) return fail(error);
+      html = (data || []).map(x => `<button class="citem" style="width:100%;text-align:left" onclick="V.openTag('${esc(x.tag)}')"><div class="im" style="background:#eef4fb;color:#1e9be8;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">#</div><div class="grow"><b>${esc(x.tag)}</b><div class="mut small">${fmtN(x.videos)} <span>vidéos</span></div></div><span class="mut">›</span></button>`).join('');
+    } else {
+      const lw = w.toLowerCase(), l = (await loadLives()).filter(x => [x.username, x.display_name, x.title].some(y => (y || '').toLowerCase().includes(lw)));
+      html = l.map(x => `<button class="mitem" style="padding:8px 0" onclick="V.openLive('${x.id}')"><div class="lvring">${avatar(x, 48)}</div><div class="grow"><div class="n">${esc(x.title || x.display_name || '')}</div><div class="l">🔴 LIVE · @${esc(x.username)}${x.viewers ? ' · 👁 ' + fmtN(x.viewers) : ''}</div></div></button>`).join('');
+    }
+    if (($('#q') ? $('#q').value : '').trim() !== q) return;
+    us.innerHTML = html || `<div class="empty">${t === 'live' ? 'Aucun live ne correspond à ta recherche.' : 'Aucun résultat.'}</div>`; return;
+  }
   let vq = sb.from('videos_feed').select('*').eq('status', 'published');
   if (q.startsWith('#') && q.length > 1) vq = vq.contains('tags', [q.slice(1).toLowerCase()]);
   else if (q.startsWith('♪') && q.length > 1) vq = vq.eq('sound', q.slice(1));
@@ -685,15 +711,15 @@ async function search() {
   else vq = inScope(vq);
   const [{ data: vids, error }, users] = await Promise.all([
     (q.startsWith('#') || q.startsWith('♪') ? vq.order('view_count', { ascending: false }) : vq).order('created_at', { ascending: false }).limit(30),
-    q && !q.startsWith('♪') && !q.startsWith('#') ? sb.from('profile_stats').select('*').ilike('username', `%${q.replace(/^@/, '').toLowerCase()}%`).limit(8) : Promise.resolve({ data: [] }),
+    t === 'top' && plain ? sb.from('profile_stats').select('*').ilike('username', `%${q.replace(/^@/, '').toLowerCase()}%`).limit(8) : Promise.resolve({ data: [] }),
   ]);
   if (error) return fail(error);
-  $('#users').innerHTML = (users.data || []).length ? `<div class="lbl">Personnes</div>` + users.data.map(u => `<button class="mitem" style="padding:8px 0" onclick="V.openProfile('${u.id}')">${avatar(u, 44)}<div class="grow"><div class="n">${esc(u.display_name)}</div><div class="l">@${esc(u.username)} · ${fmtN(u.followers)} abonnés</div></div></button>`).join('') : '';
-  $('#dres').innerHTML = vids.length ? vids.map(v => thumb(v, vids)).join('') : `<div class="empty" style="grid-column:1/-1">Aucune vidéo trouvée.</div>`;
-  S._grid = vids; const lb = $('#dlbl'); if (lb) lb.innerHTML = q ? (q.startsWith('#') || q.startsWith('♪') ? 'Les plus vues' : 'Résultats') : '<span>Vidéos récentes</span> · ' + esc(locLabel());
+  us.innerHTML = (users.data || []).length ? `<div class="lbl">Personnes</div>` + users.data.map(u => `<button class="mitem" style="padding:8px 0" onclick="V.openProfile('${u.id}')">${avatar(u, 44)}<div class="grow"><div class="n">${esc(u.display_name)}</div><div class="l">@${esc(u.username)} · ${fmtN(u.followers)} abonnés</div></div></button>`).join('') : '';
+  grid.innerHTML = vids.length ? vids.map(v => thumb(v, vids)).join('') : `<div class="empty" style="grid-column:1/-1">Aucune vidéo trouvée.</div>`;
+  S._grid = vids; if (lb) lb.innerHTML = q ? (q.startsWith('#') || q.startsWith('♪') ? 'Les plus vues' : 'Résultats') : '<span>Vidéos récentes</span> · ' + esc(locLabel());
   if (q) loadTrends();
 }
-const thumb = (v) => { S.vids.set(v.id, v); return `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.openGrid('${v.id}')">${S.saver ? '<div class="vthph">▶</div>' : `<video src="${esc(v.video_url)}#t=0.5" muted preload="metadata" playsinline></video>`}<span>${v.view_count ? '▶ ' + fmtN(v.view_count) : '♥ ' + fmtN(v.like_count)}</span></button>`; };
+const thumb = (v, _l, pins) => { S.vids.set(v.id, v); return `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.openGrid('${v.id}')">${isPh(v) ? `<img src="${esc(v.photos[0])}" loading="lazy" alt="">` : S.saver ? '<div class="vthph">▶</div>' : `<video src="${esc(v.video_url)}#t=0.5" muted preload="metadata" playsinline></video>`}${pins && v.pinned_at ? '<em class="vpin">📌 <span>Épinglé</span></em>' : ''}${isPh(v) ? `<em class="vphi">🖼️ ${v.photos.length}</em>` : ''}<span>${v.view_count ? '▶ ' + fmtN(v.view_count) : '♥ ' + fmtN(v.like_count)}</span></button>`; };
 function openGrid(id) { const list = S._grid || [S.vids.get(id)]; S.override = { list, start: id }; go('home', { keepOverride: true }); }
 
 /* =====================================================================
@@ -704,20 +730,29 @@ SCREENS.create = async () => {
   if (!uid()) { $('#s-create').innerHTML = hdr('Publier') + `<div class="empty"><div class="big">🎬</div><p>Crée un compte gratuit pour publier tes vidéos.</p><button class="btn" onclick="V.go('auth')">Se connecter / s’inscrire</button></div>`; return; }
   let prods = [];
   if (S.myShop) { const { data } = await sb.from('products').select('id,name,price,currency').eq('shop_id', S.myShop.id).eq('active', true); prods = data || []; }
-  $('#s-create').innerHTML = hdr('Nouvelle vidéo', `<span class="loc">📍 ${esc((C[S.me.country] || {}).f || '')} ${esc(S.me.region || '')}</span>`) + `<div class="pad">
-  <div class="seg" style="margin-bottom:10px"><button class="${S.postKind === 'story' ? '' : 'on'}" onclick="V.postKind('video')">🎬 Vidéo</button><button class="${S.postKind === 'story' ? 'on' : ''}" onclick="V.postKind('story')">⏱ Story 24 h</button></div>
-  <button class="golive cam" onclick="V.openCamera({mode:'${S.postKind === 'story' ? 'story' : 'video'}'})"><span>🎥</span><div><b>Filmer avec Vibzo</b><small>Effets, minuteur, texte, sons tendance</small></div><i>›</i></button>
-  ${S.postKind === 'story' ? '' : `<button class="golive" onclick="V.goLive()"><span>🔴</span><div><b>Lancer un live</b><small>Filme-toi en direct, reçois des cœurs et des cadeaux</small></div><i>›</i></button>`}
+  const k = S.postKind, story = k === 'story', photo = k === 'photo', rc = S.replyCm;
+  $('#s-create').innerHTML = hdr(photo ? 'Nouvelle publication photo' : 'Nouvelle vidéo', `<span class="loc">📍 ${esc((C[S.me.country] || {}).f || '')} ${esc(S.me.region || '')}</span>`) + `<div class="pad">
+  <div class="seg" style="margin-bottom:10px"><button class="${!story && !photo ? 'on' : ''}" onclick="V.postKind('video')">🎬 Vidéo</button><button class="${photo ? 'on' : ''}" onclick="V.postKind('photo')">🖼️ Photos</button><button class="${story ? 'on' : ''}" onclick="V.postKind('story')">⏱ Story 24 h</button></div>
+  ${rc && !story ? `<div class="rcban"><div class="grow"><small>💬 <span>Réponse en vidéo à</span></small><div>${esc(rc.text)}</div></div><button class="ib" onclick="V.cancelReplyVideo()" aria-label="Annuler">✕</button></div>` : ''}
+  ${photo ? `<label class="up"><input type="file" accept="image/*" multiple style="display:none" onchange="V.pickPhotos(this)"><div class="big">🖼️</div><b>${PHD.length ? 'Ajouter des photos' : 'Choisir des photos'}</b><div class="mut small" style="margin-top:4px">Jusqu’à 10 photos · elles défilent comme un diaporama</div></label>
+  <div class="phstrip" id="phStrip">${PHD.map((p, i) => `<div><img src="${p.url}" alt=""><button onclick="V.phRemove(${i})" aria-label="Retirer">✕</button></div>`).join('')}</div>
+  <button class="golive" onclick="V.phSoundPick()"><span>♪</span><div><b>${PHS ? esc(PHS) : 'Ajouter un son'}</b><small>La musique joue pendant le diaporama</small></div><i>›</i></button>`
+  : `<button class="golive cam" onclick="V.openCamera({mode:'${story ? 'story' : 'video'}'})"><span>🎥</span><div><b>Filmer avec Vibzo</b><small>Effets, minuteur, texte, sons tendance</small></div><i>›</i></button>
+  ${story || rc ? '' : `<button class="golive" onclick="V.goLive()"><span>🔴</span><div><b>Lancer un live</b><small>Filme-toi en direct, reçois des cœurs et des cadeaux</small></div><i>›</i></button>`}
   <label class="up"><input type="file" accept="video/*" style="display:none" onchange="V.pickVid(this)"><div class="big">📹</div><b>${draft ? 'Changer de vidéo' : 'Choisir une vidéo'}</b><div class="mut small" style="margin-top:4px">Depuis ta galerie ou ta caméra · tous formats · 3 minutes maximum</div></label>
   <div class="prev" id="prev" style="${draft ? '' : 'display:none'};background:#0b2540">${draft ? `<video src="${draft.url}" autoplay loop muted playsinline></video>` : ''}</div>
-  ${draft && draft.cam && draft.cam.sound ? `<div class="mut small" style="margin-top:8px">♪ ${esc(draft.cam.sound.name)}</div>` : ''}${draft && draft.cam && draft.cam.src ? `<div class="mut small" style="margin-top:8px">${draft.cam.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} <span>avec</span> @${esc(draft.cam.src.username || '')}</div>` : ''}
-  ${S.postKind === 'story' ? `<div class="field"><label>Texte de la story (facultatif)</label><input id="cd" maxlength="150" placeholder="Ex : Ma journée à Douala ☀️"></div><p class="mut small" style="margin-top:8px">Ta story est visible 24 heures par tes abonnés, puis elle disparaît.</p>` : `<div class="field"><label>Titre à l’écran (facultatif)</label><input id="ct" maxlength="80" placeholder="Ex : Mon premier challenge 🔥"></div>
-  <div class="field"><label>Description</label><textarea id="cd" rows="2" maxlength="300" placeholder="Décris ta vidéo…"></textarea></div>
+  ${draft && draft.cam && draft.cam.sound ? `<div class="mut small" style="margin-top:8px">♪ ${esc(draft.cam.sound.name)}</div>` : ''}${draft && draft.cam && draft.cam.src ? `<div class="mut small" style="margin-top:8px">${draft.cam.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} <span>avec</span> @${esc(draft.cam.src.username || '')}</div>` : ''}`}
+  ${story ? `<div class="field"><label>Texte de la story (facultatif)</label><input id="cd" maxlength="150" placeholder="Ex : Ma journée à Douala ☀️"></div><p class="mut small" style="margin-top:8px">Ta story est visible 24 heures par tes abonnés, puis elle disparaît.</p>` : `<div class="field"><label>Titre à l’écran (facultatif)</label><input id="ct" maxlength="80" placeholder="Ex : Mon premier challenge 🔥"></div>
+  <div class="field"><label>Description</label><textarea id="cd" rows="2" maxlength="300" placeholder="${photo ? 'Décris tes photos…' : 'Décris ta vidéo…'}"></textarea></div>
   <div class="field"><label>Hashtags</label><input id="ch" placeholder="danse, humour, cuisine" value="${esc(S.draftTag || '')}"></div>`}
-  ${prods.length && S.postKind !== 'story' ? `<div class="field"><label>🛍️ Taguer un produit de ma boutique</label><select id="cp"><option value="">Aucun</option>${prods.map(p => `<option value="${p.id}">${esc(p.name)} · ${money(p.price, p.currency)}</option>`).join('')}</select></div>` : ''}
-  <p class="mut small" style="margin-top:12px">Ta vidéo sera visible par tous dans ta région. Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs de façon inappropriée.</p>
+  ${prods.length && !story ? `<div class="field"><label>🛍️ Taguer un produit de ma boutique</label><select id="cp"><option value="">Aucun</option>${prods.map(p => `<option value="${p.id}">${esc(p.name)} · ${money(p.price, p.currency)}</option>`).join('')}</select></div>` : ''}
+  ${story ? '' : `<div class="lbl">🔒 Qui peut…</div><div class="prv">
+  <label class="check"><input type="checkbox" id="pvC" checked> <span>Commenter</span></label>
+  ${photo ? '' : '<label class="check"><input type="checkbox" id="pvD" checked> <span>Faire un Duo ou un Collage avec ma vidéo</span></label>'}
+  <label class="check"><input type="checkbox" id="pvL" checked> <span>Télécharger ma publication</span></label></div>`}
+  <p class="mut small" style="margin-top:12px">${photo ? 'Tes photos seront visibles par tous dans ta région. Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs de façon inappropriée.' : 'Ta vidéo sera visible par tous dans ta région. Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs de façon inappropriée.'}</p>
   <div class="progress" id="prog" style="display:none"><i></i></div>
-  <button class="btn" id="pubBtn" onclick="V.publish()">${S.postKind === 'story' ? 'Publier la story' : 'Publier'}</button></div>`;
+  <button class="btn" id="pubBtn" onclick="V.publish()">${story ? 'Publier la story' : 'Publier'}</button></div>`;
 };
 /* =====================================================================
    CONVERSION VIDÉO : tout format → MP4 H.264 + AAC, 720p max, lisible partout
@@ -787,6 +822,7 @@ function pickVid(inp) {
   probe.onerror = show;
 }
 async function publish() {
+  if (S.postKind === 'photo') return publishPhotos();
   if (!draft) return toast('Choisis d’abord une vidéo 📹');
   const btn = $('#pubBtn'); busy(btn, true, 'Envoi en cours…');
   const prog = $('#prog'); prog.style.display = ''; let pct = 5; const bar = prog.querySelector('i');
@@ -822,9 +858,9 @@ async function publish() {
     }
     const cm = draft.cam || {};
     const tags = ($('#ch').value || '').toLowerCase().split(/[,\s#]+/).map(t => t.replace(/[^a-z0-9àâäéèêëïîôöùûüç_]/g, '')).filter(Boolean).slice(0, 8);
-    const row = { user_id: uid(), video_url: pub.publicUrl, title: $('#ct').value.trim(), caption: ($('#cd').value.trim() + (cm.src ? ` ${cm.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} avec @${cm.src.username || ''}` : '')).trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: cm.sound ? cm.sound.name : '', duet_of: cm.mode === 'duet' && cm.src ? cm.src.id : null, stitch_of: cm.mode === 'stitch' && cm.src ? cm.src.id : null };
+    const row = { user_id: uid(), video_url: pub.publicUrl, title: $('#ct').value.trim(), caption: ($('#cd').value.trim() + (cm.src ? ` ${cm.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} avec @${cm.src.username || ''}` : '')).trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: cm.sound ? cm.sound.name : '', duet_of: cm.mode === 'duet' && cm.src ? cm.src.id : null, stitch_of: cm.mode === 'stitch' && cm.src ? cm.src.id : null, ...privacyVals(), reply_to: S.replyCm ? S.replyCm.id : null };
     const { error } = await sb.from('videos').insert(row); if (error) throw error;
-    bar.style.width = '100%'; draft = null; S.draftTag = null; toast('Vidéo publiée 🎉');
+    bar.style.width = '100%'; draft = null; S.draftTag = null; S.replyCm = null; toast('Vidéo publiée 🎉');
     S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc();
     go('profile');
   } catch (e) { fail(e); } finally { clearInterval(timer); busy(btn, false); }
@@ -1121,7 +1157,7 @@ SCREENS.profile = async () => {
   <div class="pstats"><div><b>${fmtN(p.following)}</b><span>Abonnements</span></div><div><b>${fmtN(p.followers)}</b><span>Abonnés</span></div><div><b>${fmtN(p.likes_received)}</b><span>J’aime</span></div><div><b>${fmtN(p.views || 0)}</b><span>Vues</span></div></div>
   ${own ? startChecklist(p) : ''}
   ${own ? `<button class="crcta" onclick="V.creatorSheet()">💰 <b>Programme Créateurs</b> · gagne de l’argent avec tes vidéos ›</button>` : ''}
-  <div class="pbtns">${own ? `<button class="btn sm ghost grow" onclick="V.editProfile()">Modifier le profil</button><button class="btn sm ghost" style="width:auto" onclick="V.go('orders')">📦 Commandes</button>`
+  <div class="pbtns">${own ? `<button class="btn sm ghost grow" onclick="V.editProfile()">Modifier le profil</button><button class="btn sm ghost" style="width:auto" onclick="V.analyticsSheet()" aria-label="Statistiques">📊</button><button class="btn sm ghost" style="width:auto" onclick="V.go('orders')">📦 Commandes</button>`
       : `<button class="btn sm grow ${p.followed_by_me ? 'ghost' : ''}" onclick="V.toggleFollow('${p.id}',${p.followed_by_me})">${p.followed_by_me ? 'Abonné ✓' : 'Suivre'}</button><button class="btn sm ghost grow" onclick="V.chatWith('${p.id}','dm','',null)">💬 Message</button>`}</div></div>
   ${own ? `<div class="ptabs"><button class="${tab === 'videos' ? 'on' : ''}" onclick="V.profTab('videos')">Mes vidéos</button><button class="${tab === 'saved' ? 'on' : ''}" onclick="V.profTab('saved')">Favoris</button></div>` : '<div class="ptabs"><button class="on">Vidéos</button></div>'}
   <div class="vgrid" id="pgridv">${loading()}</div>`;
@@ -1131,10 +1167,10 @@ SCREENS.profile = async () => {
     const ids = (sv || []).map(x => x.video_id);
     if (ids.length) { const { data } = await sb.from('videos_feed').select('*').in('id', ids); vids = data || []; }
   } else {
-    const { data, error: e2 } = await sb.from('videos_feed').select('*').eq('user_id', id).order('created_at', { ascending: false }).limit(60); if (e2) throw e2; vids = data;
+    const { data, error: e2 } = await sb.from('videos_feed').select('*').eq('user_id', id).order('created_at', { ascending: false }).limit(60); if (e2) throw e2; vids = [...data.filter(x => x.pinned_at).sort((a, b) => a.pinned_at < b.pinned_at ? 1 : -1), ...data.filter(x => !x.pinned_at)];
   }
   S._grid = vids;
-  $('#pgridv').innerHTML = vids.length ? vids.map(v => thumb(v)).join('') : `<div class="empty" style="grid-column:1/-1">${own && tab === 'videos' ? 'Publie ta première vidéo avec le bouton ＋' : 'Rien ici pour le moment.'}</div>`;
+  $('#pgridv').innerHTML = vids.length ? vids.map(v => thumb(v, null, tab === 'videos')).join('') : `<div class="empty" style="grid-column:1/-1">${own && tab === 'videos' ? 'Publie ta première vidéo avec le bouton ＋' : 'Rien ici pour le moment.'}</div>`;
 };
 const SOC = { instagram: ['Instagram', 'https://instagram.com/', '#E1306C', '📸'], tiktok: ['TikTok', 'https://www.tiktok.com/@', '#111', '🎵'], youtube: ['YouTube', 'https://www.youtube.com/@', '#FF0000', '▶️'] };
 const socials = p => { const l = Object.keys(SOC).filter(k => p[k]); return l.length ? `<div class="socs">${l.map(k => `<a href="${SOC[k][1]}${encodeURIComponent(p[k])}" target="_blank" rel="noopener" style="background:${SOC[k][2]}">${SOC[k][3]} ${SOC[k][0]}</a>`).join('')}</div>` : ''; };
@@ -1206,6 +1242,9 @@ function settings() {
   <button onclick="V.closeSheet();${S.myShop ? 'V.myShopSheet()' : 'V.shopForm()'}"><span class="e">🏪</span>Ma boutique<span class="r">${S.myShop ? (ST[S.myShop.status] || [''])[0] : 'Ouvrir'} ›</span></button>
   <button onclick="V.myCV()"><span class="e">📄</span>Mon profil candidat<span class="r">›</span></button>
   <button onclick="V.verifySheet()"><span class="e">✔️</span>Badge vérifié<span class="r">${S.me.verified ? '✅' : 'Obtenir'} ›</span></button>
+  <button onclick="V.analyticsSheet()"><span class="e">📊</span>Statistiques créateur<span class="r">›</span></button>
+  <button onclick="V.historySheet()"><span class="e">🕒</span>Historique de visionnage<span class="r">›</span></button>
+  <button onclick="V.wellSheet()"><span class="e">🧘</span>Bien-être et temps d’écran<span class="r">${WB.limit ? WB.limit + ' min/j' : ''} ›</span></button>
   <button onclick="V.saverSheet()"><span class="e">📶</span>Petit forfait & hors ligne<span class="r">${S.saver ? 'Activé' : ''} ›</span></button>
   <button onclick="V.creatorSheet()"><span class="e">💰</span>Programme Créateurs<span class="r">›</span></button>
   <button onclick="V.mfaSheet()"><span class="e">🔐</span>Validation en 2 étapes<span class="r">${S.mfaOn ? '✅ activée' : 'conseillé ›'}</span></button>
@@ -2828,6 +2867,177 @@ async function openUserStories(userId) {
 }
 
 /* =====================================================================
+   PUBLICATIONS PHOTO (diaporama comme TikTok Photo)
+   ===================================================================== */
+const isPh = v => !!(v && v.photos && v.photos.length);
+const photoHTML = v => `<div class="vbg pcar" data-i="0" style="background:#000;animation:none"><div class="ptrack">${v.photos.map((u, i) => `<img src="${esc(u)}" ${i ? 'loading="lazy"' : ''} alt="">`).join('')}</div>${v.photos.length > 1 ? `<div class="pdots">${v.photos.map((u, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><div class="pcnt">1/${v.photos.length}</div>` : ''}</div>`;
+let PHA = null; const sndUrl = new Map();
+function phStep(car, d, manual) {
+  const imgs = car.querySelectorAll('.ptrack img'), n = imgs.length; if (n < 2) return;
+  let i = (+car.dataset.i + d + n) % n; car.dataset.i = i;
+  car.querySelector('.ptrack').style.transform = `translateX(${-i * 100}%)`;
+  car.querySelectorAll('.pdots i').forEach((x, j) => x.classList.toggle('on', j === i));
+  const c = car.querySelector('.pcnt'); if (c) c.textContent = `${i + 1}/${n}`;
+  if (manual && car._t) { clearInterval(car._t); car._t = setInterval(() => phStep(car, 1), 3500); }
+}
+async function phStart(car, id) {
+  phStop(car); car._t = setInterval(() => phStep(car, 1), 3500);
+  car._vw = setTimeout(() => { if (!viewed.has(id)) { viewed.add(id); sb.rpc('record_view', { p_video: id, p_key: viewerKey }).then(() => { }, () => { }); histAdd(id); } }, 3000);
+  const v = S.vids.get(id); if (!v || !v.sound || S.saver) return;
+  let url = sndUrl.get(v.sound);
+  if (url === undefined) { const { data } = await sb.from('videos').select('video_url').eq('sound', v.sound).eq('status', 'published').eq('photos', '{}').order('created_at').limit(1).maybeSingle().then(r => r, () => ({})); url = data ? data.video_url : null; sndUrl.set(v.sound, url); }
+  if (!url || !car._t) return;
+  if (!PHA) PHA = new Audio(); PHA.src = url; PHA.loop = true; PHA.muted = S.muted || soundBlocked; PHA._car = car; PHA.play().catch(() => { });
+}
+function phStop(car) { clearInterval(car._t); car._t = null; clearTimeout(car._vw); if (PHA && PHA._car === car) PHA.pause(); }
+let PHD = [], PHS = '';
+function pickPhotos(inp) {
+  const fs = [...inp.files].filter(f => /^image\//.test(f.type)); inp.value = '';
+  if (PHD.length + fs.length > 10) toast('10 photos au maximum');
+  fs.slice(0, 10 - PHD.length).forEach(f => PHD.push({ file: f, url: URL.createObjectURL(f) }));
+  go('create');
+}
+function phRemove(i) { PHD.splice(i, 1); go('create'); }
+async function phSoundPick() {
+  sheet('♪ Ajouter un son', `<div id="sndL">${loading()}</div>`);
+  const { data } = await sb.rpc('trending_sounds', { p_limit: 20 }); if (!$('#sndL')) return; S._snds = data || [];
+  $('#sndL').innerHTML = (S._snds.length ? S._snds.map((x, i) => `<button class="citem" style="width:100%;text-align:left" onclick="V.phSoundUse(${i})"><div class="im" style="background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">♪</div><div class="grow"><b>${esc(x.sound)}</b><div class="mut small">${fmtN(x.videos || 0)} <span>vidéos</span></div></div></button>`).join('') : '<p class="mut small">Aucun son tendance pour le moment.</p>') + (PHS ? `<button class="btn ghost" onclick="V.phSoundUse(-1)">Retirer le son</button>` : '');
+}
+function phSoundUse(i) { PHS = i < 0 ? '' : ((S._snds || [])[i] || {}).sound || ''; closeSheet(); if (PHS) toast('♪ Son ajouté'); go('create'); }
+function shrinkImg(file, max = 1440) {
+  return new Promise((ok, ko) => {
+    const im = new Image(), u = URL.createObjectURL(file);
+    im.onload = () => { const r = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * r); c.height = Math.round(im.height * r); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob(b => b ? ok(b) : ko(new Error('Image illisible')), 'image/jpeg', .85); };
+    im.onerror = () => { URL.revokeObjectURL(u); ko(new Error('Image illisible')); }; im.src = u;
+  });
+}
+const privacyVals = () => ({ allow_comments: $('#pvC') ? $('#pvC').checked : true, allow_duet: $('#pvD') ? $('#pvD').checked : true, allow_download: $('#pvL') ? $('#pvL').checked : true });
+async function publishPhotos() {
+  if (!PHD.length) return toast('Choisis d’abord des photos 🖼️');
+  const btn = $('#pubBtn'); busy(btn, true, 'Envoi en cours…'); const prog = $('#prog'); prog.style.display = ''; const bar = prog.querySelector('i');
+  try {
+    const urls = [];
+    for (let i = 0; i < PHD.length; i++) {
+      btn.innerHTML = `<span class="spin"></span> <span>Photo</span> ${i + 1}/${PHD.length}`;
+      const blob = await shrinkImg(PHD[i].file); if (blob.size > 5 * 1024 * 1024) throw new Error('Image trop lourde (5 Mo max)');
+      const path = `${uid()}/posts/${Date.now()}_${i}.jpg`;
+      const { error } = await sb.storage.from('images').upload(path, blob, { contentType: 'image/jpeg', upsert: false }); if (error) throw error;
+      urls.push(sb.storage.from('images').getPublicUrl(path).data.publicUrl); bar.style.width = Math.round((i + 1) / PHD.length * 90) + '%';
+    }
+    const tags = ($('#ch').value || '').toLowerCase().split(/[,\s#]+/).map(t => t.replace(/[^a-z0-9àâäéèêëïîôöùûüç_]/g, '')).filter(Boolean).slice(0, 8);
+    const { error } = await sb.from('videos').insert({ user_id: uid(), video_url: urls[0], photos: urls, title: $('#ct').value.trim(), caption: $('#cd').value.trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: PHS, ...privacyVals() });
+    if (error) throw error;
+    bar.style.width = '100%'; PHD = []; PHS = ''; S.draftTag = null; S.postKind = 'video'; toast('Photos publiées 🎉');
+    S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc(); go('profile');
+  } catch (e) { fail(e); } finally { busy(btn, false); }
+}
+async function savePhotos(v) {
+  toast('Téléchargement des photos…');
+  for (let i = 0; i < v.photos.length; i++) { try { const b = await (await fetch(v.photos[i])).blob(); saveBlob(new File([b], `vibzo-${v.username}-${i + 1}.jpg`, { type: 'image/jpeg' })); } catch (e) { window.open(v.photos[i], '_blank'); } }
+}
+
+/* ---------- Réponse en vidéo à un commentaire ---------- */
+async function replyVideo(cid) {
+  const { data: c } = await sb.from('comments_view').select('id,body,username').eq('id', cid).maybeSingle(); if (!c) return;
+  S.replyCm = { id: c.id, text: `@${c.username} : ${c.body}`.slice(0, 200) }; closeSheet(); S.postKind = 'video'; go('create');
+}
+function cancelReplyVideo() { S.replyCm = null; go('create'); }
+
+/* ---------- Confidentialité et épingle ---------- */
+function privacySheet(id) {
+  const v = S.vids.get(id); if (!v) return;
+  sheet('🔒 Confidentialité', `<div class="prv"><label class="check"><input type="checkbox" id="pvC" ${v.allow_comments !== false ? 'checked' : ''}> <span>Autoriser les commentaires</span></label>
+  ${isPh(v) ? '' : `<label class="check"><input type="checkbox" id="pvD" ${v.allow_duet !== false ? 'checked' : ''}> <span>Autoriser Duo et Collage</span></label>`}
+  <label class="check"><input type="checkbox" id="pvL" ${v.allow_download !== false ? 'checked' : ''}> <span>Autoriser le téléchargement</span></label></div>
+  <button class="btn" id="pvBtn" onclick="V.savePrivacy('${id}')">Enregistrer</button>`);
+}
+async function savePrivacy(id) {
+  const vals = privacyVals(), btn = $('#pvBtn'); busy(btn, true);
+  const { error } = await sb.from('videos').update(vals).eq('id', id); busy(btn, false); if (error) return fail(error);
+  Object.assign(S.vids.get(id) || {}, vals); closeSheet(); toast('Enregistré ✅');
+}
+async function pinVideo(id) {
+  const v = S.vids.get(id); if (!v) return; const at = v.pinned_at ? null : new Date().toISOString();
+  const { error } = await sb.from('videos').update({ pinned_at: at }).eq('id', id); if (error) return fail(error);
+  v.pinned_at = at; closeSheet(); toast(at ? '📌 Épinglée en haut de ton profil' : 'Désépinglée'); if (S.cur === 'profile') go('profile');
+}
+
+/* ---------- Historique de visionnage ---------- */
+const histOff = () => { try { return localStorage.getItem('vibzo_nohist') === '1'; } catch (e) { return false; } };
+function histAdd(id) { const v = S.vids.get(id); if (!uid() || histOff() || (v && v.user_id === uid())) return; sb.from('watch_history').upsert({ user_id: uid(), video_id: id, seen_at: new Date().toISOString() }).then(() => { }, () => { }); }
+async function historySheet() {
+  if (!requireAuth()) return;
+  sheet('🕒 Historique de visionnage', loading());
+  const { data: h, error } = await sb.from('watch_history').select('video_id,seen_at').eq('user_id', uid()).order('seen_at', { ascending: false }).limit(90); if (error) return fail(error);
+  const ids = (h || []).map(x => x.video_id); let vids = [];
+  if (ids.length) { const { data } = await sb.from('videos_feed').select('*').in('id', ids); const m = new Map((data || []).map(v => [v.id, v])); vids = ids.map(i => m.get(i)).filter(Boolean); }
+  S._grid = vids;
+  $('#sheet .sh-b').innerHTML = `<label class="check" style="margin:0 0 10px"><input type="checkbox" ${histOff() ? '' : 'checked'} onchange="V.histPause(!this.checked)"> <span>Enregistrer les vidéos que je regarde</span></label>
+  ${vids.length ? `<div class="vgrid" style="margin:0 -16px">${vids.map(v => thumb(v, vids)).join('')}</div><button class="btn ghost" style="margin-top:12px" onclick="V.clearHistory()">🗑️ Effacer l’historique</button>` : '<div class="empty">Les vidéos que tu regardes apparaîtront ici. Seul toi peux voir ton historique.</div>'}`;
+}
+function histPause(off) { try { localStorage.setItem('vibzo_nohist', off ? '1' : '0'); } catch (e) { } toast(off ? 'Historique en pause' : 'Historique activé'); }
+async function clearHistory() {
+  const { error } = await sb.from('watch_history').delete().eq('user_id', uid()); if (error) return fail(error);
+  toast('Historique effacé'); historySheet();
+}
+
+/* ---------- Statistiques créateur ---------- */
+async function analyticsSheet(days) {
+  if (!requireAuth()) return; days = days || S.anDays || 7; S.anDays = days;
+  sheet('📊 Statistiques', loading());
+  const { data: a, error } = await sb.rpc('creator_analytics', { p_days: days }); if (error) return fail(error);
+  const delta = a.prev_views ? Math.round((a.views - a.prev_views) / a.prev_views * 100) : null;
+  const mx = Math.max(1, ...a.daily.map(d => d.v));
+  const k = (ic, n, l, sub) => `<div class="ank"><span>${ic}</span><b>${typeof n === 'number' ? fmtN(n) : n}</b><small>${l}</small>${sub || ''}</div>`;
+  const pct = x => x == null ? '–' : Math.round(Math.min(1, x) * 100) + ' %';
+  $('#sheet .sh-b').innerHTML = `<div class="seg" style="margin-bottom:12px">${[7, 28, 60].map(d => `<button class="${d === days ? 'on' : ''}" onclick="V.analyticsSheet(${d})">${d} <span>jours</span></button>`).join('')}</div>
+  <div class="angrid">${k('👁️', a.views, 'Vues', delta == null ? '' : `<em class="${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} %</em>`)}${k('❤️', a.likes, 'J’aime')}${k('💬', a.comments, 'Commentaires')}${k('👥', '+' + fmtN(a.followers_new), 'Nouveaux abonnés')}${k('🔁', a.shares, 'Partages')}${k('⏱', pct(a.completion), 'Visionnage moyen')}</div>
+  <div class="lbl">Vues par jour</div><div class="anbars">${a.daily.map(d => `<div title="${d.d} : ${d.v}"><i style="height:${Math.max(2, Math.round(d.v / mx * 100))}%"></i><small>${days <= 7 ? new Date(d.d).toLocaleDateString(getLang(), { weekday: 'narrow' }) : ''}</small></div>`).join('')}</div>
+  <div class="mut small" style="margin-top:4px">${fmtN(a.followers)} <span>abonnés au total</span> · ${fmtN(a.gifts)} <span>pièces de cadeaux reçues</span></div>
+  <div class="lbl">Tes meilleures publications</div>${a.top.length ? a.top.map(t => `<button class="anv" onclick="V.closeSheet();V.openGrid('${t.id}')">${t.photos && t.photos.length ? `<img src="${esc(t.photos[0])}" alt="">` : `<video src="${esc(t.video_url)}#t=0.5" muted preload="metadata" playsinline></video>`}<div class="grow"><b>${esc(t.title || t.caption || '—').slice(0, 60)}</b><div class="mut small">👁 ${fmtN(t.period_views)} · ❤️ ${fmtN(t.likes)} · 💬 ${fmtN(t.comments)} · ⏱ ${pct(t.completion)}</div></div></button>`).join('') : '<div class="empty">Publie ta première vidéo pour voir tes statistiques.</div>'}
+  <p class="mut small" style="margin-top:10px">💡 Les vidéos regardées jusqu’au bout sont montrées à plus de monde. Accroche dans les 2 premières secondes !</p>`;
+  if (a.top.length) { const { data } = await sb.from('videos_feed').select('*').in('id', a.top.map(t => t.id)); const m = new Map((data || []).map(v => [v.id, v])); S._grid = a.top.map(t => m.get(t.id)).filter(Boolean); S._grid.forEach(v => S.vids.set(v.id, v)); }
+}
+
+/* ---------- Bien-être : temps d'écran, pauses ---------- */
+const WB = (() => { try { return Object.assign({ limit: 0, brk: 0, days: {} }, JSON.parse(localStorage.getItem('vibzo_wb') || '{}')); } catch (e) { return { limit: 0, brk: 0, days: {} }; } })();
+const wbDay = (d = new Date()) => d.toISOString().slice(0, 10);
+const wbSave = () => { try { const keep = {}; Object.keys(WB.days).sort().slice(-14).forEach(k => keep[k] = WB.days[k]); WB.days = keep; localStorage.setItem('vibzo_wb', JSON.stringify(WB)); } catch (e) { } };
+let wbSess = 0, wbHidden = 0, wbAsked = { brk: 0, day: '' };
+setInterval(() => {
+  if (document.visibilityState !== 'visible') { wbHidden += 15; if (wbHidden >= 600) wbSess = 0; return; }
+  wbHidden = 0; if (!['home', 'discover'].includes(S.cur) && !STV && !LV) return;
+  const d = wbDay(); WB.days[d] = (WB.days[d] || 0) + 15; wbSess += 15; wbSave();
+  if ($('#modal').classList.contains('on')) return;
+  if (WB.brk && wbSess >= WB.brk * 60 && wbAsked.brk < wbSess - 60) { wbAsked.brk = wbSess; wellNudge('brk'); }
+  else if (WB.limit && WB.days[d] >= WB.limit * 60 && wbAsked.day !== d) { wbAsked.day = d; wellNudge('day'); }
+}, 15000);
+const wbMin = s => s >= 3600 ? `${Math.floor(s / 3600)} h ${String(Math.round(s % 3600 / 60)).padStart(2, '0')}` : `${Math.round(s / 60)} min`;
+function wellNudge(kind) {
+  document.querySelectorAll('#feed video').forEach(v => v.pause()); if (PHA) PHA.pause();
+  modal(`<div class="card" style="max-width:330px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">${kind === 'brk' ? '🧘' : '🌙'}</div><h3>${kind === 'brk' ? 'Et si tu faisais une pause ?' : 'Ton temps d’écran du jour est atteint'}</h3>
+  <p class="mut small">${kind === 'brk' ? `<span>Tu regardes Vibzo depuis</span> ${wbMin(wbSess)}. <span>Lève-toi, bois de l’eau, regarde au loin quelques instants.</span>` : `<span>Aujourd’hui :</span> ${wbMin(WB.days[wbDay()] || 0)}. <span>Tu avais choisi une limite de</span> ${WB.limit} min.`}</p>
+  <button class="btn" onclick="V.wellGo('${kind}',0)">${kind === 'brk' ? 'D’accord, je fais une pause' : 'Fermer pour aujourd’hui'}</button><button class="btn ghost" onclick="V.wellGo('${kind}',1)">${kind === 'brk' ? 'Continuer à regarder' : 'Encore 15 minutes'}</button></div>`);
+}
+function wellGo(kind, more) {
+  closeModal();
+  if (!more) { wbSess = 0; go('profile'); toast('À tout à l’heure 👋'); return; }
+  if (kind === 'brk') wbSess = 0; else { wbAsked.day = ''; WB.days[wbDay()] = Math.max(0, WB.limit * 60 - 900); wbSave(); }
+  const feed = $('#feed'); if (feed && S.cur === 'home') { const sl = feed.children[Math.round(feed.scrollTop / feed.clientHeight)], v = sl && sl.querySelector('video'); if (v) v.play().catch(() => { }); }
+}
+function wellSheet() {
+  const today = WB.days[wbDay()] || 0, last = [...Array(7)].map((_, i) => { const d = new Date(Date.now() - (6 - i) * 864e5); return [d, WB.days[wbDay(d)] || 0]; });
+  const mx = Math.max(60, ...last.map(x => x[1])), avg = Math.round(last.reduce((a, x) => a + x[1], 0) / 7);
+  const opt = (k, vals, cur) => `<div class="seg wrap">${vals.map(m => `<button class="${cur === m ? 'on' : ''}" onclick="V.wellSet('${k}',${m})">${m ? m + ' min' : '<span>Désactivé</span>'}</button>`).join('')}</div>`;
+  sheet('🧘 Bien-être', `<div class="angrid two">${`<div class="ank"><span>📱</span><b>${wbMin(today)}</b><small>Aujourd’hui</small></div><div class="ank"><span>📅</span><b>${wbMin(avg)}</b><small>Moyenne par jour</small></div>`}</div>
+  <div class="lbl">7 derniers jours</div><div class="anbars">${last.map(([d, s]) => `<div title="${wbMin(s)}"><i style="height:${Math.max(2, Math.round(s / mx * 100))}%"></i><small>${d.toLocaleDateString(getLang(), { weekday: 'narrow' })}</small></div>`).join('')}</div>
+  <div class="lbl">⏰ Limite de temps d’écran par jour</div>${opt('limit', [0, 30, 60, 90, 120], WB.limit)}
+  <div class="lbl">☕ Rappel de pause après</div>${opt('brk', [0, 10, 20, 30, 60], WB.brk)}
+  <p class="mut small" style="margin-top:10px">Le temps est compté sur cet appareil seulement, quand tu regardes des vidéos, des stories ou des lives.</p>`);
+}
+function wellSet(k, m) { WB[k] = m; wbSave(); wellSheet(); toast(m ? '✅ Enregistré' : 'Désactivé'); }
+
+/* =====================================================================
    ORDINATEUR ET TABLETTE : raccourcis clavier
    ===================================================================== */
 window.addEventListener('keydown', e => {
@@ -2840,11 +3050,13 @@ window.addEventListener('keydown', e => {
   if (e.key === 'ArrowDown' || e.key === 'j' || e.key === 'PageDown') { e.preventDefault(); feed.scrollBy({ top: feed.clientHeight, behavior: 'smooth' }); }
   else if (e.key === 'ArrowUp' || e.key === 'k' || e.key === 'PageUp') { e.preventDefault(); feed.scrollBy({ top: -feed.clientHeight, behavior: 'smooth' }); }
   else if (e.key === ' ') { e.preventDefault(); const i = Math.round(feed.scrollTop / feed.clientHeight), sl = feed.children[i], v = sl && sl.querySelector('video'); if (v) v.paused ? v.play().catch(() => { }) : v.pause(); }
+  else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const i = Math.round(feed.scrollTop / feed.clientHeight), sl = feed.children[i], car = sl && sl.querySelector('.pcar'); if (car) { e.preventDefault(); phStep(car, e.key === 'ArrowRight' ? 1 : -1, true); } }
   else if (e.key === 'm' || e.key === 'M') toggleMute();
   else if (e.key === 'l' || e.key === 'L') { const i = Math.round(feed.scrollTop / feed.clientHeight), sl = feed.children[i]; if (sl && sl.dataset.id) like(sl.dataset.id); }
 });
 
 window.V = {
+  pickPhotos, phRemove, phSoundPick, phSoundUse, replyVideo, cancelReplyVideo, privacySheet, savePrivacy, pinVideo, historySheet, clearHistory, histPause, analyticsSheet, wellSheet, wellSet, wellGo, sTab: t => { S.sTab = t; search(); },
   openCamera, closeCamera, camRecord, camRedo, camDone, camFlip, camTimer, camFilters, camFilter, camDur, camMic, camClip, camText, camTextAdd, camTextClear, camSoundPick, camSoundUse, useSound, duetWith, stitchWith,
   openStories, storyStep, closeStories, storyDel, storyReply, openUserStories, postKind: k => { S.postKind = k; go('create'); },
   livePinMsg, liveVote, livePollForm, livePollStart, livePollEnd, liveGoalForm, liveGoalStart, liveModForm, liveModSave, liveTools, liveMore, liveViewers, liveGuest, liveKick, liveRequest, liveFollow, liveQuick,

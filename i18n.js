@@ -473,6 +473,88 @@ Recommencer depuis le début|Start over from the beginning|Recomeçar do início
 Supprimer cette story|Delete this story|Apagar esta story|Eliminar esta historia|احذف هذه القصة|Futa hadithi hii|ይህን ታሪክ ሰርዝ|Bu hekayəni sil
 Story supprimée|Story deleted|Story apagada|Historia eliminada|تم حذف القصة|Hadithi imefutwa|ታሪኩ ተሰርዟል|Hekayə silindi
 Micro coupé : seul le son sera enregistré|Mic off: only the sound will be recorded|Microfone desligado: só o som será gravado|Micrófono apagado: solo se grabará el sonido|الميكروفون مغلق: سيُسجَّل الصوت فقط|Maikrofoni imezimwa: sauti tu itarekodiwa|ማይክ ጠፍቷል፦ ድምፁ ብቻ ይቀረጻል|Mikrofon söndürülüb: yalnız səs yazılacaq
+Répondre en vidéo|Reply with video|Responder em vídeo|Responder con vídeo|الرد بفيديو|Jibu kwa video|በቪዲዮ መልስ|Videoyla cavab ver
+Réponse en vidéo à|Video reply to|Resposta em vídeo a|Respuesta en vídeo a|رد بالفيديو على|Jibu la video kwa|የቪዲዮ መልስ ለ|Video cavabı:
+Réponse à|Reply to|Resposta a|Respuesta a|رد على|Jibu kwa|መልስ ለ|Cavab:
+Le créateur a désactivé les commentaires|The creator turned off comments|O criador desativou os comentários|El creador desactivó los comentarios|عطّل صاحب المحتوى التعليقات|Mtayarishaji amezima maoni|ፈጣሪው አስተያየቶችን አጥፍቷል|Müəllif şərhləri bağlayıb
+Le créateur a désactivé le téléchargement|The creator turned off downloads|O criador desativou as transferências|El creador desactivó las descargas|عطّل صاحب المحتوى التنزيل|Mtayarishaji amezima upakuaji|ፈጣሪው ማውረድን አጥፍቷል|Müəllif yükləməni bağlayıb
+Faire un Duo ou un Collage avec ma vidéo|Duet or Stitch with my video|Fazer Dueto ou Stitch com o meu vídeo|Hacer Dúo o Stitch con mi vídeo|عمل ثنائي أو Stitch مع فيديوي|Duet au Stitch na video yangu|ከቪዲዮዬ ጋር ዱዌት ወይም Stitch|Videomla Duet və ya Stitch etmək
+Télécharger ma publication|Download my post|Transferir a minha publicação|Descargar mi publicación|تنزيل منشوري|Kupakua chapisho langu|ልጥፌን ማውረድ|Paylaşımımı yükləmək
+Qui peut|Who can|Quem pode|Quién puede|من يمكنه|Nani anaweza|ማን ይችላል|Kim edə bilər
+Commenter|Comment|Comentar|Comentar|التعليق|Kutoa maoni|አስተያየት መስጠት|Şərh yazmaq
+Enregistrer les vidéos que je regarde|Save the videos I watch|Guardar os vídeos que vejo|Guardar los vídeos que veo|حفظ الفيديوهات التي أشاهدها|Hifadhi video ninazotazama|የምመለከታቸውን ቪዲዮዎች አስቀምጥ|Baxdığım videoları yadda saxla
+Les vidéos que tu regardes apparaîtront ici. Seul toi peux voir ton historique|Videos you watch will appear here. Only you can see your history|Os vídeos que vês aparecem aqui. Só tu podes ver o teu histórico|Los vídeos que ves aparecerán aquí. Solo tú puedes ver tu historial|ستظهر هنا الفيديوهات التي تشاهدها. أنت فقط ترى سجلك|Video unazotazama zitaonekana hapa. Ni wewe tu unayeona historia yako|የምትመለከታቸው ቪዲዮዎች እዚህ ይታያሉ። ታሪክህን የምታየው አንተ ብቻ ነህ|Baxdığın videolar burada görünəcək. Tarixçəni yalnız sən görürsən
+Historique de visionnage|Watch history|Histórico de visualização|Historial de reproducción|سجل المشاهدة|Historia ya kutazama|የእይታ ታሪክ|Baxış tarixçəsi
+Effacer l’historique|Clear history|Apagar histórico|Borrar historial|مسح السجل|Futa historia|ታሪኩን አጽዳ|Tarixçəni təmizlə
+Historique en pause|History paused|Histórico em pausa|Historial en pausa|السجل متوقف مؤقتًا|Historia imesitishwa|ታሪክ ቆሟል|Tarixçə dayandırıldı
+Historique activé|History on|Histórico ativado|Historial activado|تم تفعيل السجل|Historia imewashwa|ታሪክ በርቷል|Tarixçə aktivdir
+Historique effacé|History cleared|Histórico apagado|Historial borrado|تم مسح السجل|Historia imefutwa|ታሪኩ ተጠርጓል|Tarixçə təmizləndi
+Pas intéressé|Not interested|Não tenho interesse|No me interesa|غير مهتم|Sipendezwi|ፍላጎት የለኝም|Maraqlı deyil
+Confidentialité de la publication|Post privacy|Privacidade da publicação|Privacidad de la publicación|خصوصية المنشور|Faragha ya chapisho|የልጥፉ ግላዊነት|Paylaşımın məxfiliyi
+Épingler sur mon profil|Pin to my profile|Fixar no meu perfil|Fijar en mi perfil|تثبيت في ملفي|Bandika kwenye wasifu wangu|በመገለጫዬ ላይ ሰካ|Profilimə sabitlə
+Désépingler du profil|Unpin from profile|Desafixar do perfil|Desfijar del perfil|إلغاء التثبيت من الملف|Ondoa kwenye wasifu|ከመገለጫ ንቀል|Profildən götür
+Épinglée en haut de ton profil|Pinned to the top of your profile|Fixado no topo do teu perfil|Fijado arriba en tu perfil|تم التثبيت أعلى ملفك|Imebandikwa juu ya wasifu wako|በመገለጫህ አናት ላይ ተሰክቷል|Profilinin yuxarısına sabitləndi
+Désépinglée|Unpinned|Desafixado|Desfijado|أُلغي التثبيت|Imeondolewa|ተነቅሏል|Sabitləmə götürüldü
+Enregistrer les photos|Save the photos|Guardar as fotos|Guardar las fotos|حفظ الصور|Hifadhi picha|ፎቶዎቹን አስቀምጥ|Şəkilləri yadda saxla
+Supprimer ma publication|Delete my post|Apagar a minha publicação|Eliminar mi publicación|حذف منشوري|Futa chapisho langu|ልጥፌን ሰርዝ|Paylaşımımı sil
+Statistiques créateur|Creator analytics|Estatísticas de criador|Estadísticas de creador|إحصاءات صانع المحتوى|Takwimu za mtayarishaji|የፈጣሪ ስታቲስቲክስ|Müəllif statistikası
+Statistiques|Analytics|Estatísticas|Estadísticas|الإحصاءات|Takwimu|ስታቲስቲክስ|Statistika
+Bien-être et temps d’écran|Wellbeing and screen time|Bem-estar e tempo de ecrã|Bienestar y tiempo de pantalla|الرفاهية ووقت الشاشة|Ustawi na muda wa skrini|ደህንነትና የስክሪን ጊዜ|Rifah və ekran vaxtı
+Bien-être|Wellbeing|Bem-estar|Bienestar|الرفاهية|Ustawi|ደህንነት|Rifah
+Choisir des photos|Choose photos|Escolher fotos|Elegir fotos|اختر صورًا|Chagua picha|ፎቶዎችን ምረጥ|Şəkillər seç
+Ajouter des photos|Add photos|Adicionar fotos|Añadir fotos|أضف صورًا|Ongeza picha|ፎቶዎችን ጨምር|Şəkil əlavə et
+Décris tes photos|Describe your photos|Descreve as tuas fotos|Describe tus fotos|صِف صورك|Eleza picha zako|ፎቶዎችህን ግለጽ|Şəkillərini təsvir et
+Jusqu’à 10 photos · elles défilent comme un diaporama|Up to 10 photos · they play as a slideshow|Até 10 fotos · passam como um diaporama|Hasta 10 fotos · se muestran como presentación|حتى 10 صور · تُعرض كعرض شرائح|Hadi picha 10 · zinaonyeshwa kama onyesho la slaidi|እስከ 10 ፎቶዎች · እንደ ስላይድ ትዕይንት ይታያሉ|10 şəklə qədər · slayd-şou kimi göstərilir
+La musique joue pendant le diaporama|Music plays during the slideshow|A música toca durante o diaporama|La música suena durante la presentación|تُشغَّل الموسيقى أثناء العرض|Muziki unacheza wakati wa onyesho|በስላይድ ትዕይንቱ ጊዜ ሙዚቃ ይጫወታል|Slayd-şou zamanı musiqi çalır
+Tes photos seront visibles par tous dans ta région. Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs de façon inappropriée|Your photos will be visible to everyone in your region. Forbidden: nudity, violence, scams, content showing minors inappropriately|As tuas fotos ficarão visíveis para todos na tua região. Proibido: nudez, violência, burlas, conteúdos que mostrem menores de forma inapropriada|Tus fotos serán visibles para todos en tu región. Prohibido: desnudos, violencia, estafas, contenidos que muestren a menores de forma inapropiada|ستكون صورك مرئية للجميع في منطقتك. ممنوع: العري والعنف والاحتيال والمحتوى الذي يُظهر القاصرين بشكل غير لائق|Picha zako zitaonekana kwa kila mtu katika eneo lako. Imekatazwa: uchi, vurugu, utapeli, maudhui yanayoonyesha watoto isivyofaa|ፎቶዎችህ በክልልህ ላሉ ሁሉ ይታያሉ። የተከለከለ፦ እርቃን፣ ሁከት፣ ማጭበርበር፣ ልጆችን አግባብ ባልሆነ መንገድ የሚያሳይ ይዘት|Şəkillərin bölgəndəki hər kəsə görünəcək. Qadağandır: çılpaqlıq, zorakılıq, fırıldaq, azyaşlıları yersiz göstərən məzmun
+Nouvelle publication photo|New photo post|Nova publicação de fotos|Nueva publicación de fotos|منشور صور جديد|Chapisho jipya la picha|አዲስ የፎቶ ልጥፍ|Yeni şəkil paylaşımı
+Photos|Photos|Fotos|Fotos|صور|Picha|ፎቶዎች|Şəkillər
+Photos publiées 🎉|Photos posted 🎉|Fotos publicadas 🎉|Fotos publicadas 🎉|تم نشر الصور 🎉|Picha zimechapishwa 🎉|ፎቶዎቹ ተለጥፈዋል 🎉|Şəkillər paylaşıldı 🎉
+Choisis d’abord des photos|Choose photos first|Escolhe primeiro as fotos|Elige primero las fotos|اختر الصور أولًا|Chagua picha kwanza|መጀመሪያ ፎቶዎችን ምረጥ|Əvvəlcə şəkil seç
+10 photos au maximum|10 photos maximum|Máximo 10 fotos|Máximo 10 fotos|10 صور كحد أقصى|Picha 10 zaidi|ቢበዛ 10 ፎቶዎች|Maksimum 10 şəkil
+Téléchargement des photos|Downloading photos|A transferir as fotos|Descargando las fotos|جارٍ تنزيل الصور|Inapakua picha|ፎቶዎችን በማውረድ ላይ|Şəkillər yüklənir
+Image illisible|Unreadable image|Imagem ilegível|Imagen ilegible|صورة غير مقروءة|Picha haisomeki|የማይነበብ ምስል|Oxunmayan şəkil
+Autoriser Duo et Collage|Allow Duet and Stitch|Permitir Dueto e Stitch|Permitir Dúo y Stitch|السماح بالثنائي وStitch|Ruhusu Duet na Stitch|ዱዌትና Stitch ፍቀድ|Duet və Stitch-ə icazə ver
+Autoriser le téléchargement|Allow downloads|Permitir transferências|Permitir descargas|السماح بالتنزيل|Ruhusu upakuaji|ማውረድ ፍቀድ|Yükləməyə icazə ver
+Autoriser les commentaires|Allow comments|Permitir comentários|Permitir comentarios|السماح بالتعليقات|Ruhusu maoni|አስተያየቶችን ፍቀድ|Şərhlərə icazə ver
+Comptes|Accounts|Contas|Cuentas|الحسابات|Akaunti|መለያዎች|Hesablar
+Sons|Sounds|Sons|Sonidos|الأصوات|Sauti|ድምፆች|Səslər
+Top|Top|Top|Top|الأبرز|Bora|ምርጥ|Top
+Aucun résultat|No results|Sem resultados|Sin resultados|لا توجد نتائج|Hakuna matokeo|ምንም ውጤት የለም|Nəticə yoxdur
+Aucun live ne correspond à ta recherche|No live matches your search|Nenhum live corresponde à tua pesquisa|Ningún directo coincide con tu búsqueda|لا يوجد بث يطابق بحثك|Hakuna live inayolingana na utafutaji wako|ከፍለጋህ ጋር የሚዛመድ ቀጥታ ስርጭት የለም|Axtarışına uyğun canlı yayım yoxdur
+Nouveaux abonnés|New followers|Novos seguidores|Nuevos seguidores|متابعون جدد|Wafuasi wapya|አዲስ ተከታዮች|Yeni izləyicilər
+Tes meilleures publications|Your top posts|As tuas melhores publicações|Tus mejores publicaciones|أفضل منشوراتك|Machapisho yako bora|ምርጥ ልጥፎችህ|Ən yaxşı paylaşımların
+Vues par jour|Views per day|Visualizações por dia|Vistas por día|المشاهدات يوميًا|Mitazamo kwa siku|በቀን እይታዎች|Gündəlik baxışlar
+abonnés au total|followers in total|seguidores no total|seguidores en total|متابعًا إجمالًا|wafuasi kwa jumla|ጠቅላላ ተከታዮች|ümumi izləyici
+pièces de cadeaux reçues|gift coins received|moedas de presentes recebidas|monedas de regalos recibidas|عملة هدايا مستلمة|sarafu za zawadi zilizopokelewa|የተቀበሉ የስጦታ ሳንቲሞች|alınmış hədiyyə sikkəsi
+Les vidéos regardées jusqu’au bout sont montrées à plus de monde. Accroche dans les 2 premières secondes|Videos watched to the end are shown to more people. Hook viewers in the first 2 seconds|Os vídeos vistos até ao fim são mostrados a mais pessoas. Prende a atenção nos 2 primeiros segundos|Los vídeos vistos hasta el final se muestran a más gente. Engancha en los 2 primeros segundos|الفيديوهات التي تُشاهد حتى النهاية تُعرض لعدد أكبر. اجذب الانتباه في أول ثانيتين|Video zinazotazamwa hadi mwisho huonyeshwa kwa watu wengi zaidi. Vutia katika sekunde 2 za kwanza|እስከ መጨረሻ የሚታዩ ቪዲዮዎች ለብዙ ሰዎች ይታያሉ። በመጀመሪያዎቹ 2 ሰከንዶች ትኩረት ሳብ|Sona qədər baxılan videolar daha çox insana göstərilir. İlk 2 saniyədə diqqəti cəlb et
+Publie ta première vidéo pour voir tes statistiques|Post your first video to see your analytics|Publica o teu primeiro vídeo para ver as estatísticas|Publica tu primer vídeo para ver tus estadísticas|انشر أول فيديو لك لترى إحصاءاتك|Chapisha video yako ya kwanza uone takwimu zako|ስታቲስቲክስህን ለማየት የመጀመሪያ ቪዲዮህን ለጥፍ|Statistikanı görmək üçün ilk videonu paylaş
+Visionnage moyen|Average watch|Visualização média|Reproducción media|متوسط المشاهدة|Wastani wa kutazama|አማካይ እይታ|Orta baxış
+Partages|Shares|Partilhas|Compartidos|المشاركات|Ushirikishaji|ማጋራቶች|Paylaşımlar
+jours|days|dias|días|أيام|siku|ቀናት|gün
+Aujourd’hui|Today|Hoje|Hoy|اليوم|Leo|ዛሬ|Bu gün
+Moyenne par jour|Daily average|Média diária|Media diaria|المعدل اليومي|Wastani wa kila siku|የቀን አማካይ|Gündəlik orta
+7 derniers jours|Last 7 days|Últimos 7 dias|Últimos 7 días|آخر 7 أيام|Siku 7 zilizopita|ያለፉት 7 ቀናት|Son 7 gün
+Désactivé|Off|Desativado|Desactivado|معطّل|Imezimwa|ጠፍቷል|Söndürülüb
+Le temps est compté sur cet appareil seulement, quand tu regardes des vidéos, des stories ou des lives|Time is counted on this device only, while you watch videos, stories or lives|O tempo é contado só neste aparelho, quando vês vídeos, stories ou lives|El tiempo se cuenta solo en este dispositivo, cuando ves vídeos, historias o directos|يُحسب الوقت على هذا الجهاز فقط أثناء مشاهدة الفيديوهات أو القصص أو البث|Muda unahesabiwa kwenye kifaa hiki tu, unapotazama video, hadithi au live|ጊዜው የሚቆጠረው በዚህ መሣሪያ ብቻ ነው፣ ቪዲዮዎችን፣ ታሪኮችን ወይም ቀጥታ ስርጭቶችን ስትመለከት|Vaxt yalnız bu cihazda, video, hekayə və ya canlı yayıma baxanda hesablanır
+Limite de temps d’écran par jour|Daily screen time limit|Limite diário de tempo de ecrã|Límite diario de tiempo de pantalla|حد وقت الشاشة اليومي|Kikomo cha muda wa skrini kwa siku|የዕለት የስክሪን ጊዜ ገደብ|Gündəlik ekran vaxtı limiti
+Rappel de pause après|Break reminder after|Lembrete de pausa após|Recordatorio de pausa tras|تذكير بالاستراحة بعد|Kikumbusho cha mapumziko baada ya|የእረፍት ማስታወሻ ከ|Fasilə xatırlatması
+Et si tu faisais une pause|Time for a break|E se fizesses uma pausa|¿Y si te tomas un descanso|ما رأيك في استراحة|Vipi ukipumzika kidogo|ትንሽ ብታርፍስ|Bəlkə fasilə verəsən
+Ton temps d’écran du jour est atteint|You've reached today's screen time|Atingiste o teu tempo de ecrã de hoje|Has alcanzado tu tiempo de pantalla de hoy|لقد بلغت وقت الشاشة لليوم|Umefikia muda wako wa skrini wa leo|የዛሬውን የስክሪን ጊዜህን ደርሰሃል|Bugünkü ekran vaxtın bitdi
+Tu regardes Vibzo depuis|You've been watching Vibzo for|Estás a ver o Vibzo há|Llevas viendo Vibzo|أنت تشاهد Vibzo منذ|Umetazama Vibzo kwa|Vibzoን እየተመለከትክ ያለኸው ለ|Vibzo-ya baxırsan:
+Lève-toi, bois de l’eau, regarde au loin quelques instants|Stand up, drink some water, look into the distance for a moment|Levanta-te, bebe água, olha ao longe por uns instantes|Levántate, bebe agua, mira a lo lejos unos instantes|انهض واشرب الماء وانظر بعيدًا لبضع لحظات|Simama, kunywa maji, tazama mbali kwa muda|ተነስ፣ ውሃ ጠጣ፣ ለጥቂት ጊዜ ወደ ሩቅ ተመልከት|Qalx, su iç, bir anlıq uzağa bax
+Aujourd’hui :|Today:|Hoje:|Hoy:|اليوم:|Leo:|ዛሬ፦|Bu gün:
+Tu avais choisi une limite de|You set a limit of|Escolheste um limite de|Elegiste un límite de|لقد اخترت حدًا قدره|Ulichagua kikomo cha|የመረጥከው ገደብ|Seçdiyin limit:
+D’accord, je fais une pause|OK, I'll take a break|Está bem, vou fazer uma pausa|Vale, me tomo un descanso|حسنًا، سآخذ استراحة|Sawa, nitapumzika|እሺ፣ አርፋለሁ|Yaxşı, fasilə verirəm
+Fermer pour aujourd’hui|Close for today|Fechar por hoje|Cerrar por hoy|إغلاق لهذا اليوم|Funga kwa leo|ለዛሬ ዝጋ|Bu günlük bağla
+Continuer à regarder|Keep watching|Continuar a ver|Seguir viendo|متابعة المشاهدة|Endelea kutazama|መመልከት ቀጥል|Baxmağa davam et
+Encore 15 minutes|15 more minutes|Mais 15 minutos|15 minutos más|15 دقيقة أخرى|Dakika 15 zaidi|ተጨማሪ 15 ደቂቃ|Daha 15 dəqiqə
+À tout à l’heure 👋|See you later 👋|Até já 👋|Hasta luego 👋|إلى اللقاء 👋|Tutaonana baadaye 👋|በኋላ እንገናኝ 👋|Sonra görüşərik 👋
+Tu peux épingler 3 vidéos au maximum|You can pin up to 3 videos|Podes fixar até 3 vídeos|Puedes fijar hasta 3 vídeos|يمكنك تثبيت 3 فيديوهات كحد أقصى|Unaweza kubandika video 3 zaidi|ቢበዛ 3 ቪዲዮዎችን መሰካት ትችላለህ|Maksimum 3 video sabitləyə bilərsən
+Ce créateur n'autorise pas les Duos et Collages|This creator doesn't allow Duets and Stitches|Este criador não permite Duetos e Stitches|Este creador no permite Dúos ni Stitches|صاحب المحتوى لا يسمح بالثنائي وStitch|Mtayarishaji huyu haruhusu Duet na Stitch|ይህ ፈጣሪ ዱዌትና Stitch አይፈቅድም|Bu müəllif Duet və Stitch-ə icazə vermir
+Photo invalide|Invalid photo|Foto inválida|Foto no válida|صورة غير صالحة|Picha si sahihi|ልክ ያልሆነ ፎቶ|Yanlış şəkil
+Maximum 10 photos|Maximum 10 photos|Máximo 10 fotos|Máximo 10 fotos|10 صور كحد أقصى|Picha 10 zaidi|ቢበዛ 10 ፎቶዎች|Maksimum 10 şəkil
+abonnés|followers|seguidores|seguidores|متابعون|wafuasi|ተከታዮች|izləyici
 Toute la zone|Whole area|Toda a zona|Toda la zona|المنطقة كلها|Eneo lote|ሙሉ አካባቢ|Bütün bölgə
 Monde entier|Whole world|Mundo inteiro|Todo el mundo|العالم كله|Dunia nzima|መላው ዓለም|Bütün dünya
 Monde entier (tous les pays)|Whole world (all countries)|Mundo inteiro (todos os países)|Todo el mundo (todos los países)|العالم كله (كل البلدان)|Dunia nzima (nchi zote)|መላው ዓለም (ሁሉም አገሮች)|Bütün dünya (bütün ölkələr)
