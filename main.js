@@ -1395,24 +1395,23 @@ const subSave = (m, plan = 'gold') => { const p = subPrice(plan); const full = p
    On détecte l'app Android (TWA) et on masque les achats de Gold, Vendeur, pièces et défis sponsorisés. */
 const IN_PLAY = (() => { try { const f = /[?&]src=twa\b/.test(location.search) || /^android-app:\/\//.test(document.referrer || ''); if (f) localStorage.setItem('vibzo_play', '1'); return f || localStorage.getItem('vibzo_play') === '1'; } catch (e) { return false; } })();
 const playNoBuy = () => `<div class="safety" style="margin-top:10px">📱 <span>Les achats ne sont pas encore disponibles dans l’application Android. Tous les autres services de Vibzo restent gratuits ici.</span></div>`;
-const CARD_BADGES = `<div class="paybadges"><span>VISA</span><span>Mastercard</span><span>G Pay</span></div>`;
+const CARD_BADGES = `<div class="paybadges"><span>MTN MoMo</span><span>Orange Money</span><span>VISA</span><span>Mastercard</span></div>`;
 function goldBlock(plan = 'gold') {
   if (IN_PLAY && !('getDigitalGoodsService' in window)) return playNoBuy();
   const zone = C[(S.me && S.me.country) || S.loc.country].z, p = subPrice(plan);
   return `<div class="card" style="text-align:center;margin:12px 0;background:#f2f9ff"><div class="mut small">Prix</div><div style="font-size:26px;font-weight:800;color:#1e9be8">${money(p.amount, p.cur)} <span style="font-size:14px;font-weight:600">/ mois</span></div>${plan !== 'gold' ? '<div class="small" style="margin-top:4px">🎁 1er mois offert à l’ouverture</div>' : ''}</div>
-  <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value,'${plan}')">${[1, 3, 12].map(m => `<option value="${m}">${m === 1 ? (IN_PLAY ? '1 mois' : '1 mois (carte : renouvelé automatiquement)') : m === 3 ? '3 mois' : '12 mois'} · ${money(p[m], p.cur)}${subSave(m, plan) ? ` (−${subSave(m, plan)} %)` : ''}</option>`).join('')}</select></div>
+  <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value,'${plan}')">${[1, 3, 12].map(m => `<option value="${m}">${m === 1 ? '1 mois' : m === 3 ? '3 mois' : '12 mois'} · ${money(p[m], p.cur)}${subSave(m, plan) ? ` (−${subSave(m, plan)} %)` : ''}</option>`).join('')}</select></div>
   <p class="small" style="text-align:center;margin:-4px 0 10px">Total : <b id="gTot">${subTotal(1, plan)}</b></p>
   ${IN_PLAY ? '' : CARD_BADGES}
-  <button class="btn gold" id="gBtn" onclick="V.requestSub('${plan}')">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer par carte ou Google Pay'}</button>
-  ${momoOk() ? `<button class="btn momo" id="gBtnM" onclick="V.requestSub('${plan}','momo')">📱 MTN MoMo / Orange Money</button>` : ''}
+  <button class="btn gold" id="gBtn" onclick="V.requestSub('${plan}')">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer : MTN, Orange Money ou carte'}</button>
   <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Activation automatique et immédiate après le paiement.'}</p>`;
 }
 function goldHero() {
   return `<div class="hero" style="margin:0"><div class="cr">👑</div><h2>Vibzo Gold</h2><div class="perks"><div>💘 <span><b>Rencontres</b> : relation sérieuse ou sans lendemain, entre adultes, par ville, région ou pays</span></div><div>✨ <span>Badge Gold sur ton profil et tes vidéos</span></div><div>🛡️ <span>Profils 18+, signalement et blocage en un clic</span></div></div></div>`;
 }
-async function requestSub(plan, method = 'card') {
+async function requestSub(plan, method = 'notch') {
   if (!requireAuth()) return;
-  const btn = $(method === 'momo' ? '#gBtnM' : '#gBtn'); busy(btn, true);
+  const btn = $('#gBtn'); busy(btn, true);
   await autoPay(plan === 'gold' ? 'gold' : 'seller', +$('#gMonths').value, method); busy(btn, false);
 }
 let payPreviewCc = null;
@@ -1760,16 +1759,15 @@ async function mfaOff(factorId) {
 const PAY_FN = `${SUPABASE_URL}/functions/v1/notchpay`;
 const CARD_FN = `${SUPABASE_URL}/functions/v1/paddlepay`, PLAY_FN = `${SUPABASE_URL}/functions/v1/playbilling`;
 /* Tous les paiements : carte (Visa, Mastercard) ou Google Pay sur le site, Google Play dans l'appli Android. */
-const momoOk = () => !IN_PLAY && C[myCc()].z !== 'A';
-async function autoPay(kind, qty, method = 'card', ref = null) {
+async function autoPay(kind, qty, method = 'notch', ref = null) {
   if (IN_PLAY && kind !== 'challenge') return playPay(kind, qty);
-  if (window.__VIBZO_FAKE__ && !window.__AUTOPAY__) { toast(method === 'momo' ? '📱 Paiement Mobile Money (test)' : '💳 Paiement par carte (test)'); return true; }
+  if (window.__VIBZO_FAKE__ && !window.__AUTOPAY__) { toast('💳 Paiement en ligne (test)'); return true; }
   try {
     const { data: { session } } = await sb.auth.getSession(); if (!session) return requireAuth(), true;
-    const r = await fetch(method === 'momo' ? PAY_FN : CARD_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', kind, qty, ref, auto: qty === 1 && (kind === 'gold' || kind === 'seller'), return_url: location.origin + location.pathname }) });
+    const r = await fetch(method === 'card' ? CARD_FN : PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', kind, qty, ref, auto: qty === 1 && (kind === 'gold' || kind === 'seller'), return_url: location.origin + location.pathname }) });
     const d = await r.json().catch(() => ({}));
     if (r.ok && d.url) { toast('🔒 Redirection vers le paiement sécurisé…'); setTimeout(() => { location.href = d.url; }, 400); return true; }
-    toast(d.error === 'not_configured' ? (method === 'momo' ? '📱 Le paiement MTN / Orange Money arrive très bientôt sur Vibzo' : '💳 Le paiement par carte et Google Pay arrive très bientôt sur Vibzo') : '⚠️ ' + (d.error || 'Paiement indisponible, réessaie dans un instant'));
+    toast(d.error === 'not_configured' ? '💳 Le paiement en ligne (MTN, Orange Money, carte) arrive très bientôt sur Vibzo' : '⚠️ ' + (d.error || 'Paiement indisponible, réessaie dans un instant'));
   } catch (e) { toast('⚠️ Connexion impossible, réessaie'); }
   return true;
 }
@@ -1853,12 +1851,11 @@ function buyCoins() {
   sheet('🪙 Acheter des pièces', `<p class="mut small" style="margin-bottom:10px">Les pièces servent à offrir des cadeaux aux créateurs que tu aimes. 1 pièce = ${cur === '₼' ? '0,03 ₼' : '10 FCFA'}.</p>
   <div class="packs">${COIN_PACKS.map(p => `<button class="pack ${p[0] === 500 ? 'on' : ''}" onclick="V.pickPack(${p[0]},this)"><b>🪙 ${p[0].toLocaleString('fr-FR')}</b>${p[3] ? `<i>${p[3]}</i>` : ''}<span>${money(cur === '₼' ? p[2] : p[1], cur)}</span></button>`).join('')}</div>
   ${IN_PLAY ? '' : CARD_BADGES}
-  <button class="btn gold" id="cBtn" onclick="V.reqCoins()">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer par carte ou Google Pay'}</button>
-  ${momoOk() ? `<button class="btn momo" id="cBtnM" onclick="V.reqCoins('momo')">📱 MTN MoMo / Orange Money</button>` : ''}
+  <button class="btn gold" id="cBtn" onclick="V.reqCoins()">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer : MTN, Orange Money ou carte'}</button>
   <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Les pièces arrivent automatiquement dès le paiement.'}</p>`);
 }
-async function reqCoins(method = 'card') {
-  const btn = $(method === 'momo' ? '#cBtnM' : '#cBtn'); busy(btn, true);
+async function reqCoins(method = 'notch') {
+  const btn = $('#cBtn'); busy(btn, true);
   await autoPay('coins', packSel, method); busy(btn, false);
 }
 async function walletSheet() {
@@ -2498,12 +2495,11 @@ async function saveChallenge() {
   closeSheet(); S._chPay = data.id;
   modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🏆</div><h3>Défi créé !</h3><p class="small">Il se met en ligne automatiquement dès le paiement.</p>
   <div class="card" style="margin:10px 0;text-align:left"><div class="small">Montant à payer</div><b style="font-size:20px">${money(data.total, data.currency)}</b><div class="mut small">${money(data.prizes, data.currency)} <span>de prix</span> + 15 %</div></div>
-  ${CARD_BADGES}<button class="btn gold" id="chPayC" onclick="V.payChallenge('card')">💳 Payer par carte ou Google Pay</button>
-  ${momoOk() && data.currency !== '₼' ? `<button class="btn momo" id="chPayM" onclick="V.payChallenge('momo')">📱 MTN MoMo / Orange Money</button>` : ''}
+  ${CARD_BADGES}<button class="btn gold" id="chPayC" onclick="V.payChallenge()">💳 Payer : MTN, Orange Money ou carte</button>
   <button class="btn ghost" style="margin-top:8px" onclick="V.closeModal()">Plus tard</button></div>`);
 }
-async function payChallenge(method) {
-  const id = S._chPay; if (!id) return; const b = $(method === 'momo' ? '#chPayM' : '#chPayC'); busy(b, true);
+async function payChallenge(method = 'notch') {
+  const id = S._chPay; if (!id) return; const b = $('#chPayC'); busy(b, true);
   await autoPay('challenge', 1, method, id); busy(b, false);
 }
 async function tagChallengeBanner(tag) {
