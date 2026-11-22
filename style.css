@@ -602,29 +602,7 @@ button.lvcnt{color:#fff}
 .stfoot button{background:rgba(255,255,255,.2);color:#fff;border-radius:20px;padding:9px 18px;font-weight:700}
 .pav{cursor:pointer}
 /* ---------- tablette ---------- */
-@media (min-width:600px) and (max-width:899px){#app{max-width:600px;box-shadow:0 0 40px rgba(0,0,0,.12)}}
-/* ---------- ordinateur : barre de navigation à gauche, vidéo au centre ---------- */
-@media (min-width:900px){
-  body{background:#0b2540}
-  #app{max-width:none;margin:0}
-  #nav{top:0;bottom:0;right:auto;width:230px;height:auto;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;padding:22px 14px;border-top:0;border-right:1px solid var(--line)}
-  #nav::before{content:'Vibzo';font-weight:900;font-size:28px;color:#1e9be8;padding:4px 14px 18px;letter-spacing:-.5px}
-  #nav button{flex-direction:row;width:100%;font-size:15.5px;gap:14px;padding:11px 14px;border-radius:12px;justify-content:flex-start;color:#4b6378}
-  #nav button:hover{background:#f1f7fd}
-  #nav button.on{background:#eaf5fe}
-  #nav .plus{width:40px;height:30px}
-  #nav .navlbl{display:inline;font-weight:700;color:#0b2540}
-  .screen{inset:0 0 0 230px;background:var(--bg)}
-  .screen:not(#s-home)>*{max-width:680px;margin-left:auto;margin-right:auto}
-  #s-home{background:#0b2540}
-  #s-home #feed{max-width:calc(100vh * 9 / 16 + 130px);margin:0 auto}
-  #s-home #topbar{left:50%;right:auto;transform:translateX(-50%);width:min(100%,calc(100vh * 9 / 16 + 130px))}
-  #s-home .lvpill{left:max(12px,calc(50% - (100vh * 9 / 16 + 130px) / 2 + 12px))}
-  #s-home .mute{right:max(12px,calc(50% - (100vh * 9 / 16 + 130px) / 2 + 12px))}
-  #sheetBg #sheet{left:calc(50% + 115px);right:auto;width:560px;transform:translate(-50%,100%)}
-  #sheetBg.on #sheet{transform:translate(-50%,0)}
-  #liveOv,#camOv,#stOv,#offOv{left:calc(230px + (100vw - 230px - 100vh * 9 / 16) / 2);right:auto;width:calc(100vh * 9 / 16)}
-  .slide video{object-fit:contain}
+
 }
 
 .navlbl{display:none}
@@ -660,7 +638,7 @@ button.lvcnt{color:#fff}
 .anv{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:8px 0;border-bottom:1px solid var(--line,#eef2f6)}
 .anv video,.anv img{width:46px;height:62px;border-radius:8px;object-fit:cover;background:#0b2540;flex:0 0 46px}
 .seg.wrap{flex-wrap:wrap}.seg.wrap button{flex:1 0 auto}
-@media (min-width:900px){.pdots{bottom:40px}}
+
 /* ---------- Vibzo Sons & sécurité ---------- */
 .sndrow{display:flex;align-items:center;gap:10px;width:100%;padding:8px 0}
 .sndplay{width:46px;height:46px;border-radius:10px;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex:0 0 46px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
@@ -693,8 +671,8 @@ button.lvcnt{color:#fff}
 .edstory{background:#fff;color:#0b2540}
 .ednext{background:#1e9be8;color:#fff}
 .pform{padding-bottom:110px}
-.ptop{display:flex;gap:12px;align-items:flex-start}
-.ptop textarea{flex:1;border:0;resize:none;font-size:15px;padding:6px 0;min-height:120px;background:transparent;outline:none}
+.pcap{display:flex;gap:12px;align-items:flex-start}
+.pcap textarea{flex:1;border:0;resize:none;font-size:15px;padding:6px 0;min-height:120px;background:transparent;outline:none}
 .pcov{flex:none;width:96px;height:128px;border-radius:10px;overflow:hidden;position:relative;background:#0b2540;color:#fff}
 .pcov img,.pcov video{width:100%;height:100%;object-fit:cover;display:block}
 .pcov span{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);font-size:11.5px;font-weight:700;padding:5px 0;text-align:center}
@@ -713,9 +691,114 @@ button.lvcnt{color:#fff}
 .covpick video{width:100%;height:100%;object-fit:contain}
 .vth .vvis{right:5px;bottom:24px;top:auto;background:rgba(0,0,0,.55);color:#fff}
 .drdel{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:12px}
-@media (min-width:900px){ #edOv{left:calc(230px + (100vw - 230px - 100vh * 9 / 16) / 2);right:auto;width:calc(100vh * 9 / 16)} .pbar{left:230px} }
+
 .prow input.tgl{width:44px!important;min-width:44px;height:26px!important;padding:0!important;margin:0!important;border:0!important;border-radius:13px!important;accent-color:auto}
 .paybadges{display:flex;justify-content:center;gap:6px;margin:4px 0 10px}
 .paybadges span{border:1px solid #d6e3ee;border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:800;color:#0b2540;background:#fff}
 .paybadges span:first-child{color:#1a1f71}.paybadges span:nth-child(2){color:#eb001b}
 .btn.momo{background:linear-gradient(90deg,#ffcc00,#ff7900);color:#1a1200;margin-top:8px}
+
+/* =====================================================================
+   v48 — Mise en page façon TikTok, adaptée au téléphone, à la tablette et à l'ordinateur
+   ===================================================================== */
+/* Téléphone : barre du bas noire sur le fil, comme TikTok */
+#nav.dark{background:#000;border-top-color:#000}
+#nav.dark button{color:rgba(255,255,255,.62)}
+#nav.dark button.on{color:#fff}
+#nav.dark .navlbl{color:#fff}
+.rail .disc{width:44px;height:44px;border:9px solid #1b1b1b;margin-top:2px;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.fstep{display:none}
+
+/* Profil façon TikTok */
+.ptop{display:block;text-align:center;padding:14px 16px 0}
+.ptop .pav{margin:0 auto}
+.pstats{display:flex;justify-content:center;gap:0;margin-top:14px;flex-wrap:nowrap}
+.pstats>div{padding:0 18px;position:relative;min-width:84px}
+.pstats>div+div::before{content:"";position:absolute;left:0;top:25%;height:50%;width:1px;background:var(--line,#e3eaf1)}
+.pstats b{font-size:17px}
+.pstats span{font-size:12.5px}
+.pbtns{justify-content:center}
+.ptabs{margin-top:16px}
+.ptabs button{display:flex;align-items:center;justify-content:center;gap:6px;color:#8aa3bb;border-bottom-width:2px}
+.ptabs button svg{width:20px;height:20px}
+.ptabs button span{font-size:13px}
+.ptabs button.on{color:var(--txt,#0b2540);border-color:var(--txt,#0b2540)}
+.vgrid{gap:2px}
+.vth span{font-size:12px}
+
+/* Tablette et ordinateur : barre latérale + vidéo centrée avec les boutons à côté (comme TikTok sur ordinateur) */
+@media (min-width:600px){
+  :root{--navw:84px}
+  body{background:#fff}
+  #app{max-width:none;margin:0;box-shadow:none}
+  #nav{top:0;bottom:0;left:0;right:auto;width:var(--navw);height:auto;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:6px;padding:18px 6px;border-top:0;border-right:1px solid var(--line)}
+  #nav::before{content:'V';align-self:center;width:42px;height:42px;border-radius:12px;background:var(--grad);color:#fff;font-weight:900;font-size:24px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+  #nav button{width:100%;font-size:11px;padding:8px 0;border-radius:12px}
+  #nav button svg{width:26px;height:26px}
+  #nav button:hover{background:rgba(30,155,232,.08)}
+  #nav.dark{border-right-color:#1d1d1d}
+  #nav.dark button:hover{background:rgba(255,255,255,.08)}
+  #nav .navlbl{display:none}
+  #nav .plus{margin:4px auto}
+  .screen{inset:0 0 0 var(--navw)}
+  .screen:not(#s-home)>*{max-width:760px;margin-left:auto;margin-right:auto}
+  #s-profile>*,#s-discover>*{max-width:1100px}
+  .vgrid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:0 12px}
+  .vgrid .vth{border-radius:10px}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  #sheetBg #sheet{left:calc(50% + var(--navw) / 2);right:auto;width:min(560px,calc(100vw - var(--navw) - 24px));transform:translate(-50%,100%)}
+  #sheetBg.on #sheet{transform:translate(-50%,0)}
+  #liveOv,#camOv,#stOv,#offOv,#edOv{left:calc(var(--navw) + (100vw - var(--navw) - min(100dvh * 9 / 16, 100vw - var(--navw))) / 2);right:auto;width:min(100dvh * 9 / 16, 100vw - var(--navw))}
+  .pbar{left:var(--navw)}
+
+  /* Fil : fond noir, vidéo arrondie au centre, boutons à droite de la vidéo */
+  body.onhome,body.onhome #app{background:#000}
+  #s-home{background:#000;--vw:min(calc((100dvh - 32px) * 9 / 16), calc(100vw - var(--navw) - 150px));--vx:calc(50% - var(--vw) / 2 - 36px)}
+  #s-home #feed{max-width:none;margin:0}
+  .slide{background:#000}
+  .slide>.vbg,.slide>.vtap{left:var(--vx);width:var(--vw);right:auto;top:16px;bottom:16px;height:auto;border-radius:16px;overflow:hidden}
+  .slide>.vbg::after{border-radius:16px}
+  .slide .vbg video{width:100%;height:100%;object-fit:contain;background:#000}
+  .slide>.vprog{left:calc(var(--vx) + 10px);width:calc(var(--vw) - 20px);right:auto;bottom:18px}
+  .slide>.vinfo{left:calc(var(--vx) + 14px);right:auto;width:calc(var(--vw) - 28px);bottom:34px}
+  .slide>.vtitle{left:calc(var(--vx) + 20px);right:auto;width:calc(var(--vw) - 40px)}
+  .slide>.rstk{left:calc(var(--vx) + 12px)}
+  .slide>.pauseIc,.slide>.spd{left:calc(var(--vx) + var(--vw) / 2)}
+  .slide>.rail{right:auto;left:calc(var(--vx) + var(--vw) + 14px);bottom:22px}
+  .rail .rb svg{width:28px;height:28px;padding:10px;box-sizing:content-box;background:rgba(255,255,255,.12);border-radius:50%;filter:none}
+  .rail .rb.gift .gi{width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.12);border-radius:50%;font-style:normal;font-size:24px}
+  .rail .rb span{font-size:12px;text-shadow:none;color:#ddd}
+  .slide.endslide{margin:16px auto;height:calc(100% - 32px);width:var(--vw);border-radius:16px;transform:translateX(-36px)}
+  #s-home #topbar{left:var(--vx);width:var(--vw);right:auto;transform:none;top:16px;border-radius:16px 16px 0 0}
+  #s-home .lvpill{left:calc(var(--vx) + 12px);top:calc(84px + var(--st))}
+  #s-home .mute{right:auto;left:calc(var(--vx) + var(--vw) - 48px);top:calc(80px + var(--st))}
+  .pcar .pdots{bottom:60px}
+  .pcnt{top:76px}
+}
+/* Ordinateur : barre latérale large avec les libellés, flèches haut/bas à droite */
+@media (min-width:1100px){
+  :root{--navw:230px}
+  #nav{padding:22px 14px;gap:4px}
+  #nav::before{content:'Vibzo';width:auto;height:auto;background:none;color:#1e9be8;font-size:28px;letter-spacing:-.5px;justify-content:flex-start;align-self:stretch;padding:4px 14px 18px;margin:0}
+  #nav.dark::before{color:#fff}
+  #nav button{flex-direction:row;font-size:15.5px;gap:14px;padding:11px 14px;justify-content:flex-start}
+  #nav .navlbl{display:inline;font-weight:700}
+  #nav:not(.dark) .navlbl{color:#0b2540}
+  #nav .plus{width:40px;height:30px;margin:0}
+  .fstep{display:flex;flex-direction:column;gap:14px;position:absolute;right:28px;top:50%;transform:translateY(-50%);z-index:7}
+  .fstep button{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .fstep button:hover{background:rgba(255,255,255,.22)}
+  /* profil en ligne comme TikTok sur ordinateur : photo à gauche, infos à droite */
+  #s-profile .ptop{display:grid;grid-template-columns:180px 1fr;column-gap:28px;text-align:left;padding:28px 24px 0;align-items:start}
+  #s-profile .ptop>*{grid-column:2}
+  #s-profile .ptop>.pav{grid-column:1;grid-row:1 / span 9;width:160px;height:160px;font-size:60px;margin:0}
+  #s-profile .ptop>h2{margin-top:6px!important;font-size:24px!important}
+  #s-profile .ptop .tags,#s-profile .ptop .socs{justify-content:flex-start!important}
+  #s-profile .ptop>.start,#s-profile .ptop>.crcta{max-width:520px}
+  #s-profile .pstats{justify-content:flex-start}
+  #s-profile .pstats>div{display:flex;gap:6px;align-items:baseline;padding:0 16px 0 0;min-width:0}
+  #s-profile .pstats>div+div{padding-left:16px}
+  #s-profile .pbtns{justify-content:flex-start;max-width:520px}
+  #s-profile .ptabs{justify-content:flex-start;padding:0 12px}
+  #s-profile .ptabs button{flex:0 0 auto;padding:12px 28px}
+}

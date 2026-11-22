@@ -149,6 +149,7 @@ function requireAuth(msg) {
 const NAV = [['home', 'Accueil', I.home], ['shop', 'Boutique', I.bag], ['create', 'Publier', I.plus], ['dating', 'Rencontres', I.heart], ['jobs', 'Emplois', I.brief], ['profile', 'Profil', I.user]];
 function renderNav() {
   $('#nav').style.display = S.cur === 'auth' || S.cur === 'chat' ? 'none' : 'flex';
+  $('#nav').classList.toggle('dark', S.cur === 'home'); document.body.classList.toggle('onhome', S.cur === 'home');
   $('#nav').innerHTML = NAV.map(([k, l, ic]) => k === 'create'
     ? `<button onclick="V.newPost()" aria-label="Publier"><span class="plus">${ic}</span><span class="navlbl">${l}</span></button>`
     : `<button class="${S.cur === k ? 'on' : ''}" onclick="V.go('${k}')">${ic}<span>${l}</span></button>`).join('');
@@ -334,7 +335,7 @@ SCREENS.home = async () => {
   const ov = !!S.override;
   $('#s-home').innerHTML = `<div id="topbar">${ov ? `<button class="ib" onclick="V.go(V.S.prev||'home')" aria-label="Retour">${I.back}</button><div></div><div></div>` :
     `<button class="loc" onclick="V.openLoc()">${esc(locLabel())} ▾</button><div class="tabs"><button class="${S.tab === 'abo' ? 'on' : ''}" onclick="V.setTab('abo')">Abonnements</button><button class="${S.tab === 'pour' ? 'on' : ''}" onclick="V.setTab('pour')">Pour toi</button></div><div class="rt"><button class="ib" onclick="V.go('discover')" aria-label="Rechercher">${I.search}</button><button class="ib" id="bellBtn" onclick="V.openNotifs()" aria-label="Notifications">${I.bell}${S.notifs ? `<span class="badge">${S.notifs > 99 ? '99+' : S.notifs}</span>` : ''}</button><button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button></div>`}</div>
-  ${ov ? '' : `<button class="lvpill" id="liveBtn" onclick="V.livesSheet()" aria-label="Lives">LIVE</button>`}<button class="mute" onclick="V.toggleMute()" aria-label="Son">${S.muted || soundBlocked ? '🔇' : '🔊'}</button><div id="feed"></div>`;
+  ${ov ? '' : `<button class="lvpill" id="liveBtn" onclick="V.livesSheet()" aria-label="Lives">LIVE</button>`}<button class="mute" onclick="V.toggleMute()" aria-label="Son">${S.muted || soundBlocked ? '🔇' : '🔊'}</button><div id="feed"></div><div class="fstep"><button onclick="V.feedStep(-1)" aria-label="Vidéo précédente">⌃</button><button onclick="V.feedStep(1)" aria-label="Vidéo suivante">⌄</button></div>`;
   if (ov) { S.feed = S.override.list; S.feedDone = true; renderSlides(true); setTimeout(() => { const el = document.querySelector(`.slide[data-id="${S.override.start}"]`); if (el) $('#feed').scrollTop = el.offsetTop; }, 30); return; }
   if (S.tab === 'abo' && !uid()) { $('#feed').innerHTML = endSlide('👥', 'Abonnements', 'Connecte-toi pour suivre tes créateurs préférés.', `<button class="btn" style="width:auto;padding:12px 22px" onclick="V.go('auth')">Se connecter</button>`); return; }
   S.feed = []; S.feedOffset = 0; S.feedDone = false;
@@ -374,6 +375,7 @@ function slideHTML(v) {
     <button class="rb ${v.saved_by_me ? 'on2' : ''}" id="sv${v.id}" onclick="V.save('${v.id}')">${I.bookmark}<span>${v.saved_by_me ? 'Enregistré' : 'Enregistrer'}</span></button>
     <button class="rb ${v.reposted_by_me ? 'on3' : ''}" id="sh${v.id}" onclick="V.shareVid('${v.id}')">${I.share}<span>${v.share_count || v.repost_count ? fmtN((v.share_count || 0) + (v.repost_count || 0)) : 'Partager'}</span></button>
     <button class="rb" onclick="V.vidMore('${v.id}')" style="font-size:22px">⋯</button>
+    <button class="disc" onclick="V.openSound('${esc((v.sound || '').replace(/'/g, '’'))}','${v.user_id}','${esc(v.username)}')" aria-label="Son" style="${v.avatar_url ? `background:#222 url('${esc(v.avatar_url)}') center/cover` : gbg(gfor(v.username))}"></button>
   </div>
   <div class="vinfo">
     <div class="vauth" onclick="V.openProfile('${v.user_id}')">@${esc(v.username)}${v.is_vip ? '<span class="vgold">👑 Gold</span>' : ''}<span class="vloc">📍 ${esc(v.region || C[v.country]?.n || '')}</span></div>
@@ -738,7 +740,7 @@ async function search() {
   S._grid = vids; if (lb) lb.innerHTML = q ? (q.startsWith('#') || q.startsWith('♪') ? 'Les plus vues' : 'Résultats') : '<span>Vidéos récentes</span> · ' + esc(locLabel());
   if (q) loadTrends();
 }
-const thumb = (v, _l, pins) => { S.vids.set(v.id, v); return `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.openGrid('${v.id}')">${isPh(v) ? `<img src="${esc(v.photos[0])}" loading="lazy" alt="">` : v.cover_url ? `<img src="${esc(v.cover_url)}" loading="lazy" alt="">` : S.saver ? '<div class="vthph">▶</div>' : `<video src="${esc(v.video_url)}#t=0.5" muted preload="metadata" playsinline></video>`}${pins && v.pinned_at ? '<em class="vpin">📌 <span>Épinglé</span></em>' : ''}${isPh(v) ? `<em class="vphi">🖼️ ${v.photos.length}</em>` : ''}${v.visibility && v.visibility !== 'public' ? `<em class="vvis">${v.visibility === 'private' ? '🔒' : '👥'}</em>` : ''}<span>${v.view_count ? '▶ ' + fmtN(v.view_count) : '♥ ' + fmtN(v.like_count)}</span></button>`; };
+const thumb = (v, _l, pins) => { S.vids.set(v.id, v); return `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.openGrid('${v.id}')">${isPh(v) ? `<img src="${esc(v.photos[0])}" loading="lazy" alt="">` : v.cover_url ? `<img src="${esc(v.cover_url)}" loading="lazy" alt="">` : S.saver ? '<div class="vthph">▶</div>' : `<video src="${esc(v.video_url)}#t=0.5" muted preload="metadata" playsinline></video>`}${pins && v.pinned_at ? '<em class="vpin">📌 <span>Épinglé</span></em>' : ''}${isPh(v) ? `<em class="vphi">🖼️ ${v.photos.length}</em>` : ''}${v.visibility && v.visibility !== 'public' ? `<em class="vvis">${v.visibility === 'private' ? '🔒' : '👥'}</em>` : ''}<span>▷ ${fmtN(v.view_count || 0)}</span></button>`; };
 function openGrid(id) { const list = S._grid || [S.vids.get(id)]; S.override = { list, start: id }; go('home', { keepOverride: true }); }
 
 /* =====================================================================
@@ -765,7 +767,7 @@ SCREENS.create = async () => {
     : `<button class="pcov" onclick="V.coverPick()" aria-label="Couverture">${draft.cover ? `<img src="${draft.cover.url}" alt="">` : `<video src="${draft.url}#t=0.5" muted playsinline preload="metadata"></video>`}<span>Couverture</span></button>`;
   $('#s-create').innerHTML = `<div class="hdr"><button class="ib" onclick="V.postBack()" aria-label="Retour">${I.back || '‹'}</button><h1>Publier</h1><span style="width:36px"></span></div><div class="pad pform">
   ${rc ? `<div class="rcban"><div class="grow"><small>💬 <span>Réponse en vidéo à</span></small><div>${esc(rc.text)}</div></div><button class="ib" onclick="V.cancelReplyVideo()" aria-label="Annuler">✕</button></div>` : ''}
-  <div class="ptop"><textarea id="cd" rows="5" maxlength="300" placeholder="${photo ? 'Ajoute une description à tes photos…' : 'Ajoute une description…'}">${esc(cap)}</textarea>${media}</div>
+  <div class="pcap"><textarea id="cd" rows="5" maxlength="300" placeholder="${photo ? 'Ajoute une description à tes photos…' : 'Ajoute une description…'}">${esc(cap)}</textarea>${media}</div>
   <div class="pchips"><button onclick="V.capIns('#')"># <span>Hashtags</span></button><button onclick="V.capIns('@')">@ <span>Mentionner</span></button></div>
   ${photo ? `<div class="phstrip" id="phStrip">${PHD.map((p, i) => `<div><img src="${p.url}" alt=""><button onclick="V.phRemove(${i})" aria-label="Retirer">✕</button></div>`).join('')}</div>
   <button class="prow" onclick="V.phSoundPick()"><span class="e">♪</span><span class="grow">${PHS ? esc(PHS) : 'Ajouter un son'}</span><i>›</i></button>`
@@ -1272,12 +1274,12 @@ SCREENS.profile = async () => {
   <h2 style="margin-top:12px;font-size:19px">${esc(p.display_name)}${vb(p.verified)}${p.is_creator ? ' <span class="crb">💰 Créateur</span>' : ''}</h2>${p.bio ? `<p class="mut" style="font-size:14px;margin-top:4px">${esc(p.bio)}</p>` : ''}
   <div class="tags" style="justify-content:center"><span>📍 ${esc(p.region || '')} ${esc((C[p.country] || {}).f || '')} ${esc((C[p.country] || {}).n || '')}</span>${p.is_vip ? '<span style="color:#a87800">👑 Gold</span>' : ''}</div>
   ${socials(p)}
-  <div class="pstats"><div><b>${fmtN(p.following)}</b><span>Abonnements</span></div><div><b>${fmtN(p.followers)}</b><span>Abonnés</span></div><div><b>${fmtN(p.likes_received)}</b><span>J’aime</span></div><div><b>${fmtN(p.views || 0)}</b><span>Vues</span></div></div>
-  ${own ? startChecklist(p) : ''}
-  ${own ? `<button class="crcta" onclick="V.creatorSheet()">💰 <b>Programme Créateurs</b> · gagne de l’argent avec tes vidéos ›</button>` : ''}
+  <div class="pstats"><div><b>${fmtN(p.following)}</b><span>Abonnements</span></div><div><b>${fmtN(p.followers)}</b><span>Abonnés</span></div><div><b>${fmtN(p.likes_received)}</b><span>J’aime</span></div></div>
   <div class="pbtns">${own ? `<button class="btn sm ghost grow" onclick="V.editProfile()">Modifier le profil</button><button class="btn sm ghost" style="width:auto" onclick="V.analyticsSheet()" aria-label="Statistiques">📊</button><button class="btn sm ghost" style="width:auto" onclick="V.go('orders')">📦 Commandes</button>`
-      : `<button class="btn sm grow ${p.followed_by_me ? 'ghost' : ''}" id="folBtn" onclick="V.toggleFollow('${p.id}',${p.followed_by_me})">${p.followed_by_me ? 'Abonné ✓' : p.is_private ? '🔒 Demander à suivre' : 'Suivre'}</button><button class="btn sm ghost grow" onclick="V.chatWith('${p.id}','dm','',null)">💬 Message</button>`}</div></div>
-  ${own ? `<div class="ptabs"><button class="${tab === 'videos' ? 'on' : ''}" onclick="V.profTab('videos')">Mes vidéos</button><button class="${tab === 'saved' ? 'on' : ''}" onclick="V.profTab('saved')">Favoris</button></div>` : '<div class="ptabs"><button class="on">Vidéos</button></div>'}
+      : `<button class="btn sm grow ${p.followed_by_me ? 'ghost' : ''}" id="folBtn" onclick="V.toggleFollow('${p.id}',${p.followed_by_me})">${p.followed_by_me ? 'Abonné ✓' : p.is_private ? '🔒 Demander à suivre' : 'Suivre'}</button><button class="btn sm ghost grow" onclick="V.chatWith('${p.id}','dm','',null)">💬 Message</button>`}</div>
+  ${own ? startChecklist(p) : ''}
+  ${own ? `<button class="crcta" onclick="V.creatorSheet()">💰 <b>Programme Créateurs</b> · gagne de l’argent avec tes vidéos ›</button>` : ''}</div>
+  ${own ? `<div class="ptabs"><button class="${tab === 'videos' ? 'on' : ''}" onclick="V.profTab('videos')" aria-label="Mes vidéos">${PT_GRID}<span>Vidéos</span></button><button class="${tab === 'saved' ? 'on' : ''}" onclick="V.profTab('saved')" aria-label="Favoris">${I.bookmark}<span>Favoris</span></button></div>` : `<div class="ptabs"><button class="on" aria-label="Vidéos">${PT_GRID}<span>Vidéos</span></button></div>`}
   <div class="vgrid" id="pgridv">${loading()}</div>`;
   let vids = [];
   if (tab === 'saved') {
@@ -1292,6 +1294,7 @@ SCREENS.profile = async () => {
   if (S.blocked.has(id)) { $('#pgridv').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">⛔</div><b>Tu as bloqué ce compte</b><button class="btn sm" style="width:auto" onclick="V.unblock('${id}')">Débloquer</button></div>`; return; }
   $('#pgridv').innerHTML = vids.length ? vids.map(v => thumb(v, null, tab === 'videos')).join('') : `<div class="empty" style="grid-column:1/-1">${own && tab === 'videos' ? 'Publie ta première vidéo avec le bouton ＋' : 'Rien ici pour le moment.'}</div>`;
 };
+const PT_GRID = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
 const SOC = { instagram: ['Instagram', 'https://instagram.com/', '#E1306C', '📸'], tiktok: ['TikTok', 'https://www.tiktok.com/@', '#111', '🎵'], youtube: ['YouTube', 'https://www.youtube.com/@', '#FF0000', '▶️'] };
 const socials = p => { const l = Object.keys(SOC).filter(k => p[k]); return l.length ? `<div class="socs">${l.map(k => `<a href="${SOC[k][1]}${encodeURIComponent(p[k])}" target="_blank" rel="noopener" style="background:${SOC[k][2]}">${SOC[k][3]} ${SOC[k][0]}</a>`).join('')}</div>` : ''; };
 const cleanHandle = v => (v || '').trim().replace(/^https?:\/\/[^/]+\/(@)?/i, '').replace(/^@/, '').split(/[/?#]/)[0] || null;
@@ -3408,8 +3411,9 @@ window.addEventListener('keydown', e => {
   else if (e.key === 'l' || e.key === 'L') { const i = Math.round(feed.scrollTop / feed.clientHeight), sl = feed.children[i]; if (sl && sl.dataset.id) like(sl.dataset.id); }
 });
 
+function feedStep(d) { const feed = $('#feed'); if (feed) feed.scrollBy({ top: d * feed.clientHeight, behavior: 'smooth' }); }
 window.V = {
-  pwProblem,
+  pwProblem, feedStep,
   saveAge, cancelReq, userMore, blockUser, doBlock, unblock, safetySheet, saveSafety, respondFollow, removeDevice, soundPicker, sndPreview, useLib, useTop, mySounds, uploadSound, removeSound, sndDecide,
   pickPhotos, phRemove, phSoundPick, phSoundUse, replyVideo, cancelReplyVideo, privacySheet, savePrivacy, pinVideo, historySheet, clearHistory, histPause, analyticsSheet, wellSheet, wellSet, wellGo, sTab: t => { S.sTab = t; search(); },
   payChallenge, subPortal, newPost, capIns, postBack, openEditor, closeEditor, editorBack, editorNext, coverPick, coverSeek, coverSave, saveDraft, draftsSheet, draftOpen, draftDel, publishStory, camMode, camLive, camImport, camPhotos,
