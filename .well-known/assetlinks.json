@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "fun.vibzo.app",
+      "sha256_cert_fingerprints": [
+        "98:9E:3B:9D:82:D6:2D:BC:67:40:AE:9C:81:66:8B:F8:CE:00:AF:B7:F0:60:A4:1F:13:0F:30:8B:F6:57:84:6C"
+      ]
+    }
+  }
+]
