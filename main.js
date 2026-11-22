@@ -155,20 +155,51 @@ function renderNav() {
     : `<button class="${S.cur === k ? 'on' : ''}" onclick="V.go('${k}')">${ic}<span>${l}</span></button>`).join('');
 }
 const SCREENS = {};
+/* ---------- historique : boutons Précédent / Suivant du téléphone et du navigateur ---------- */
+const NAVH = []; let NAVI = -1;
+const navSnap = k => ({ k, viewUser: S.viewUser, override: S.override, chatId: S.chatId, chatInfo: S.chatInfo, profTab: S.profTab, tab: S.tab });
+function navRecord(k, replace) {
+  const snap = navSnap(k);
+  if (replace || NAVI < 0) { if (NAVI < 0) NAVI = 0; NAVH[NAVI] = snap; try { history.replaceState({ vz: NAVI }, ''); } catch (e) { } return; }
+  NAVI += 1; NAVH.length = NAVI; NAVH[NAVI] = snap; try { history.pushState({ vz: NAVI }, ''); } catch (e) { }
+}
+function back(fallback) { if (NAVI > 0 && history.state && history.state.vz === NAVI) history.back(); else go(fallback || 'home'); }
+/* Une fenêtre ouverte (feuille, caméra, story, live…) se ferme d'abord avec le bouton Précédent. */
+function closeTopLayer() {
+  if ($('#modal').classList.contains('on')) { closeModal(); return true; }
+  if ($('#sheetBg').classList.contains('on')) { closeSheet(); return true; }
+  if ($('#edOv')) { editorBack(); return true; }
+  if (typeof STV !== 'undefined' && STV) { closeStories(); return true; }
+  if ($('#offOv')) { offClose(); return true; }
+  if (typeof LV !== 'undefined' && LV) { if (LV.role === 'host') toast('Appuie sur ✕ pour terminer ton live'); else closeLive(); return true; }
+  if (typeof CAM !== 'undefined' && CAM) { if (!CAM.recording) closeCamera(); return true; }
+  return false;
+}
+window.addEventListener('popstate', e => {
+  const st = e.state;
+  if (closeTopLayer()) { try { history.pushState({ vz: NAVI }, ''); } catch (er) { } return; }
+  if (!st || typeof st.vz !== 'number' || !NAVH[st.vz]) return;
+  NAVI = st.vz; const n = NAVH[NAVI];
+  S.viewUser = n.viewUser; S.override = n.override; S.chatId = n.chatId; S.chatInfo = n.chatInfo; S.profTab = n.profTab;
+  if (n.tab && n.tab !== S.tab) S.tab = n.tab;
+  go(n.k, { _pop: true, keepOverride: true, user: n.viewUser });
+});
 function go(k, opts = {}) {
   if (k === 'profile' && !opts.user) S.viewUser = null;
   if (k === 'profile' && opts.user) S.viewUser = opts.user;
   if (k !== S.cur && k !== 'chat') S.prev = S.cur;
   if (S.cur === 'chat' && k !== 'chat') stopChat();
   if (k === 'home' && !opts.keepOverride) S.override = null;
+  const same = k === S.cur && NAVI >= 0 && NAVH[NAVI] && NAVH[NAVI].k === k && NAVH[NAVI].viewUser === S.viewUser;
   S.cur = k;
+  if (!opts._pop) navRecord(k, same || !!(NAVH[NAVI] && NAVH[NAVI].k === 'auth'));
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
   $('#s-' + k).classList.add('on');
   if (k !== 'home') document.querySelectorAll('#feed video').forEach(v => v.pause());
   renderNav();
   Promise.resolve(SCREENS[k]()).catch(fail);
 }
-const hdr = (title, right = '', back = '') => `<div class="hdr">${back ? `<button class="ib" onclick="V.go('${back}')" aria-label="Retour">${I.back}</button>` : ''}<h1>${title}</h1>${right}</div>`;
+const hdr = (title, right = '', back = '') => `<div class="hdr">${back ? `<button class="ib" onclick="V.back('${back}')" aria-label="Retour">${I.back}</button>` : ''}<h1>${title}</h1>${right}</div>`;
 const locBtn = () => `<button class="loc" onclick="V.openLoc()">📍 ${esc(locLabel())} ▾</button>`;
 
 /* ---------- pays / région ---------- */
@@ -333,7 +364,7 @@ async function logout() { closeSheet(); closeModal(); await sb.auth.signOut(); S
    ===================================================================== */
 SCREENS.home = async () => {
   const ov = !!S.override;
-  $('#s-home').innerHTML = `<div id="topbar">${ov ? `<button class="ib" onclick="V.go(V.S.prev||'home')" aria-label="Retour">${I.back}</button><div></div><div></div>` :
+  $('#s-home').innerHTML = `<div id="topbar">${ov ? `<button class="ib" onclick="V.back(V.S.prev||'home')" aria-label="Retour">${I.back}</button><div></div><div></div>` :
     `<button class="loc" onclick="V.openLoc()">${esc(locLabel())} ▾</button><div class="tabs"><button class="${S.tab === 'abo' ? 'on' : ''}" onclick="V.setTab('abo')">Abonnements</button><button class="${S.tab === 'pour' ? 'on' : ''}" onclick="V.setTab('pour')">Pour toi</button></div><div class="rt"><button class="ib" onclick="V.go('discover')" aria-label="Rechercher">${I.search}</button><button class="ib" id="bellBtn" onclick="V.openNotifs()" aria-label="Notifications">${I.bell}${S.notifs ? `<span class="badge">${S.notifs > 99 ? '99+' : S.notifs}</span>` : ''}</button><button class="ib" onclick="V.openMsgs()" aria-label="Messages">${I.chat}${S.unread ? `<span class="badge">${S.unread}</span>` : ''}</button></div>`}</div>
   ${ov ? '' : `<button class="lvpill" id="liveBtn" onclick="V.livesSheet()" aria-label="Lives">LIVE</button>`}<button class="mute" onclick="V.toggleMute()" aria-label="Son">${S.muted || soundBlocked ? '🔇' : '🔊'}</button><div id="feed"></div><div class="fstep"><button onclick="V.feedStep(-1)" aria-label="Vidéo précédente">⌃</button><button onclick="V.feedStep(1)" aria-label="Vidéo suivante">⌄</button></div>`;
   if (ov) { S.feed = S.override.list; S.feedDone = true; renderSlides(true); setTimeout(() => { const el = document.querySelector(`.slide[data-id="${S.override.start}"]`); if (el) $('#feed').scrollTop = el.offsetTop; }, 30); return; }
@@ -689,7 +720,7 @@ async function sendReport(type, id, i) {
 let qTimer;
 SCREENS.discover = () => {
   const pre = S.searchQ || ''; S.searchQ = null;
-  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="sTabs" style="padding-bottom:0"></div><div class="pad" id="storyStrip" style="padding-bottom:0"></div><div class="pad" id="chStrip"></div><div class="pad" id="livesStrip"></div><div class="pad" id="sndStrip" style="padding-top:0"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
+  $('#s-discover').innerHTML = `<div class="hdr"><button class="ib" onclick="V.back('home')" aria-label="Retour">${I.back}</button><div class="search">${I.search}<input id="q" placeholder="Rechercher vidéos, #hashtags, @personnes" oninput="V.searchDebounced()" autocomplete="off" value="${esc(pre)}"></div></div><div class="pad" id="sTabs" style="padding-bottom:0"></div><div class="pad" id="storyStrip" style="padding-bottom:0"></div><div class="pad" id="chStrip"></div><div class="pad" id="livesStrip"></div><div class="pad" id="sndStrip" style="padding-top:0"></div><div class="pad" id="trends"></div><div class="pad" id="users"></div><div class="lbl pad" id="dlbl"><span>Vidéos récentes</span> · ${esc(locLabel())}</div><div class="vgrid" id="dres">${loading()}</div>`;
   loadTrends(); search(); livesStrip(); libStrip().catch(() => { }); loadChallenges().catch(() => { }); loadStories().catch(() => { });
 };
 async function loadTrends() {
@@ -1586,7 +1617,7 @@ SCREENS.msgs = async () => {
 async function openChat(id) { S.chatId = id; go('chat'); }
 SCREENS.chat = async () => {
   const id = S.chatId;
-  $('#s-chat').innerHTML = `<div class="hdr"><button class="ib" onclick="V.go('msgs')" aria-label="Retour">${I.back}</button><div id="chHead" class="row grow">${loading('')}</div><button class="ib" onclick="V.chatMore()">⋯</button></div><div class="msgs" id="msgs">${loading()}</div>
+  $('#s-chat').innerHTML = `<div class="hdr"><button class="ib" onclick="V.back('msgs')" aria-label="Retour">${I.back}</button><div id="chHead" class="row grow">${loading('')}</div><button class="ib" onclick="V.chatMore()">⋯</button></div><div class="msgs" id="msgs">${loading()}</div>
   <form class="cbar" onsubmit="event.preventDefault();V.sendMsg()"><input id="mIn" placeholder="Écris un message…" autocomplete="off" maxlength="2000"><button aria-label="Envoyer">${I.send}</button></form>`;
   const [{ data: info }, { data: msgs, error }] = await Promise.all([
     sb.from('conversation_list').select('*').eq('id', id).maybeSingle(),
@@ -3413,7 +3444,7 @@ window.addEventListener('keydown', e => {
 
 function feedStep(d) { const feed = $('#feed'); if (feed) feed.scrollBy({ top: d * feed.clientHeight, behavior: 'smooth' }); }
 window.V = {
-  pwProblem, feedStep,
+  pwProblem, feedStep, back,
   saveAge, cancelReq, userMore, blockUser, doBlock, unblock, safetySheet, saveSafety, respondFollow, removeDevice, soundPicker, sndPreview, useLib, useTop, mySounds, uploadSound, removeSound, sndDecide,
   pickPhotos, phRemove, phSoundPick, phSoundUse, replyVideo, cancelReplyVideo, privacySheet, savePrivacy, pinVideo, historySheet, clearHistory, histPause, analyticsSheet, wellSheet, wellSet, wellGo, sTab: t => { S.sTab = t; search(); },
   payChallenge, subPortal, newPost, capIns, postBack, openEditor, closeEditor, editorBack, editorNext, coverPick, coverSeek, coverSave, saveDraft, draftsSheet, draftOpen, draftDel, publishStory, camMode, camLive, camImport, camPhotos,
