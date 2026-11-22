@@ -1758,7 +1758,7 @@ async function mfaOff(factorId) {
 /* Paiement automatique (Notch Pay : MTN MoMo, Orange Money, carte). Si le service n'est pas encore activé
    ou indisponible, l'appli bascule sur le paiement manuel (WhatsApp + Mobile Money / IBAN). */
 const PAY_FN = `${SUPABASE_URL}/functions/v1/notchpay`;
-const CARD_FN = `${SUPABASE_URL}/functions/v1/cardpay`, PLAY_FN = `${SUPABASE_URL}/functions/v1/playbilling`;
+const CARD_FN = `${SUPABASE_URL}/functions/v1/paddlepay`, PLAY_FN = `${SUPABASE_URL}/functions/v1/playbilling`;
 /* Tous les paiements : carte (Visa, Mastercard) ou Google Pay sur le site, Google Play dans l'appli Android. */
 const momoOk = () => !IN_PLAY && C[myCc()].z !== 'A';
 async function autoPay(kind, qty, method = 'card', ref = null) {

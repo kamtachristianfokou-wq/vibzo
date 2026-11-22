@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Paiement sécurisé · Vibzo</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f8fc;color:#0b2540;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
+  .box{max-width:360px;padding:24px}
+  .logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#5ac8fa,#1e9be8);color:#fff;font-weight:900;font-size:36px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .spin{width:28px;height:28px;border:3px solid #cfe3f3;border-top-color:#1e9be8;border-radius:50%;animation:s 1s linear infinite;margin:16px auto}
+  @keyframes s{to{transform:rotate(360deg)}}
+  a.btn{display:inline-block;margin-top:14px;background:#1e9be8;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:12px}
+  small{color:#5b7489}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">V</div>
+  <h2 id="t">Paiement sécurisé</h2>
+  <div class="spin" id="sp"></div>
+  <p id="m"><small>Visa · Mastercard · Google Pay</small></p>
+  <a class="btn" id="back" href="/">Retour à Vibzo</a>
+</div>
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<script>
+(async () => {
+  const FN = 'https://pcfebfknjtqtgkhctxll.supabase.co/functions/v1/paddlepay';
+  const KEY = 'sb_publishable_jzRFhRUH5JlyNcIcnAwgAQ_1W8oZUoh';
+  const q = new URLSearchParams(location.search);
+  const txn = q.get('_ptxn') || '', pid = q.get('pid') || '';
+  let back = q.get('back') || 'https://vibzo.fun/';
+  if (!/^https:\/\/(vibzo\.fun|www\.vibzo\.fun|kamtachristianfokou-wq\.github\.io)(\/|$)/.test(back)) back = 'https://vibzo.fun/';
+  const done = back + (/^[0-9a-f-]{36}$/i.test(pid) ? '?cpay=' + pid : '');
+  document.getElementById('back').href = back;
+  const say = (t, m) => { document.getElementById('t').textContent = t; document.getElementById('m').innerHTML = m; document.getElementById('sp').style.display = 'none'; };
+  if (!/^txn_[a-z0-9]+$/i.test(txn)) return say('Lien de paiement invalide', '<small>Recommence depuis Vibzo.</small>');
+  try {
+    const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY }, body: JSON.stringify({ action: 'config' }) });
+    const c = await r.json();
+    if (!c.token) return say('Paiement bientôt disponible', '<small>Le paiement par carte arrive très bientôt sur Vibzo.</small>');
+    if (c.env === 'sandbox') Paddle.Environment.set('sandbox');
+    Paddle.Initialize({
+      token: c.token,
+      checkout: { settings: { displayMode: 'overlay', locale: 'fr', variant: 'one-page', successUrl: done } },
+      eventCallback: (e) => {
+        if (e.name === 'checkout.loaded') window.__open = 1;
+        if (e.name === 'checkout.completed') { say('Paiement reçu ✅', '<small>Activation en cours…</small>'); setTimeout(() => { location.href = done; }, 1500); }
+        if (e.name === 'checkout.closed') say('Paiement annulé', '<small>Aucun montant n’a été débité.</small>');
+      },
+    });
+    // Paddle.js ouvre tout seul le paiement grâce à _ptxn ; sinon on l'ouvre nous-mêmes
+    setTimeout(() => { if (!window.__open) Paddle.Checkout.open({ transactionId: txn }); }, 2500);
+  } catch (e) { say('Paiement indisponible', '<small>Vérifie ta connexion et réessaie.</small>'); }
+})();
+</script>
+</body>
+</html>
