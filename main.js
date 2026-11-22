@@ -150,7 +150,7 @@ const NAV = [['home', 'Accueil', I.home], ['shop', 'Boutique', I.bag], ['create'
 function renderNav() {
   $('#nav').style.display = S.cur === 'auth' || S.cur === 'chat' ? 'none' : 'flex';
   $('#nav').innerHTML = NAV.map(([k, l, ic]) => k === 'create'
-    ? `<button onclick="V.go('create')" aria-label="Publier"><span class="plus">${ic}</span><span class="navlbl">${l}</span></button>`
+    ? `<button onclick="V.newPost()" aria-label="Publier"><span class="plus">${ic}</span><span class="navlbl">${l}</span></button>`
     : `<button class="${S.cur === k ? 'on' : ''}" onclick="V.go('${k}')">${ic}<span>${l}</span></button>`).join('');
 }
 const SCREENS = {};
@@ -362,7 +362,7 @@ function slideHTML(v) {
   S.vids.set(v.id, v);
   const mine = v.user_id === uid();
   return `<div class="slide" data-id="${v.id}">
-  ${isPh(v) ? photoHTML(v) : `<div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" loop playsinline ${S.muted || soundBlocked ? 'muted' : ''} preload="${S.saver ? 'none' : 'metadata'}" onloadedmetadata="V.noImg(this)"></video></div>`}
+  ${isPh(v) ? photoHTML(v) : `<div class="vbg" style="background:#0b2540;animation:none"><video src="${esc(v.video_url)}" ${v.cover_url ? `poster="${esc(v.cover_url)}"` : ''} loop playsinline ${S.muted || soundBlocked ? 'muted' : ''} preload="${S.saver ? 'none' : 'metadata'}" onloadedmetadata="V.noImg(this)"></video></div>`}
   ${v.title ? `<div class="vtitle" style="top:auto;bottom:150px">${esc(v.title)}</div>` : ''}${v.reply_text ? `<div class="rstk"><small>💬 <span>Réponse à</span></small>${esc(v.reply_text)}</div>` : ''}
   <div class="vtap" onclick="V.tapVid(event,'${v.id}')" onpointerdown="V.holdStart(event,this)" onpointerup="V.holdEnd(this)" onpointerleave="V.holdEnd(this)" onpointercancel="V.holdEnd(this)" oncontextmenu="return false"></div><div class="pauseIc">▶</div><div class="spd">2x ⏩</div>
   <div class="vprog" onpointerdown="V.seek(event,this)"><i></i></div>
@@ -718,7 +718,7 @@ async function search() {
       html = (data || []).map(x => `<button class="citem" style="width:100%;text-align:left" onclick="V.openTag('${esc(x.tag)}')"><div class="im" style="background:#eef4fb;color:#1e9be8;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">#</div><div class="grow"><b>${esc(x.tag)}</b><div class="mut small">${fmtN(x.videos)} <span>vidéos</span></div></div><span class="mut">›</span></button>`).join('');
     } else {
       const lw = w.toLowerCase(), l = (await loadLives()).filter(x => [x.username, x.display_name, x.title].some(y => (y || '').toLowerCase().includes(lw)));
-      html = l.map(x => `<button class="mitem" style="padding:8px 0" onclick="V.openLive('${x.id}')"><div class="lvring">${avatar(x, 48)}</div><div class="grow"><div class="n">${esc(x.title || x.display_name || '')}</div><div class="l">🔴 LIVE · @${esc(x.username)}${x.viewers ? ' · 👁 ' + fmtN(x.viewers) : ''}</div></div></button>`).join('');
+      html = l.map(x => `<button class="mitem" style="padding:8px 0" onclick="V.openLive('${x.id}')"><div class="lvring">${avatar(x, 48)}</div><div class="grow"><div class="n">${esc(x.title || x.display_name || '')}</div><div class="l">🔵 LIVE · @${esc(x.username)}${x.viewers ? ' · 👁 ' + fmtN(x.viewers) : ''}</div></div></button>`).join('');
     }
     if (($('#q') ? $('#q').value : '').trim() !== q) return;
     us.innerHTML = html || `<div class="empty">${t === 'live' ? 'Aucun live ne correspond à ta recherche.' : 'Aucun résultat.'}</div>`; return;
@@ -738,7 +738,7 @@ async function search() {
   S._grid = vids; if (lb) lb.innerHTML = q ? (q.startsWith('#') || q.startsWith('♪') ? 'Les plus vues' : 'Résultats') : '<span>Vidéos récentes</span> · ' + esc(locLabel());
   if (q) loadTrends();
 }
-const thumb = (v, _l, pins) => { S.vids.set(v.id, v); return `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.openGrid('${v.id}')">${isPh(v) ? `<img src="${esc(v.photos[0])}" loading="lazy" alt="">` : S.saver ? '<div class="vthph">▶</div>' : `<video src="${esc(v.video_url)}#t=0.5" muted preload="metadata" playsinline></video>`}${pins && v.pinned_at ? '<em class="vpin">📌 <span>Épinglé</span></em>' : ''}${isPh(v) ? `<em class="vphi">🖼️ ${v.photos.length}</em>` : ''}<span>${v.view_count ? '▶ ' + fmtN(v.view_count) : '♥ ' + fmtN(v.like_count)}</span></button>`; };
+const thumb = (v, _l, pins) => { S.vids.set(v.id, v); return `<button class="vth" style="${gst(gfor(v.id))}" onclick="V.openGrid('${v.id}')">${isPh(v) ? `<img src="${esc(v.photos[0])}" loading="lazy" alt="">` : v.cover_url ? `<img src="${esc(v.cover_url)}" loading="lazy" alt="">` : S.saver ? '<div class="vthph">▶</div>' : `<video src="${esc(v.video_url)}#t=0.5" muted preload="metadata" playsinline></video>`}${pins && v.pinned_at ? '<em class="vpin">📌 <span>Épinglé</span></em>' : ''}${isPh(v) ? `<em class="vphi">🖼️ ${v.photos.length}</em>` : ''}${v.visibility && v.visibility !== 'public' ? `<em class="vvis">${v.visibility === 'private' ? '🔒' : '👥'}</em>` : ''}<span>${v.view_count ? '▶ ' + fmtN(v.view_count) : '♥ ' + fmtN(v.like_count)}</span></button>`; };
 function openGrid(id) { const list = S._grid || [S.vids.get(id)]; S.override = { list, start: id }; go('home', { keepOverride: true }); }
 
 /* =====================================================================
@@ -749,30 +749,122 @@ SCREENS.create = async () => {
   if (!uid()) { $('#s-create').innerHTML = hdr('Publier') + `<div class="empty"><div class="big">🎬</div><p>Crée un compte gratuit pour publier tes vidéos.</p><button class="btn" onclick="V.go('auth')">Se connecter / s’inscrire</button></div>`; return; }
   let prods = [];
   if (S.myShop) { const { data } = await sb.from('products').select('id,name,price,currency').eq('shop_id', S.myShop.id).eq('active', true); prods = data || []; }
-  const k = S.postKind, story = k === 'story', photo = k === 'photo', rc = S.replyCm;
-  $('#s-create').innerHTML = hdr(photo ? 'Nouvelle publication photo' : 'Nouvelle vidéo', `<span class="loc">📍 ${esc((C[S.me.country] || {}).f || '')} ${esc(S.me.region || '')}</span>`) + `<div class="pad">
-  <div class="seg" style="margin-bottom:10px"><button class="${!story && !photo ? 'on' : ''}" onclick="V.postKind('video')">🎬 Vidéo</button><button class="${photo ? 'on' : ''}" onclick="V.postKind('photo')">🖼️ Photos</button><button class="${story ? 'on' : ''}" onclick="V.postKind('story')">⏱ Story 24 h</button></div>
-  ${rc && !story ? `<div class="rcban"><div class="grow"><small>💬 <span>Réponse en vidéo à</span></small><div>${esc(rc.text)}</div></div><button class="ib" onclick="V.cancelReplyVideo()" aria-label="Annuler">✕</button></div>` : ''}
-  ${photo ? `<label class="up"><input type="file" accept="image/*" multiple style="display:none" onchange="V.pickPhotos(this)"><div class="big">🖼️</div><b>${PHD.length ? 'Ajouter des photos' : 'Choisir des photos'}</b><div class="mut small" style="margin-top:4px">Jusqu’à 10 photos · elles défilent comme un diaporama</div></label>
-  <div class="phstrip" id="phStrip">${PHD.map((p, i) => `<div><img src="${p.url}" alt=""><button onclick="V.phRemove(${i})" aria-label="Retirer">✕</button></div>`).join('')}</div>
-  <button class="golive" onclick="V.phSoundPick()"><span>♪</span><div><b>${PHS ? esc(PHS) : 'Ajouter un son'}</b><small>La musique joue pendant le diaporama</small></div><i>›</i></button>`
-  : `<button class="golive cam" onclick="V.openCamera({mode:'${story ? 'story' : 'video'}'})"><span>🎥</span><div><b>Filmer avec Vibzo</b><small>Effets, minuteur, texte, sons tendance</small></div><i>›</i></button>
-  ${story || rc ? '' : `<button class="golive" onclick="V.goLive()"><span>🔴</span><div><b>Lancer un live</b><small>Filme-toi en direct, reçois des cœurs et des cadeaux</small></div><i>›</i></button>`}
-  <label class="up"><input type="file" accept="video/*" style="display:none" onchange="V.pickVid(this)"><div class="big">📹</div><b>${draft ? 'Changer de vidéo' : 'Choisir une vidéo'}</b><div class="mut small" style="margin-top:4px">Depuis ta galerie ou ta caméra · tous formats · 3 minutes maximum</div></label>
-  <div class="prev" id="prev" style="${draft ? '' : 'display:none'};background:#0b2540">${draft ? `<video src="${draft.url}" autoplay loop muted playsinline></video>` : ''}</div>
-  ${draft && draft.cam && draft.cam.sound ? `<div class="mut small" style="margin-top:8px">♪ ${esc(draft.cam.sound.name)}</div>` : ''}${draft && draft.cam && draft.cam.src ? `<div class="mut small" style="margin-top:8px">${draft.cam.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} <span>avec</span> @${esc(draft.cam.src.username || '')}</div>` : ''}`}
-  ${story ? `<div class="field"><label>Texte de la story (facultatif)</label><input id="cd" maxlength="150" placeholder="Ex : Ma journée à Douala ☀️"></div><p class="mut small" style="margin-top:8px">Ta story est visible 24 heures par tes abonnés, puis elle disparaît.</p>` : `<div class="field"><label>Titre à l’écran (facultatif)</label><input id="ct" maxlength="80" placeholder="Ex : Mon premier challenge 🔥"></div>
-  <div class="field"><label>Description</label><textarea id="cd" rows="2" maxlength="300" placeholder="${photo ? 'Décris tes photos…' : 'Décris ta vidéo…'}"></textarea></div>
-  <div class="field"><label>Hashtags</label><input id="ch" placeholder="danse, humour, cuisine" value="${esc(S.draftTag || '')}"></div>`}
-  ${prods.length && !story ? `<div class="field"><label>🛍️ Taguer un produit de ma boutique</label><select id="cp"><option value="">Aucun</option>${prods.map(p => `<option value="${p.id}">${esc(p.name)} · ${money(p.price, p.currency)}</option>`).join('')}</select></div>` : ''}
-  ${story ? '' : `<div class="lbl">🔒 Qui peut…</div><div class="prv">
-  <label class="check"><input type="checkbox" id="pvC" checked> <span>Commenter</span></label>
-  ${photo ? '' : '<label class="check"><input type="checkbox" id="pvD" checked> <span>Faire un Duo ou un Collage avec ma vidéo</span></label>'}
-  <label class="check"><input type="checkbox" id="pvL" checked> <span>Télécharger ma publication</span></label></div>`}
-  <p class="mut small" style="margin-top:12px">${photo ? 'Tes photos seront visibles par tous dans ta région. Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs de façon inappropriée.' : 'Ta vidéo sera visible par tous dans ta région. Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs de façon inappropriée.'}</p>
+  const photo = S.postKind === 'photo', rc = S.replyCm, nd = await draftCount();
+  if (!photo && !draft) {
+    $('#s-create').innerHTML = hdr('Publier') + `<div class="pad">
+    ${rc ? `<div class="rcban"><div class="grow"><small>💬 <span>Réponse en vidéo à</span></small><div>${esc(rc.text)}</div></div><button class="ib" onclick="V.cancelReplyVideo()" aria-label="Annuler">✕</button></div>` : ''}
+    <button class="golive cam" onclick="V.openCamera({mode:'video'})"><span>🎥</span><div><b>Ouvrir la caméra</b><small>Effets, minuteur, texte, sons tendance</small></div><i>›</i></button>
+    <label class="up"><input type="file" accept="video/*" style="display:none" onchange="V.pickVid(this)"><div class="big">📹</div><b>Importer une vidéo</b><div class="mut small" style="margin-top:4px">Depuis ta galerie · tous formats · 3 minutes maximum</div></label>
+    <button class="golive" onclick="V.postKind('photo')" style="background:#eaf5fd;color:#0b2540"><span>🖼️</span><div><b>Publier des photos</b><small>Jusqu’à 10 photos en diaporama</small></div><i>›</i></button>
+    ${rc ? '' : `<button class="golive" onclick="V.goLive()"><span>🔵</span><div><b>Lancer un live</b><small>Filme-toi en direct, reçois des cœurs et des cadeaux</small></div><i>›</i></button>`}
+    ${nd ? `<button class="btn ghost" onclick="V.draftsSheet()">📥 <span>Brouillons</span> (${nd})</button>` : ''}</div>`;
+    return;
+  }
+  const cm = (draft && draft.cam) || {}, cap = draft && draft.caption != null ? draft.caption : (S.draftTag ? '#' + S.draftTag + ' ' : '');
+  const media = photo ? `<div class="pcov phc"><label><input type="file" accept="image/*" multiple style="display:none" onchange="V.pickPhotos(this)">${PHD.length ? `<img src="${PHD[0].url}" alt="">` : '<b>＋</b>'}<span>${PHD.length ? PHD.length + ' / 10' : 'Photos'}</span></label></div>`
+    : `<button class="pcov" onclick="V.coverPick()" aria-label="Couverture">${draft.cover ? `<img src="${draft.cover.url}" alt="">` : `<video src="${draft.url}#t=0.5" muted playsinline preload="metadata"></video>`}<span>Couverture</span></button>`;
+  $('#s-create').innerHTML = `<div class="hdr"><button class="ib" onclick="V.postBack()" aria-label="Retour">${I.back || '‹'}</button><h1>Publier</h1><span style="width:36px"></span></div><div class="pad pform">
+  ${rc ? `<div class="rcban"><div class="grow"><small>💬 <span>Réponse en vidéo à</span></small><div>${esc(rc.text)}</div></div><button class="ib" onclick="V.cancelReplyVideo()" aria-label="Annuler">✕</button></div>` : ''}
+  <div class="ptop"><textarea id="cd" rows="5" maxlength="300" placeholder="${photo ? 'Ajoute une description à tes photos…' : 'Ajoute une description…'}">${esc(cap)}</textarea>${media}</div>
+  <div class="pchips"><button onclick="V.capIns('#')"># <span>Hashtags</span></button><button onclick="V.capIns('@')">@ <span>Mentionner</span></button></div>
+  ${photo ? `<div class="phstrip" id="phStrip">${PHD.map((p, i) => `<div><img src="${p.url}" alt=""><button onclick="V.phRemove(${i})" aria-label="Retirer">✕</button></div>`).join('')}</div>
+  <button class="prow" onclick="V.phSoundPick()"><span class="e">♪</span><span class="grow">${PHS ? esc(PHS) : 'Ajouter un son'}</span><i>›</i></button>`
+    : cm.sound ? `<div class="prow"><span class="e">♪</span><span class="grow">${esc(cm.sound.name)}</span></div>` : ''}
+  ${cm.src ? `<div class="prow"><span class="e">${cm.mode === 'duet' ? '🎭' : '✂️'}</span><span class="grow">${cm.mode === 'duet' ? 'Duo' : 'Collage'} <span>avec</span> @${esc(cm.src.username || '')}</span></div>` : ''}
+  <div class="prow"><span class="e">📍</span><span class="grow">${esc((C[S.me.country] || {}).f || '')} ${esc(S.me.region || '')}</span></div>
+  ${prods.length ? `<label class="prow"><span class="e">🛍️</span><span class="grow">Ajouter un produit</span><select id="cp"><option value="">Aucun</option>${prods.map(p => `<option value="${p.id}">${esc(p.name)} · ${money(p.price, p.currency)}</option>`).join('')}</select></label>` : ''}
+  <label class="prow"><span class="e">👁</span><span class="grow">Qui peut voir cette publication</span><select id="pvV"><option value="public">Tout le monde</option><option value="friends">Amis</option><option value="private">Moi uniquement</option></select></label>
+  <label class="prow"><span class="e">💬</span><span class="grow">Autoriser les commentaires</span><input type="checkbox" class="tgl" id="pvC" checked></label>
+  ${photo ? '' : `<label class="prow"><span class="e">🎭</span><span class="grow">Autoriser Duo et Collage</span><input type="checkbox" class="tgl" id="pvD" checked></label>`}
+  <label class="prow"><span class="e">⬇️</span><span class="grow">Autoriser le téléchargement</span><input type="checkbox" class="tgl" id="pvL" checked></label>
+  <p class="mut small" style="margin-top:12px">Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs.</p>
   <div class="progress" id="prog" style="display:none"><i></i></div>
-  <button class="btn" id="pubBtn" onclick="V.publish()">${story ? 'Publier la story' : 'Publier'}</button></div>`;
+  <div class="pbar">${photo ? '' : `<button class="btn ghost" onclick="V.saveDraft()">📥 <span>Brouillons</span></button>`}<button class="btn" id="pubBtn" onclick="V.publish()">⬆ <span>Publier</span></button></div></div>`;
 };
+function capIns(ch) { const t = $('#cd'); if (!t) return; const s = t.selectionStart ?? t.value.length, pre = t.value.slice(0, s), add = (pre && !/\s$/.test(pre) ? ' ' : '') + ch; t.value = pre + add + t.value.slice(t.selectionEnd ?? s); t.focus(); const p = s + add.length; t.setSelectionRange(p, p); }
+function postBack() {
+  if (S.postKind === 'photo') { if (PHD.length && !confirm('Abandonner ces photos ?')) return; PHD = []; PHS = ''; PHSID = null; S.postKind = 'video'; return go('home'); }
+  if (draft) { draft.caption = ($('#cd') || {}).value; return openEditor(); }
+  go('home');
+}
+const capTags = c => [...new Set((String(c).match(/#[\p{L}\p{N}_]+/gu) || []).map(t => t.slice(1).toLowerCase()).filter(Boolean))].slice(0, 8);
+function newPost() {
+  if (!uid()) return go('create');
+  if (draft || S.postKind === 'photo') return go('create');
+  if (navigator.mediaDevices && window.MediaRecorder && HTMLCanvasElement.prototype.captureStream) return openCamera({ mode: 'video' });
+  go('create');
+}
+/* ---------- Écran d'édition (après la caméra ou l'import), comme TikTok ---------- */
+function openEditor() {
+  if (!draft) return go('create');
+  closeEditor(); const d = document.createElement('div'); d.id = 'edOv';
+  const cm = draft.cam || {}, story = cm.mode === 'story';
+  d.innerHTML = `<video id="edVid" src="${draft.url}" autoplay loop playsinline></video>
+  <div class="camtop"><button class="ib" onclick="V.editorBack()" aria-label="Retour">‹</button>${cm.sound ? `<span class="camsnd">♪ ${esc(cm.sound.name)}</span>` : '<span></span>'}<span style="width:36px"></span></div>
+  <div class="progress" id="edProg" style="display:none;position:absolute;left:16px;right:16px;bottom:calc(96px + var(--sb));z-index:4"><i></i></div>
+  <div class="edbot"><button class="edstory" id="edStory" onclick="V.publishStory()">${avatar(S.me, 26)} <span>Ta story</span></button><button class="ednext" onclick="V.editorNext()">${story ? '<span>Suivant</span>' : '<span>Suivant</span>'}</button></div>`;
+  $('#sheetBg').parentNode.appendChild(d);
+  document.querySelectorAll('#feed video').forEach(v => v.pause());
+}
+function closeEditor() { const e = $('#edOv'); if (e) { const v = e.querySelector('video'); if (v) v.pause(); e.remove(); } }
+function editorBack() {
+  if (!confirm('Abandonner cette vidéo ?')) return;
+  closeEditor(); draft = null; openCamera({ mode: 'video' });
+}
+function editorNext() { closeEditor(); S.postKind = 'video'; go('create'); }
+/* ---------- Couverture ---------- */
+function coverPick() {
+  if (!draft) return;
+  sheet('🖼️ Choisir la couverture', `<div class="covpick"><video id="cvV" src="${draft.url}" muted playsinline preload="auto"></video></div>
+  <input type="range" id="cvR" min="0" max="1000" value="${draft.cover ? Math.round(draft.cover.r * 1000) : 50}" style="width:100%" oninput="V.coverSeek(this.value)">
+  <p class="mut small" style="text-align:center">Fais glisser pour choisir l’image</p><button class="btn" onclick="V.coverSave()">Enregistrer</button>`);
+  const v = $('#cvV'); v.onloadedmetadata = () => coverSeek($('#cvR').value);
+}
+function coverSeek(x) { const v = $('#cvV'); if (v && v.duration && isFinite(v.duration)) v.currentTime = Math.max(0, Math.min(v.duration - 0.05, v.duration * x / 1000)); }
+function grabFrame(v) {
+  return new Promise((ok, ko) => { const w = v.videoWidth, h = v.videoHeight; if (!w || !h) return ko(new Error('frame')); const r = Math.min(1, 720 / Math.max(w, h)), c = document.createElement('canvas'); c.width = Math.round(w * r); c.height = Math.round(h * r); c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); c.toBlob(b => b ? ok(b) : ko(new Error('frame')), 'image/jpeg', .85); });
+}
+async function coverSave() {
+  const v = $('#cvV'); if (!v || !draft) return closeSheet();
+  try { const b = await grabFrame(v); if (draft.cover) URL.revokeObjectURL(draft.cover.url); draft.cover = { blob: b, url: URL.createObjectURL(b), r: +$('#cvR').value / 1000 }; draft.caption = ($('#cd') || {}).value; closeSheet(); go('create'); toast('Couverture choisie ✅'); }
+  catch (e) { toast('Impossible de lire cette image, essaie une autre position'); }
+}
+async function autoCover() {
+  if (!draft || draft.cover) return;
+  await new Promise(ok => { const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = draft.url;
+    const done = () => { v.removeAttribute('src'); v.load(); ok(); };
+    v.onloadeddata = () => { v.currentTime = Math.min(0.5, (v.duration || 1) / 2); };
+    v.onseeked = async () => { try { const b = await grabFrame(v); if (draft && !draft.cover) draft.cover = { blob: b, url: URL.createObjectURL(b), r: 0.05 }; } catch (e) { } done(); };
+    v.onerror = done; setTimeout(done, 6000); });
+}
+/* ---------- Brouillons (gardés sur l'appareil) ---------- */
+let draftDB = null;
+function ddb() {
+  if (draftDB) return draftDB;
+  draftDB = new Promise((ok, ko) => { if (!window.indexedDB) return ko(new Error('idb')); const r = indexedDB.open('vibzo-drafts', 1); r.onupgradeneeded = () => r.result.createObjectStore('d', { keyPath: 'id' }); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
+  draftDB.catch(() => { draftDB = null; }); return draftDB;
+}
+async function ddo(mode, fn) { const db = await ddb(); return new Promise((ok, ko) => { const tx = db.transaction('d', mode), st = tx.objectStore('d'), r = fn(st); tx.oncomplete = () => ok(r && r.result); tx.onerror = () => ko(tx.error); }); }
+async function draftCount() { try { return (await ddo('readonly', s => s.count())) || 0; } catch (e) { return 0; } }
+async function saveDraft() {
+  if (!draft) return;
+  const cm = draft.cam || {};
+  const rec = { id: draft.did || 'd' + Date.now(), uid: uid(), created: Date.now(), file: draft.file, caption: ($('#cd') || {}).value || '', cover: draft.cover ? draft.cover.blob : null, sound: cm.sound ? { name: cm.sound.name, id: cm.sound.id || null } : null };
+  try { await ddo('readwrite', s => s.put(rec)); draft = null; S.replyCm = null; toast('📥 Enregistré dans tes brouillons'); go('profile'); }
+  catch (e) { toast('Impossible d’enregistrer le brouillon sur cet appareil'); }
+}
+async function draftsSheet() {
+  let list = []; try { list = (await ddo('readonly', s => s.getAll())) || []; } catch (e) { }
+  list = list.filter(d => !d.uid || d.uid === uid()).sort((a, b) => b.created - a.created);
+  S._drafts = list;
+  sheet('📥 Brouillons', list.length ? `<p class="mut small">Gardés seulement sur cet appareil.</p><div class="vgrid">${list.map((d, i) => `<div class="vth" style="position:relative"><button style="all:unset;display:block;width:100%;height:100%;cursor:pointer" onclick="V.draftOpen(${i})">${d.cover ? `<img src="${URL.createObjectURL(d.cover)}" alt="">` : '<div class="vthph">▶</div>'}<span>${new Date(d.created).toLocaleDateString()}</span></button><button class="drdel" onclick="V.draftDel(${i})" aria-label="Supprimer">✕</button></div>`).join('')}</div>` : '<p class="mut">Aucun brouillon.</p>');
+}
+function draftOpen(i) {
+  const d = (S._drafts || [])[i]; if (!d) return; closeSheet(); closeCamera();
+  draft = { file: d.file, url: URL.createObjectURL(d.file), caption: d.caption, did: d.id, cam: d.sound ? { mode: 'video', sound: d.sound } : {}, cover: d.cover ? { blob: d.cover, url: URL.createObjectURL(d.cover), r: 0.05 } : null };
+  S.postKind = 'video'; go('create');
+}
+async function draftDel(i) { const d = (S._drafts || [])[i]; if (!d || !confirm('Supprimer ce brouillon ?')) return; await ddo('readwrite', s => s.delete(d.id)).catch(() => { }); draftsSheet(); }
 /* =====================================================================
    CONVERSION VIDÉO : tout format → MP4 H.264 + AAC, 720p max, lisible partout
    (WebCodecs via Mediabunny, chargé seulement au moment de publier)
@@ -832,57 +924,63 @@ async function convertVideoSoft(file, onProgress) {
   } finally { ff.off('progress', onP); ff.deleteFile(inName).catch(() => { }); ff.deleteFile('out.mp4').catch(() => { }); }
 }
 function pickVid(inp) {
-  const f = inp.files[0]; if (!f) return;
+  const f = inp.files[0]; if (!f) return; inp.value = '';
   if (f.size > 500 * 1024 * 1024) { toast('Vidéo trop lourde (500 Mo max).'); return; }
   const url = URL.createObjectURL(f);
-  const show = () => { draft = { file: f, url }; const p = $('#prev'); p.style.display = ''; p.innerHTML = `<video src="${url}" autoplay loop muted playsinline></video>`; };
+  const show = () => { draft = { file: f, url, cam: {} }; S.postKind = 'video'; openEditor(); };
   const probe = document.createElement('video'); probe.preload = 'metadata'; probe.muted = true; probe.src = url;
   probe.onloadedmetadata = () => { if (probe.duration && probe.duration > 185) { toast('Vidéo trop longue (3 minutes max).'); return; } show(); };
   probe.onerror = show;
+}
+/* Prépare (conversion MP4) puis envoie la vidéo du brouillon ; renvoie l'URL publique */
+async function uploadDraftVideo(story, say, bar) {
+  let body = draft.file, type = draft.file.type || 'video/mp4', ext = (draft.file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
+  say('Préparation de la vidéo…');
+  try {
+    body = await convertVideo(draft.file, p => { bar(Math.round(p * 70)); say(`Préparation ${Math.round(p * 100)} %`); });
+    type = 'video/mp4'; ext = 'mp4';
+  } catch (ce) {
+    console.warn('conversion rapide impossible, plan B', ce); say('Conversion du format…');
+    try { body = await convertVideoSoft(draft.file, p => { bar(Math.round(p * 70)); say(`Conversion ${Math.round(p * 100)} %`); }); type = 'video/mp4'; ext = 'mp4'; }
+    catch (se) { console.warn('conversion logicielle', se); throw new Error('Impossible de préparer cette vidéo. Vérifie ta connexion internet et réessaie, ou choisis une autre vidéo.'); }
+  }
+  if (body.size > 50 * 1024 * 1024) throw new Error('Vidéo trop lourde après préparation (50 Mo max). Raccourcis-la.');
+  say('Envoi en cours…'); let pct = 70; bar(pct);
+  const t = setInterval(() => { pct = Math.min(95, pct + (95 - pct) * 0.08); bar(pct); }, 400);
+  try {
+    const path = `${uid()}/${story ? 'stories/' : ''}${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from('videos').upload(path, body, { contentType: type, upsert: false }); if (error) throw error;
+    return sb.storage.from('videos').getPublicUrl(path).data.publicUrl;
+  } finally { clearInterval(t); }
+}
+async function publishStory() {
+  if (!draft) return; const b = $('#edStory'), pg = $('#edProg'); if (!b || b.disabled) return;
+  b.disabled = true; pg.style.display = ''; const bi = pg.querySelector('i');
+  try {
+    const url = await uploadDraftVideo(true, s => { b.innerHTML = `<span class="spin"></span> ${esc(s)}`; }, p => { bi.style.width = p + '%'; });
+    const { error } = await sb.from('stories').insert({ user_id: uid(), media_url: url, caption: '' }); if (error) throw error;
+    bi.style.width = '100%'; closeEditor(); draft = null; S.postKind = 'video'; toast('Story publiée ⏱ Elle reste 24 heures'); go('home');
+  } catch (e) { fail(e); b.disabled = false; b.innerHTML = `${avatar(S.me, 26)} <span>Ta story</span>`; pg.style.display = 'none'; }
 }
 async function publish() {
   if (S.postKind === 'photo') return publishPhotos();
   if (!draft) return toast('Choisis d’abord une vidéo 📹');
   const btn = $('#pubBtn'); busy(btn, true, 'Envoi en cours…');
-  const prog = $('#prog'); prog.style.display = ''; let pct = 5; const bar = prog.querySelector('i');
-  const timer = setInterval(() => { pct = Math.min(90, pct + (90 - pct) * 0.08); bar.style.width = pct + '%'; }, 400);
+  const prog = $('#prog'); prog.style.display = ''; const bar = prog.querySelector('i');
   try {
-    let body = draft.file, type = draft.file.type || 'video/mp4', ext = (draft.file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
-    clearInterval(timer); btn.innerHTML = '<span class="spin"></span> Préparation de la vidéo…';
-    try {
-      body = await convertVideo(draft.file, p => { bar.style.width = Math.round(p * 70) + '%'; btn.innerHTML = `<span class="spin"></span> Préparation ${Math.round(p * 100)} %`; });
-      type = 'video/mp4'; ext = 'mp4';
-    } catch (ce) {
-      console.warn('conversion rapide impossible, plan B', ce);
-      btn.innerHTML = '<span class="spin"></span> Conversion du format…';
-      try {
-        body = await convertVideoSoft(draft.file, p => { bar.style.width = Math.round(p * 70) + '%'; btn.innerHTML = `<span class="spin"></span> Conversion ${Math.round(p * 100)} %`; });
-        type = 'video/mp4'; ext = 'mp4';
-      } catch (se) {
-        console.warn('conversion logicielle', se);
-        throw new Error('Impossible de préparer cette vidéo. Vérifie ta connexion internet et réessaie, ou choisis une autre vidéo.');
-      }
-    }
-    if (body.size > 50 * 1024 * 1024) throw new Error('Vidéo trop lourde après préparation (50 Mo max). Raccourcis-la.');
-    btn.innerHTML = '<span class="spin"></span> Envoi en cours…'; pct = 70; bar.style.width = '70%';
-    const timer2 = setInterval(() => { pct = Math.min(95, pct + (95 - pct) * 0.08); bar.style.width = pct + '%'; }, 400);
-    const story = S.postKind === 'story', path = `${uid()}/${story ? 'stories/' : ''}${Date.now()}.${ext}`;
-    const { error: upErr } = await sb.storage.from('videos').upload(path, body, { contentType: type, upsert: false });
-    clearInterval(timer2);
-    if (upErr) throw upErr;
-    const { data: pub } = sb.storage.from('videos').getPublicUrl(path);
-    if (story) {
-      const { error: se } = await sb.from('stories').insert({ user_id: uid(), media_url: pub.publicUrl, caption: ($('#cd').value || '').trim().slice(0, 150) }); if (se) throw se;
-      bar.style.width = '100%'; draft = null; S.postKind = 'video'; toast('Story publiée ⏱ Elle reste 24 heures'); go('discover'); return;
-    }
+    const caption = ($('#cd').value || '').trim().slice(0, 300), vis = ($('#pvV') || {}).value || 'public';
+    const url = await uploadDraftVideo(false, s => { btn.innerHTML = `<span class="spin"></span> ${esc(s)}`; }, p => { bar.style.width = p + '%'; });
+    let cover_url = null;
+    if (!draft.cover) await autoCover();
+    if (draft.cover) { const cp = `${uid()}/covers/${Date.now()}.jpg`; const { error: ce } = await sb.storage.from('images').upload(cp, draft.cover.blob, { contentType: 'image/jpeg', upsert: false }); if (!ce) cover_url = sb.storage.from('images').getPublicUrl(cp).data.publicUrl; }
     const cm = draft.cam || {};
-    const tags = ($('#ch').value || '').toLowerCase().split(/[,\s#]+/).map(t => t.replace(/[^a-z0-9àâäéèêëïîôöùûüç_]/g, '')).filter(Boolean).slice(0, 8);
-    const row = { user_id: uid(), video_url: pub.publicUrl, title: $('#ct').value.trim(), caption: ($('#cd').value.trim() + (cm.src ? ` ${cm.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} avec @${cm.src.username || ''}` : '')).trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: cm.sound ? cm.sound.name : '', sound_id: cm.sound && cm.sound.id ? cm.sound.id : null, duet_of: cm.mode === 'duet' && cm.src ? cm.src.id : null, stitch_of: cm.mode === 'stitch' && cm.src ? cm.src.id : null, ...privacyVals(), reply_to: S.replyCm ? S.replyCm.id : null };
+    const row = { user_id: uid(), video_url: url, title: '', caption: (caption + (cm.src ? ` ${cm.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} avec @${cm.src.username || ''}` : '')).trim().slice(0, 300), tags: capTags(caption), country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: cm.sound ? cm.sound.name : '', sound_id: cm.sound && cm.sound.id ? cm.sound.id : null, duet_of: cm.mode === 'duet' && cm.src ? cm.src.id : null, stitch_of: cm.mode === 'stitch' && cm.src ? cm.src.id : null, ...privacyVals(), visibility: vis, cover_url, reply_to: S.replyCm ? S.replyCm.id : null };
     const { error } = await sb.from('videos').insert(row); if (error) throw error;
-    bar.style.width = '100%'; draft = null; S.draftTag = null; S.replyCm = null; toast('Vidéo publiée 🎉');
+    if (draft.did) ddo('readwrite', s => s.delete(draft.did)).catch(() => { });
+    bar.style.width = '100%'; draft = null; S.draftTag = null; S.replyCm = null; toast(vis === 'private' ? '🔒 Vidéo publiée (visible par toi uniquement)' : 'Vidéo publiée 🎉');
     S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc();
     go('profile');
-  } catch (e) { fail(e); } finally { clearInterval(timer); busy(btn, false); }
+  } catch (e) { fail(e); } finally { busy(btn, false); }
 }
 
 /* =====================================================================
@@ -1296,27 +1394,24 @@ const subSave = (m, plan = 'gold') => { const p = subPrice(plan); const full = p
    On détecte l'app Android (TWA) et on masque les achats de Gold, Vendeur, pièces et défis sponsorisés. */
 const IN_PLAY = (() => { try { const f = /[?&]src=twa\b/.test(location.search) || /^android-app:\/\//.test(document.referrer || ''); if (f) localStorage.setItem('vibzo_play', '1'); return f || localStorage.getItem('vibzo_play') === '1'; } catch (e) { return false; } })();
 const playNoBuy = () => `<div class="safety" style="margin-top:10px">📱 <span>Les achats ne sont pas encore disponibles dans l’application Android. Tous les autres services de Vibzo restent gratuits ici.</span></div>`;
+const CARD_BADGES = `<div class="paybadges"><span>VISA</span><span>Mastercard</span><span>G Pay</span></div>`;
 function goldBlock(plan = 'gold') {
-  if (IN_PLAY) return playNoBuy();
+  if (IN_PLAY && !('getDigitalGoodsService' in window)) return playNoBuy();
   const zone = C[(S.me && S.me.country) || S.loc.country].z, p = subPrice(plan);
   return `<div class="card" style="text-align:center;margin:12px 0;background:#f2f9ff"><div class="mut small">Prix</div><div style="font-size:26px;font-weight:800;color:#1e9be8">${money(p.amount, p.cur)} <span style="font-size:14px;font-weight:600">/ mois</span></div>${plan !== 'gold' ? '<div class="small" style="margin-top:4px">🎁 1er mois offert à l’ouverture</div>' : ''}</div>
   <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value,'${plan}')">${[1, 3, 12].map(m => `<option value="${m}">${m === 1 ? '1 mois' : m === 3 ? '3 mois' : '12 mois'} · ${money(p[m], p.cur)}${subSave(m, plan) ? ` (−${subSave(m, plan)} %)` : ''}</option>`).join('')}</select></div>
   <p class="small" style="text-align:center;margin:-4px 0 10px">Total : <b id="gTot">${subTotal(1, plan)}</b></p>
-  <div class="field"><label>Comment veux-tu payer ?</label><select id="gPay">${[...PAYZ[zone], 'Espèces', 'Autre'].map(p => `<option>${p}</option>`).join('')}</select></div>
-  <button class="btn gold" id="gBtn" onclick="V.requestSub('${plan}')">${plan === 'gold' ? '👑 Demander l’activation Gold' : '🏪 Demander l’activation Vendeur'}</button>
-  <p class="mut small" style="margin-top:8px;text-align:center">Après ta demande, paie le montant et envoie la capture sur WhatsApp. L’abonnement est activé dès réception.</p>`;
+  ${IN_PLAY ? '' : CARD_BADGES}
+  <button class="btn gold" id="gBtn" onclick="V.requestSub('${plan}')">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer par carte ou Google Pay'}</button>
+  <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Paiement sécurisé : Visa, Mastercard ou Google Pay. Activation immédiate après le paiement.'}</p>`;
 }
 function goldHero() {
   return `<div class="hero" style="margin:0"><div class="cr">👑</div><h2>Vibzo Gold</h2><div class="perks"><div>💘 <span><b>Rencontres</b> : relation sérieuse ou sans lendemain, entre adultes, par ville, région ou pays</span></div><div>✨ <span>Badge Gold sur ton profil et tes vidéos</span></div><div>🛡️ <span>Profils 18+, signalement et blocage en un clic</span></div></div></div>`;
 }
 async function requestSub(plan) {
-  if (!requireAuth()) return; if (IN_PLAY) return sheet('👑 Vibzo Gold', playNoBuy());
+  if (!requireAuth()) return;
   const btn = $('#gBtn'); busy(btn, true);
-  if (await autoPay(plan === 'gold' ? 'gold' : 'seller', +$('#gMonths').value)) return;
-  const { error } = await sb.from('subscription_requests').insert({ user_id: uid(), plan, months: +$('#gMonths').value, payment: $('#gPay').value });
-  busy(btn, false); if (error) return fail(error);
-  closeSheet(); if (S.cur === 'dating') go('dating');
-  payInfo(plan, +$('#gMonths')?.value || 1, $('#gPay')?.value || '');
+  await autoPay(plan === 'gold' ? 'gold' : 'seller', +$('#gMonths').value); busy(btn, false);
 }
 let payPreviewCc = null;
 function previewPay(z) {
@@ -1524,7 +1619,7 @@ async function refreshUnread() {
 /* =====================================================================
    NOTIFICATIONS ET PARRAINAGE
    ===================================================================== */
-const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''], match: ['💘', ''], order: ['🛍️', ''], order_status: ['📦', ''], application: ['💼', ''], offer_ok: ['✅', ''], live: ['🔴', ''], review: ['⭐', ''], verified: ['✔️', ''], service: ['🛠️', ''], challenge: ['🏆', ''], follow_request: ['🔒', 'veut s’abonner à ton compte privé'], sound: ['🎵', ''], login: ['🛡️', ''] };
+const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''], match: ['💘', ''], order: ['🛍️', ''], order_status: ['📦', ''], application: ['💼', ''], offer_ok: ['✅', ''], live: ['🔵', ''], review: ['⭐', ''], verified: ['✔️', ''], service: ['🛠️', ''], challenge: ['🏆', ''], follow_request: ['🔒', 'veut s’abonner à ton compte privé'], sound: ['🎵', ''], login: ['🛡️', ''] };
 async function refreshNotifs() {
   if (!uid()) return;
   const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false);
@@ -1659,28 +1754,53 @@ async function mfaOff(factorId) {
 /* Paiement automatique (Notch Pay : MTN MoMo, Orange Money, carte). Si le service n'est pas encore activé
    ou indisponible, l'appli bascule sur le paiement manuel (WhatsApp + Mobile Money / IBAN). */
 const PAY_FN = `${SUPABASE_URL}/functions/v1/notchpay`;
+const CARD_FN = `${SUPABASE_URL}/functions/v1/cardpay`, PLAY_FN = `${SUPABASE_URL}/functions/v1/playbilling`;
+/* Tous les paiements : carte (Visa, Mastercard) ou Google Pay sur le site, Google Play dans l'appli Android. */
 async function autoPay(kind, qty) {
-  if (C[myCc()].z === 'A' || window.__VIBZO_FAKE__ && !window.__AUTOPAY__) return false;
+  if (IN_PLAY) return playPay(kind, qty);
+  if (window.__VIBZO_FAKE__ && !window.__AUTOPAY__) { toast('💳 Paiement par carte (test)'); return true; }
   try {
-    const { data: { session } } = await sb.auth.getSession(); if (!session) return false;
-    const r = await fetch(PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', kind, qty, return_url: location.origin + location.pathname }) });
+    const { data: { session } } = await sb.auth.getSession(); if (!session) return requireAuth(), true;
+    const r = await fetch(CARD_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', kind, qty, return_url: location.origin + location.pathname }) });
     const d = await r.json().catch(() => ({}));
     if (r.ok && d.url) { toast('🔒 Redirection vers le paiement sécurisé…'); setTimeout(() => { location.href = d.url; }, 400); return true; }
-    if (d.error && d.error !== 'not_configured') toast('⚠️ Paiement automatique indisponible : paiement manuel proposé');
-  } catch (e) { }
-  return false;
+    toast(d.error === 'not_configured' ? '💳 Le paiement par carte et Google Pay arrive très bientôt sur Vibzo' : '⚠️ ' + (d.error || 'Paiement indisponible, réessaie dans un instant'));
+  } catch (e) { toast('⚠️ Connexion impossible, réessaie'); }
+  return true;
+}
+async function playPay(kind, qty) {
+  if (!('getDigitalGoodsService' in window) || !window.PaymentRequest) { toast('Mets à jour l’application Vibzo pour acheter'); return true; }
+  const sku = `${kind}_${qty}`;
+  try {
+    const svc = await window.getDigitalGoodsService('https://play.google.com/billing');
+    const det = await svc.getDetails([sku]); if (!det || !det.length) { toast('Offre bientôt disponible sur Google Play'); return true; }
+    const pr = new PaymentRequest([{ supportedMethods: 'https://play.google.com/billing', data: { sku } }], { total: { label: 'Total', amount: { currency: 'USD', value: '0' } } });
+    const res = await pr.show(); const token = res.details && res.details.purchaseToken;
+    const { data: { session } } = await sb.auth.getSession();
+    let d = {};
+    for (let i = 0; i < 5; i++) {
+      const r = await fetch(PLAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + (session ? session.access_token : '') }, body: JSON.stringify({ sku, token }) });
+      d = await r.json().catch(() => ({})); if (d.status !== 'pending') break; await new Promise(x => setTimeout(x, 2500));
+    }
+    await res.complete(d.status === 'complete' ? 'success' : 'fail').catch(() => { });
+    if (d.status === 'complete') { closeSheet(); await loadMe().catch(() => { }); payDone(d); }
+    else toast(d.status === 'pending' ? '⏳ Paiement en attente : tu recevras une notification' : '⚠️ ' + (d.error || 'Achat non confirmé'));
+  } catch (e) { if (!/abort/i.test(e && e.name || '')) toast('Achat annulé'); }
+  return true;
+}
+function payDone(d) {
+  const t = d.kind === 'coins' ? [`💰`, `${d.qty} pièces ajoutées !`, 'Offre des cadeaux à tes créateurs préférés.'] : d.kind === 'gold' ? ['👑', 'Vibzo Gold activé !', 'L’espace rencontres est ouvert.'] : ['🏪', 'Boutique activée !', 'Tes produits sont visibles par tous.'];
+  modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:48px">${t[0]}</div><h3>Paiement reçu ✅</h3><p style="font-weight:700;margin-top:6px">${t[1]}</p><p class="mut small">${t[2]}</p><button class="btn" style="margin-top:12px" onclick="V.closeModal();${d.kind === 'gold' ? "V.go('dating')" : d.kind === 'coins' ? 'V.walletSheet()' : "V.go('profile')"}">Continuer</button></div>`);
 }
 async function checkPayReturn() {
-  const id = new URLSearchParams(location.search).get('pay'); if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
+  const qs = new URLSearchParams(location.search), card = !!qs.get('cpay'), id = qs.get('cpay') || qs.get('pay'); if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
   history.replaceState(null, '', location.pathname + location.hash);
   modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">⏳</div><h3>Vérification du paiement…</h3><p class="mut small">Valide la demande sur ton téléphone si ce n’est pas encore fait.</p></div>`);
   for (let i = 0; i < 20; i++) {
     let d = {};
-    try { const r = await fetch(PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }, body: JSON.stringify({ action: 'verify', id }) }); d = await r.json(); } catch (e) { }
+    try { const r = await fetch(card ? CARD_FN : PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }, body: JSON.stringify({ action: 'verify', id }) }); d = await r.json(); } catch (e) { }
     if (d.status === 'complete') {
-      await loadMe().catch(() => { });
-      const t = d.kind === 'coins' ? [`💰`, `${d.qty} pièces ajoutées !`, 'Offre des cadeaux à tes créateurs préférés.'] : d.kind === 'gold' ? ['👑', 'Vibzo Gold activé !', 'L’espace rencontres est ouvert.'] : ['🏪', 'Boutique activée !', 'Tes produits sont visibles par tous.'];
-      modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:48px">${t[0]}</div><h3>Paiement reçu ✅</h3><p style="font-weight:700;margin-top:6px">${t[1]}</p><p class="mut small">${t[2]}</p><button class="btn" style="margin-top:12px" onclick="V.closeModal();${d.kind === 'gold' ? "V.go('dating')" : d.kind === 'coins' ? 'V.walletSheet()' : "V.go('profile')"}">Continuer</button></div>`);
+      await loadMe().catch(() => { }); payDone(d);
       return;
     }
     if (d.status === 'failed' || d.status === 'unknown') { closeModal(); toast('❌ Paiement annulé ou refusé. Tu peux réessayer.'); return; }
@@ -1711,28 +1831,16 @@ async function sendGift(id, g) {
 function giftFly(e, n) { const d = document.createElement('div'); d.className = 'gfly' + (n >= 100 ? ' big' : ''); d.textContent = e; document.body.appendChild(d); setTimeout(() => d.remove(), 1800); }
 function pickPack(n, el) { packSel = n; document.querySelectorAll('.pack').forEach(x => x.classList.toggle('on', x === el)); }
 function buyCoins() {
-  if (!requireAuth()) return; if (IN_PLAY) return sheet('🪙 Pièces', playNoBuy()); const cur = coinCur(), zone = C[myCc()].z; packSel = 500;
+  if (!requireAuth()) return; if (IN_PLAY && !('getDigitalGoodsService' in window)) return sheet('🪙 Pièces', playNoBuy()); const cur = coinCur(); packSel = 500;
   sheet('🪙 Acheter des pièces', `<p class="mut small" style="margin-bottom:10px">Les pièces servent à offrir des cadeaux aux créateurs que tu aimes. 1 pièce = ${cur === '₼' ? '0,03 ₼' : '10 FCFA'}.</p>
   <div class="packs">${COIN_PACKS.map(p => `<button class="pack ${p[0] === 500 ? 'on' : ''}" onclick="V.pickPack(${p[0]},this)"><b>🪙 ${p[0].toLocaleString('fr-FR')}</b>${p[3] ? `<i>${p[3]}</i>` : ''}<span>${money(cur === '₼' ? p[2] : p[1], cur)}</span></button>`).join('')}</div>
-  <div class="field"><label>Comment veux-tu payer ?</label><select id="cPay">${[...PAYZ[zone], 'Autre'].map(x => `<option>${x}</option>`).join('')}</select></div>
-  <button class="btn gold" id="cBtn" onclick="V.reqCoins()">Continuer</button>
-  <p class="mut small" style="margin-top:8px;text-align:center">Après ta demande, paie et envoie la capture sur WhatsApp : les pièces arrivent dès réception.</p>`);
+  ${IN_PLAY ? '' : CARD_BADGES}
+  <button class="btn gold" id="cBtn" onclick="V.reqCoins()">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer par carte ou Google Pay'}</button>
+  <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Paiement sécurisé : Visa, Mastercard ou Google Pay. Les pièces arrivent tout de suite.'}</p>`);
 }
 async function reqCoins() {
-  const btn = $('#cBtn'), pay = $('#cPay').value; busy(btn, true);
-  if (await autoPay('coins', packSel)) return;
-  const { data, error } = await sb.rpc('request_coins', { p_coins: packSel, p_payment: pay }); busy(btn, false);
-  if (error) return fail(error);
-  closeSheet();
-  const cc = myCc(), pi = PAYMENT_INFO[C[cc].z], amount = money(data.price, data.currency);
-  const msg = `Bonjour Vibzo 👋 Je viens de demander ${data.coins} pièces depuis ${C[cc].n}. Utilisateur : @${S.me.username}. Montant : ${amount}. Paiement : ${pay}.`;
-  modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center;max-height:90vh;overflow:auto"><div style="font-size:40px">🪙</div><h3>Demande envoyée</h3>
-  <div style="font-size:22px;font-weight:800;color:#1e9be8;margin-top:6px">${esc(amount)}</div><div class="mut small">pour ${data.coins.toLocaleString('fr-FR')} pièces</div>
-  <p class="mut small" style="margin-top:6px">1. Paie ce montant (${esc(pay)}).<br>2. Envoie la capture du paiement sur WhatsApp.<br>3. Tes pièces sont ajoutées dès réception.</p>
-  ${pi && pi.momo ? `<div class="card" style="text-align:left;margin-top:12px;background:#fffbe6"><b>Mobile Money</b><div class="small" style="margin-top:6px">${esc(pi.momo)}<br>Numéro : <b style="user-select:all">${esc(pi.number)}</b></div><button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${pi.number}').then(()=>V.toast('Numéro copié ✅'))">📋 Copier le numéro</button></div>` : ''}
-  ${SUPPORT_WHATSAPP ? `<a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:12px" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Envoyer la preuve sur WhatsApp</a>` : ''}
-  ${pi && pi.iban ? `<div class="card" style="text-align:left;margin-top:12px;background:#f2f9ff"><b>Virement bancaire</b><div class="small" style="margin-top:6px">Banque : <b>${esc(pi.bank)}</b><br>Bénéficiaire : <b>${esc(pi.holder)}</b><br>IBAN : <b style="user-select:all">${esc(pi.iban)}</b></div><button class="btn ghost" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${pi.iban}').then(()=>V.toast('IBAN copié ✅'))">📋 Copier l’IBAN</button></div>` : ''}
-  <button class="btn ghost" style="margin-top:10px" onclick="V.closeModal()">Fermer</button></div>`);
+  const btn = $('#cBtn'); busy(btn, true);
+  await autoPay('coins', packSel); busy(btn, false);
 }
 async function walletSheet() {
   if (!requireAuth()) return;
@@ -1890,7 +1998,7 @@ function shareText(k, id) {
   if (k === 'u') { const u = S.shareUser; return u ? `Découvre @${u} sur Vibzo 🔥` : 'Découvre ce créateur sur Vibzo 🔥'; }
   if (k === 's') { const v = S.svcs.get(id); return v ? `🛠️ ${v.title} · ${v.display_name} sur Vibzo` : 'Service près de chez toi sur Vibzo 🛠️'; }
   if (k === 'c') { const c = S.chs.get(id); return c ? `🏆 Défi #${c.hashtag} : ${money(c.prize1 + c.prize2 + c.prize3, c.currency)} de prix à gagner sur Vibzo !` : '🏆 Défi avec des prix sur Vibzo'; }
-  if (k === 'l') { const l = LV && LV.host; return l ? `🔴 @${l.username} est en direct sur Vibzo, viens vite !` : '🔴 En direct sur Vibzo'; }
+  if (k === 'l') { const l = LV && LV.host; return l ? `🔵 @${l.username} est en direct sur Vibzo, viens vite !` : '🔵 En direct sur Vibzo'; }
   return 'Vibzo';
 }
 function shareThing(k, id, user) {
@@ -1936,22 +2044,22 @@ async function liveToken(id) {
 async function loadLives() { const { data } = await sb.from('lives_now').select('*').order('viewers', { ascending: false }).limit(30); return data || []; }
 const liveCard = l => `<button class="lvc" onclick="V.openLive('${l.id}')" style="${gst(gfor(l.username))}">${l.avatar_url ? `<img src="${esc(l.avatar_url)}" alt="">` : `<b class="lvi">${esc((l.display_name || l.username || '?')[0].toUpperCase())}</b>`}<span class="lvbadge">EN DIRECT</span><span class="lvv">👁 ${fmtN(l.viewers)}</span><div class="lvn">@${esc(l.username)}${l.title ? `<small>${esc(l.title)}</small>` : ''}</div></button>`;
 async function livesSheet() {
-  sheet('🔴 En direct', `<div id="lvList">${loading()}</div><button class="btn" onclick="V.goLive()">🔴 Lancer mon live</button>`);
+  sheet('🔵 En direct', `<div id="lvList">${loading()}</div><button class="btn" onclick="V.goLive()">🔵 Lancer mon live</button>`);
   const l = await loadLives();
   if ($('#lvList')) $('#lvList').innerHTML = l.length ? `<div class="lvgrid">${l.map(liveCard).join('')}</div>` : '<div class="empty"><div class="big">📡</div><p>Personne n’est en direct pour le moment. Sois le premier !</p></div>';
 }
 async function livesStrip() {
   const el = $('#livesStrip'); if (!el) return;
   const l = await loadLives(); if (!$('#livesStrip')) return;
-  el.innerHTML = l.length ? `<div class="lbl">🔴 En direct maintenant</div><div class="lvstrip">${l.map(x => `<button onclick="V.openLive('${x.id}')"><div class="lvring">${avatar(x, 58)}</div><span class="lvbadge">LIVE</span><small>@${esc(x.username)}</small></button>`).join('')}</div>` : '';
+  el.innerHTML = l.length ? `<div class="lbl">🔵 En direct maintenant</div><div class="lvstrip">${l.map(x => `<button onclick="V.openLive('${x.id}')"><div class="lvring">${avatar(x, 58)}</div><span class="lvbadge">LIVE</span><small>@${esc(x.username)}</small></button>`).join('')}</div>` : '';
   const b = $('#liveBtn'); if (b) { b.classList.toggle('hot', l.length > 0); b.textContent = l.length ? `LIVE · ${l.length}` : 'LIVE'; }
 }
 function goLive() {
   if (!requireAuth('Connecte-toi pour lancer un live.')) return;
-  sheet('🔴 Lancer un live', `<div class="hero" style="margin:0 0 10px;text-align:center"><div style="font-size:40px">🎥</div><p class="small">Filme-toi en direct : tes abonnés reçoivent une notification, tes fans t’envoient des cœurs et des cadeaux (convertibles en argent).</p></div>
+  sheet('🔵 Lancer un live', `<div class="hero" style="margin:0 0 10px;text-align:center"><div style="font-size:40px">🎥</div><p class="small">Filme-toi en direct : tes abonnés reçoivent une notification, tes fans t’envoient des cœurs et des cadeaux (convertibles en argent).</p></div>
   <div class="field"><label>Titre du live</label><input id="lvT" maxlength="80" placeholder="Ex : Questions-réponses 🔥"></div>
   <p class="mut small">Interdit en live : nudité, violence, arnaques, mineurs exposés. Les lives peuvent être signalés et coupés.</p>
-  <button class="btn" id="lvGo" onclick="V.startLive()">🔴 Passer en direct</button>`);
+  <button class="btn" id="lvGo" onclick="V.startLive()">🔵 Passer en direct</button>`);
 }
 function liveUI(o) {
   const old = $('#liveOv'); if (old) old.remove();
@@ -2018,7 +2126,7 @@ function bindRoom(room, LK) {
 }
 async function startLive() {
   const b = $('#lvGo'); if (b) { b.disabled = true; b.textContent = 'Préparation…'; }
-  const reset = () => { if (b) { b.disabled = false; b.textContent = '🔴 Passer en direct'; } };
+  const reset = () => { if (b) { b.disabled = false; b.textContent = '🔵 Passer en direct'; } };
   let LK, tracks;
   try { LK = await loadLK(); } catch (e) { reset(); return fail(e); }
   try { tracks = await LK.createLocalTracks({ audio: { echoCancellation: true, noiseSuppression: true }, video: { facingMode: 'user', resolution: LK.VideoPresets.h720.resolution } }); }
@@ -2033,13 +2141,13 @@ async function startLive() {
   const tk = await liveToken(id);
   if (!tk.token) {
     await sb.rpc('end_live', { p_live: id }); tracks.forEach(t => t.stop()); LV.closing = true; $('#liveOv').remove(); LV = null;
-    return modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🔴</div><h3>Les lives arrivent très bientôt</h3><p class="mut small">Le serveur vidéo est en cours d’activation. Tu recevras une notification dès que tu pourras passer en direct.</p><button class="btn" onclick="V.closeModal()">OK</button></div>`);
+    return modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🔵</div><h3>Les lives arrivent très bientôt</h3><p class="mut small">Le serveur vidéo est en cours d’activation. Tu recevras une notification dès que tu pourras passer en direct.</p><button class="btn" onclick="V.closeModal()">OK</button></div>`);
   }
   try {
     const room = new LK.Room({ adaptiveStream: true, dynacast: true }); LV.room = room; bindRoom(room, LK);
     await room.connect(tk.url, tk.token);
     for (const t of tracks) await room.localParticipant.publishTrack(t);
-    $('#lvWait').style.display = 'none'; liveSys('🔴 Tu es en direct ! Tes abonnés ont été prévenus.'); liveUpd();
+    $('#lvWait').style.display = 'none'; liveSys('🔵 Tu es en direct ! Tes abonnés ont été prévenus.'); liveUpd();
     LV.ping = setInterval(() => { if (LV) sb.rpc('live_ping', { p_live: LV.id, p_viewers: liveCount() }).then(() => { }, () => { }); }, 15000);
     sb.rpc('live_ping', { p_live: id, p_viewers: 0 }); LV.topT = setInterval(liveTop, 20000);
   } catch (e) { fail(e); closeLive(); }
@@ -2048,11 +2156,11 @@ async function openLive(id) {
   closeSheet(); if (LV) await closeLive();
   const { data: l } = await sb.from('lives_now').select('*').eq('id', id).maybeSingle();
   if (!l) return toast('Ce live est terminé');
-  if (l.host_id === uid()) return toast('C’est ton live 🔴');
+  if (l.host_id === uid()) return toast('C’est ton live 🔵');
   liveUI({ id, role: uid() ? 'viewer' : 'guest', title: l.title, host: l });
   const tk = await liveToken(id);
   if (!LV || LV.id !== id) return;
-  if (!tk.token) { closeLive(); return toast(tk.error === 'not_configured' ? 'Les lives arrivent très bientôt sur Vibzo 🔴' : 'Ce live est terminé'); }
+  if (!tk.token) { closeLive(); return toast(tk.error === 'not_configured' ? 'Les lives arrivent très bientôt sur Vibzo 🔵' : 'Ce live est terminé'); }
   try {
     const LK = await loadLK(); const room = new LK.Room({ adaptiveStream: true }); LV.room = room; bindRoom(room, LK);
     await room.connect(tk.url, tk.token);
@@ -2584,7 +2692,7 @@ const badWord = txt => { const w = (LV && LV.mod && LV.mod.words) || []; const t
 function liveTools() {
   const reqs = (LV.reqs || new Map()).size;
   sheet('✨ Outils du live', `<div class="slist" style="margin:0">
-  <button onclick="V.liveViewers()"><span class="e">👥</span>Spectateurs et invités<span class="r">${reqs ? `<b style="color:#ff2d55">✋ ${reqs}</b> ` : ''}›</span></button>
+  <button onclick="V.liveViewers()"><span class="e">👥</span>Spectateurs et invités<span class="r">${reqs ? `<b style="color:#1e9be8">✋ ${reqs}</b> ` : ''}›</span></button>
   <button onclick="V.livePollForm()"><span class="e">📊</span>Sondage<span class="r">${LV.poll ? 'En cours' : ''} ›</span></button>
   <button onclick="V.liveGoalForm()"><span class="e">🎯</span>Objectif de cadeaux<span class="r">${LV.goal ? 'Affiché' : ''} ›</span></button>
   <button onclick="V.liveModForm()"><span class="e">🛡️</span>Modération du chat<span class="r">›</span></button>
@@ -2673,26 +2781,27 @@ async function openCamera(o = {}) {
   if (CAM.src) CAM.max = Math.min(180, Math.max(5, Math.ceil(CAM.src.duration || 60)));
   const d = document.createElement('div'); d.id = 'camOv';
   const modeName = { video: '', story: 'Story', duet: 'Duo', stitch: 'Collage' }[CAM.mode];
+  const vs = CAM.mode === 'video' || CAM.mode === 'story', nd = await draftCount();
   d.innerHTML = `<canvas id="camCv" width="720" height="1280"></canvas><div class="camwait" id="camWait">${loading()}<div>Ouverture de la caméra…</div></div>
   <div class="camprog" id="camProg"><i></i></div>
   <div class="camtop"><button class="ib" onclick="V.closeCamera()" aria-label="Fermer">${I.close}</button>
-    <button class="camsnd" onclick="V.camSoundPick()">♪ <span id="camSndT">${CAM.sound ? esc(CAM.sound.name) : CAM.src ? esc('@' + (CAM.src.username || '')) : 'Ajouter un son'}</span></button>${modeName ? `<span class="cammode">${modeName}</span>` : '<span style="width:36px"></span>'}</div>
+    <button class="camsnd" onclick="V.camSoundPick()">♪ <span id="camSndT">${CAM.sound ? esc(CAM.sound.name) : CAM.src ? esc('@' + (CAM.src.username || '')) : 'Ajouter un son'}</span></button>${modeName && !vs ? `<span class="cammode">${modeName}</span>` : nd && vs ? `<button class="camdr" onclick="V.draftsSheet()" aria-label="Brouillons">📥<i>${nd}</i></button>` : '<span style="width:36px"></span>'}</div>
   <div class="camside">
     <button onclick="V.camFlip()" aria-label="Retourner"><b>🔄</b><span>Retourner</span></button>
-    <button onclick="V.camTimer()" aria-label="Minuteur"><b id="camTimB">⏱</b><span id="camTimT">Minuteur</span></button>
     <button onclick="V.camFilters()" aria-label="Filtres"><b>✨</b><span id="camFilT">Filtres</span></button>
+    <button onclick="V.camTimer()" aria-label="Minuteur"><b id="camTimB">⏱</b><span id="camTimT">Minuteur</span></button>
     <button onclick="V.camText()" aria-label="Texte"><b>Aa</b><span>Texte</span></button>
-    ${CAM.mode === 'video' || CAM.mode === 'story' ? `<button onclick="V.camDur()" aria-label="Durée"><b id="camDurB">60s</b><span>Durée</span></button>` : ''}
     ${CAM.sound || CAM.src ? `<button onclick="V.camMic()" aria-label="Micro"><b id="camMicB">🎙️</b><span>Micro</span></button>` : ''}
     ${CAM.mode === 'stitch' ? `<button onclick="V.camClip()" aria-label="Extrait"><b id="camClipB">5s</b><span>Extrait</span></button>` : ''}
   </div>
   <div class="camfil" id="camFil" style="display:none">${CAM_FILTERS.map((f, i) => `<button onclick="V.camFilter(${i})" class="${i === 0 ? 'on' : ''}">${f[0]}</button>`).join('')}</div>
   <div class="camcount" id="camCount" style="display:none"></div>
-  <div class="cambot"><button class="camsm" id="camRedo" onclick="V.camRedo()" style="visibility:hidden" aria-label="Recommencer">↺</button>
+  ${vs ? `<div class="camdurs" id="camDurs"></div>` : ''}
+  <div class="cambot"><div class="camslot"><button class="camfx" onclick="V.camFilters()"><b>✨</b><span>Effets</span></button><button class="camsm" id="camRedo" onclick="V.camRedo()" style="visibility:hidden" aria-label="Recommencer">↺</button></div>
     <button class="camrec" id="camRec" onclick="V.camRecord()" aria-label="Filmer"><i></i></button>
-    <button class="camsm ok" id="camDone" onclick="V.camDone()" style="visibility:hidden" aria-label="Terminer">✓</button>
-    ${CAM.mode === 'video' ? `<label class="camsm gal" aria-label="Galerie"><input type="file" accept="video/*" style="display:none" onchange="V.closeCamera();V.go('create');setTimeout(()=>V.pickVid(this),300)">🖼️</label>` : ''}</div>`;
-  $('#sheetBg').parentNode.appendChild(d);
+    <div class="camslot">${vs ? `<label class="camup" aria-label="Importer"><input type="file" accept="video/*" style="display:none" onchange="V.camImport(this)"><b>🖼️</b><span>Importer</span></label>` : ''}<button class="camsm ok" id="camDone" onclick="V.camDone()" style="visibility:hidden" aria-label="Terminer">✓</button></div></div>
+  ${vs ? `<div class="cammodes" id="camModes"><button class="lv" onclick="V.camLive()">LIVE</button><button data-m="video" onclick="V.camMode('video')">Publier</button><button data-m="story" onclick="V.camMode('story')">Story</button></div>` : ''}`;
+  $('#sheetBg').parentNode.appendChild(d); camModeUI();
   document.querySelectorAll('#feed video').forEach(v => v.pause());
   try { await camStart(); } catch (e) { closeCamera(); return toast('⚠️ Autorise la caméra et le micro pour filmer'); }
   if (CAM.src) { try { await camLoadSrc(CAM.src.video_url); } catch (e) { toast('Impossible de charger la vidéo d’origine'); } }
@@ -2774,12 +2883,12 @@ function camGo() {
   } else if (CAM.rec.state === 'paused') CAM.rec.resume();
   if (CAM.srcEl && (CAM.mode === 'duet' || CAM.inClip)) CAM.srcEl.play().catch(() => { });
   if (CAM.sndEl) CAM.sndEl.play().catch(() => { });
-  CAM.recording = true; CAM.t0 = performance.now(); CAM.segs.push(CAM.elapsed);
+  CAM.recording = true; CAM.t0 = performance.now(); CAM.segs.push(CAM.elapsed); camState();
   $('#camRec').classList.add('on'); $('#camRedo').style.visibility = 'hidden'; $('#camDone').style.visibility = CAM.elapsed >= 1 ? 'visible' : 'hidden';
   document.querySelectorAll('#camOv .camside, #camOv .camtop .camsnd').forEach(e => e.style.opacity = '.35');
 }
 function camPause() {
-  if (!CAM || !CAM.recording) return; CAM.recording = false;
+  if (!CAM || !CAM.recording) return; CAM.recording = false; setTimeout(camState, 0);
   try { if (CAM.rec && CAM.rec.state === 'recording') CAM.rec.pause(); } catch (e) { }
   if (CAM.srcEl) CAM.srcEl.pause(); if (CAM.sndEl) CAM.sndEl.pause();
   $('#camRec').classList.remove('on'); $('#camRedo').style.visibility = 'visible'; $('#camDone').style.visibility = CAM.elapsed >= 1 ? 'visible' : 'hidden';
@@ -2791,7 +2900,7 @@ function camRedo() {
   try { if (CAM.rec && CAM.rec.state !== 'inactive') CAM.rec.stop(); } catch (e) { }
   CAM.rec = null; CAM.chunks = []; CAM.elapsed = 0; CAM.segs = []; CAM.inClip = false;
   if (CAM.srcEl) { CAM.srcEl.pause(); CAM.srcEl.currentTime = 0; } if (CAM.sndEl) { CAM.sndEl.pause(); CAM.sndEl.currentTime = 0; }
-  const pg = $('#camProg'); if (pg) pg.innerHTML = '<i></i>'; $('#camRedo').style.visibility = 'hidden'; $('#camDone').style.visibility = 'hidden';
+  const pg = $('#camProg'); if (pg) pg.innerHTML = '<i></i>'; $('#camRedo').style.visibility = 'hidden'; $('#camDone').style.visibility = 'hidden'; camState();
 }
 async function camDone() {
   if (!CAM || !CAM.rec || CAM.done) return; CAM.done = true; camPause();
@@ -2802,10 +2911,10 @@ async function camDone() {
   const meta = { mode: CAM.mode, src: CAM.src, sound: CAM.sound };
   await closeCamera();
   draft = { file, url: URL.createObjectURL(file), cam: meta };
-  S.postKind = meta.mode === 'story' ? 'story' : 'video';
+  S.postKind = 'video';
   if (meta.mode === 'duet' && meta.src) S.draftTag = 'duo';
   if (meta.mode === 'stitch' && meta.src) S.draftTag = 'collage';
-  go('create');
+  openEditor();
 }
 async function closeCamera() {
   if (!CAM) return; const c = CAM; CAM = null; cancelAnimationFrame(c.raf);
@@ -2819,7 +2928,18 @@ async function camFlip() { if (!CAM || CAM.recording) return; CAM.facing = CAM.f
 function camTimer() { if (!CAM) return; CAM.timer = CAM.timer === 0 ? 3 : CAM.timer === 3 ? 10 : 0; $('#camTimT').textContent = CAM.timer ? CAM.timer + ' s' : 'Minuteur'; $('#camTimB').textContent = CAM.timer ? '⏱' + CAM.timer : '⏱'; }
 function camFilters() { const f = $('#camFil'); if (f) f.style.display = f.style.display === 'none' ? 'flex' : 'none'; }
 function camFilter(i) { if (!CAM) return; CAM.filter = i; document.querySelectorAll('#camFil button').forEach((b, k) => b.classList.toggle('on', k === i)); $('#camFilT').textContent = i ? CAM_FILTERS[i][0] : 'Filtres'; }
-function camDur() { if (!CAM || CAM.elapsed > 0) return; const opts = CAM.mode === 'story' ? [15, 60] : [15, 60, 180]; CAM.max = opts[(opts.indexOf(CAM.max) + 1) % opts.length]; $('#camDurB').textContent = CAM.max >= 60 ? (CAM.max / 60) + ' min' : CAM.max + 's'; }
+function camDurs() { return CAM.mode === 'story' ? [60, 15] : [180, 60, 15]; }
+function camDur(x) { if (!CAM || CAM.elapsed > 0) return; CAM.max = x; camModeUI(); }
+function camModeUI() {
+  if (!CAM) return; const el = $('#camDurs');
+  if (el) { if (!camDurs().includes(CAM.max)) CAM.max = 60; el.innerHTML = camDurs().map(x => `<button class="${x === CAM.max ? 'on' : ''}" onclick="V.camDur(${x})">${x >= 120 ? x / 60 + ' min' : x + ' s'}</button>`).join('') + (CAM.mode === 'video' ? `<label><input type="file" accept="image/*" multiple style="display:none" onchange="V.camPhotos(this)">Photo</label>` : ''); }
+  document.querySelectorAll('#camModes button[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === CAM.mode));
+}
+function camMode(m) { if (!CAM || CAM.elapsed > 0 || CAM.recording) return; CAM.mode = m; camModeUI(); }
+function camState() { const o = $('#camOv'); if (!o || !CAM) return; o.classList.toggle('rec', CAM.recording); o.classList.toggle('has', !CAM.recording && CAM.elapsed > 0); }
+async function camLive() { await closeCamera(); goLive(); }
+async function camImport(inp) { const f = inp.files[0]; if (!f) return; const files = inp.files; await closeCamera(); pickVid({ files, set value(x) { } }); }
+async function camPhotos(inp) { const files = [...inp.files]; await closeCamera(); S.postKind = 'photo'; pickPhotos({ files, set value(x) { } }); }
 function camMic() { if (!CAM) return; CAM.mic = !CAM.mic; if (CAM.micGain) CAM.micGain.gain.value = CAM.mic ? 1 : 0; $('#camMicB').textContent = CAM.mic ? '🎙️' : '🔇'; toast(CAM.mic ? 'Micro activé' : 'Micro coupé : seul le son sera enregistré'); }
 function camClip() { if (!CAM || CAM.elapsed > 0) return; CAM.clipLen = CAM.clipLen >= 5 ? 1 : CAM.clipLen + 1; $('#camClipB').textContent = CAM.clipLen + 's'; }
 function camText() {
@@ -2955,8 +3075,8 @@ async function publishPhotos() {
       const { error } = await sb.storage.from('images').upload(path, blob, { contentType: 'image/jpeg', upsert: false }); if (error) throw error;
       urls.push(sb.storage.from('images').getPublicUrl(path).data.publicUrl); bar.style.width = Math.round((i + 1) / PHD.length * 90) + '%';
     }
-    const tags = ($('#ch').value || '').toLowerCase().split(/[,\s#]+/).map(t => t.replace(/[^a-z0-9àâäéèêëïîôöùûüç_]/g, '')).filter(Boolean).slice(0, 8);
-    const { error } = await sb.from('videos').insert({ user_id: uid(), video_url: urls[0], photos: urls, title: $('#ct').value.trim(), caption: $('#cd').value.trim().slice(0, 300), tags, country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: PHS, sound_id: PHSID, ...privacyVals() });
+    const caption = ($('#cd').value || '').trim().slice(0, 300), tags = capTags(caption);
+    const { error } = await sb.from('videos').insert({ user_id: uid(), video_url: urls[0], photos: urls, title: '', caption, tags, visibility: ($('#pvV') || {}).value || 'public', country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: PHS, sound_id: PHSID, ...privacyVals() });
     if (error) throw error;
     bar.style.width = '100%'; PHD = []; PHS = ''; PHSID = null; S.draftTag = null; S.postKind = 'video'; toast('Photos publiées 🎉');
     S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc(); go('profile');
@@ -3274,6 +3394,7 @@ window.V = {
   pwProblem,
   saveAge, cancelReq, userMore, blockUser, doBlock, unblock, safetySheet, saveSafety, respondFollow, removeDevice, soundPicker, sndPreview, useLib, useTop, mySounds, uploadSound, removeSound, sndDecide,
   pickPhotos, phRemove, phSoundPick, phSoundUse, replyVideo, cancelReplyVideo, privacySheet, savePrivacy, pinVideo, historySheet, clearHistory, histPause, analyticsSheet, wellSheet, wellSet, wellGo, sTab: t => { S.sTab = t; search(); },
+  newPost, capIns, postBack, openEditor, closeEditor, editorBack, editorNext, coverPick, coverSeek, coverSave, saveDraft, draftsSheet, draftOpen, draftDel, publishStory, camMode, camLive, camImport, camPhotos,
   openCamera, closeCamera, camRecord, camRedo, camDone, camFlip, camTimer, camFilters, camFilter, camDur, camMic, camClip, camText, camTextAdd, camTextClear, camSoundPick, camSoundUse, useSound, duetWith, stitchWith,
   openStories, storyStep, closeStories, storyDel, storyReply, openUserStories, postKind: k => { S.postKind = k; go('create'); },
   livePinMsg, liveVote, livePollForm, livePollStart, livePollEnd, liveGoalForm, liveGoalStart, liveModForm, liveModSave, liveTools, liveMore, liveViewers, liveGuest, liveKick, liveRequest, liveFollow, liveQuick,
