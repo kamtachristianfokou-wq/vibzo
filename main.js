@@ -209,13 +209,14 @@ SCREENS.auth = () => {
   <div class="mut small" style="text-align:center;margin:12px 0 0">— ou avec ton e-mail —</div>
   <form onsubmit="event.preventDefault();V.submitAuth()" style="margin-top:6px">
   ${authMode === 'signup' ? `<div class="field"><label>Ton nom</label><input id="aName" maxlength="40" required placeholder="Ex : Christian K."></div>
-  <div class="field"><label>Nom d’utilisateur</label><input id="aUser" maxlength="24" required placeholder="ex : christian.k" pattern="[a-zA-Z0-9_.]{3,24}" title="3 à 24 caractères : lettres, chiffres, . et _"></div>` : ''}
+  <div class="field"><label>Nom d’utilisateur</label><input id="aUser" maxlength="24" required placeholder="ex : christian.k" pattern="[a-zA-Z0-9_.]{3,24}" title="3 à 24 caractères : lettres, chiffres, . et _"></div>
+  <div class="field"><label>🎂 Année de naissance (jamais affichée)</label><select id="aBY" required><option value="">—</option>${[...Array(90)].map((_, i) => `<option>${new Date().getFullYear() - 10 - i}</option>`).join('')}</select><p class="mut small"><span>Vibzo est réservé aux 18 ans et plus.</span></p></div>` : ''}
   <div class="field"><label>E-mail</label><input id="aEmail" type="email" required autocomplete="email" placeholder="toi@exemple.com"></div>
   <div class="field"><label>Mot de passe</label><input id="aPass" type="password" required minlength="8" autocomplete="${authMode === 'signup' ? 'new-password' : 'current-password'}" placeholder="${authMode === 'signup' ? '8 caractères, lettres et chiffres' : '8 caractères minimum'}"></div>
   ${authMode === 'signup' ? `<div class="field"><label>Pays</label><select id="aCc" onchange="V.authRegions()">${ccOpts}</select></div>
   <div class="field"><label>Région</label><select id="aRg"></select></div>
   <div class="field"><label>Téléphone (facultatif)</label><div class="row"><span class="chip" id="aInd" style="flex:none">${C[S.loc.country].tel}</span><input id="aTel" type="tel" inputmode="tel" placeholder="6 12 34 56 78"></div></div>
-  <label class="check"><input type="checkbox" id="aAge" required> J’ai 16 ans ou plus.</label>
+  <label class="check"><input type="checkbox" id="aAge" required> J’ai 18 ans ou plus.</label>
   <label class="check"><input type="checkbox" id="aCgu" required> J’accepte la <a href="privacy.html" target="_blank" rel="noopener">politique de confidentialité</a> et je m’engage à respecter les autres membres.</label>` : `<p style="margin-top:8px"><button type="button" class="mut small" onclick="V.forgot()" style="text-decoration:underline">Mot de passe oublié ?</button></p>`}
   <div class="err" id="aErr"></div>
   <button class="btn" id="aBtn">${authMode === 'signup' ? 'Créer mon compte' : 'Se connecter'}</button></form>
@@ -244,6 +245,9 @@ async function submitAuth() {
   try {
     if (authMode === 'signup') {
       const cc = $('#aCc').value, tel = $('#aTel').value.replace(/[^\d]/g, '');
+      const by = +($('#aBY') || {}).value; if (!by) throw new Error('Indique ton année de naissance');
+      if (new Date().getFullYear() - by < 18) { minorBlock(); throw new Error('Vibzo est réservé aux 18 ans et plus'); }
+      try { localStorage.setItem('vibzo_by', String(by)); } catch (e) { }
       const weak = await pwProblem(password); if (weak) throw new Error(weak);
       const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.href.split('#')[0], data: { username: $('#aUser').value.trim().toLowerCase(), display_name: $('#aName').value.trim(), country: cc, region: $('#aRg').value, phone: tel ? C[cc].tel + tel : '', ref: pendingRef() } } });
       if (error) throw error;
@@ -276,7 +280,7 @@ function setupProfile() {
   <div class="field"><label>Nom d’utilisateur</label><input id="sUser" maxlength="24" required pattern="[a-zA-Z0-9_.]{3,24}" title="3 à 24 caractères : lettres, chiffres, . et _" value="${esc(m.username || '')}"></div>
   <div class="field"><label>Pays</label><select id="sCc" onchange="V.setupRegions()">${ccOpts}</select></div>
   <div class="field"><label>Région</label><select id="sRg"></select></div>
-  <label class="check"><input type="checkbox" required> J’ai 16 ans ou plus.</label>
+  <label class="check"><input type="checkbox" required> J’ai 18 ans ou plus.</label>
   <label class="check"><input type="checkbox" required> J’accepte la <a href="privacy.html" target="_blank" rel="noopener">politique de confidentialité</a> et je m’engage à respecter les autres membres.</label>
   <div class="err" id="sErr"></div><button class="btn" id="sBtn">C’est parti</button></form>`);
   setupRegions();
@@ -3073,20 +3077,29 @@ async function loadSafety() {
   const [{ data: sf }, { data: bl }] = await Promise.all([sb.rpc('my_safety'), sb.from('blocks').select('blocked_id').eq('blocker_id', uid())]);
   S.safety = sf || {}; S.blocked = new Set((bl || []).map(b => b.blocked_id));
   sb.rpc('register_device', { p_key: deviceKey, p_label: deviceLabel() }).then(() => { refreshNotifs(); }, () => { });
-  if (S.safety && !S.safety.birth_year && !sessionStorage.getItem('vibzo_age')) setTimeout(ageAsk, 4000);
+  if (S.safety && S.safety.minor) return minorBlock(true);
+  if (S.safety && !S.safety.birth_year) {
+    let by = 0; try { by = +localStorage.getItem('vibzo_by'); } catch (e) { }
+    if (by) { const { error } = await sb.from('profiles').update({ birth_year: by }).eq('id', uid()); if (!error) { try { localStorage.removeItem('vibzo_by'); } catch (e) { } return loadSafety(); } }
+    if (!sessionStorage.getItem('vibzo_age')) setTimeout(ageAsk, 1500);
+  }
+}
+async function minorBlock(signOut) {
+  if (signOut) { try { await sb.auth.signOut(); } catch (e) { } S.me = null; }
+  modal(`<div class="card" style="max-width:330px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">🔞</div><h3>Vibzo est réservé aux 18 ans et plus</h3><p class="mut small">Pour protéger les plus jeunes, l’inscription et l’utilisation de Vibzo sont interdites aux moins de 18 ans.</p><button class="btn" onclick="V.closeModal();location.reload()">OK</button></div>`);
 }
 function ageAsk() {
   if (!S.me || (S.safety && S.safety.birth_year) || $('#modal').classList.contains('on')) return;
   try { sessionStorage.setItem('vibzo_age', '1'); } catch (e) { }
   const y = new Date().getFullYear();
-  modal(`<div class="card" style="max-width:330px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">🛡️</div><h3>Quelle est ton année de naissance ?</h3><p class="mut small">Vibzo protège automatiquement les moins de 18 ans (compte privé, messages limités aux amis, pas de cadeaux). Elle n’est jamais affichée et ne peut plus être changée ensuite.</p>
+  modal(`<div class="card" style="max-width:330px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">🛡️</div><h3>Quelle est ton année de naissance ?</h3><p class="mut small">Vibzo est réservé aux 18 ans et plus. Ton année n’est jamais affichée et ne peut plus être changée ensuite.</p>
   <div class="field"><select id="byY"><option value="">—</option>${[...Array(90)].map((_, i) => `<option>${y - 10 - i}</option>`).join('')}</select></div>
-  <button class="btn" onclick="V.saveAge()">Valider</button><button class="btn ghost" onclick="V.closeModal()">Plus tard</button></div>`);
+  <button class="btn" onclick="V.saveAge()">Valider</button></div>`);
 }
 async function saveAge() {
   const y = +($('#byY') || {}).value; if (!y) return toast('Choisis ton année');
   const { error } = await sb.from('profiles').update({ birth_year: y }).eq('id', uid()); if (error) return fail(error);
-  closeModal(); await loadSafety(); toast(S.safety.minor ? '🛡️ Protections jeunes activées' : '✅ Enregistré');
+  closeModal(); await loadSafety(); if (S.safety && !S.safety.minor) toast('✅ Enregistré');
 }
 async function askFollow(userId) {
   const { error } = await sb.from('follow_requests').insert({ requester_id: uid(), target_id: userId });
