@@ -1,0 +1,6 @@
+-- Paiements 100 % automatiques (appliqué en production via MCP)
+-- payments : kind + 'challenge', ref_id ; index unique (provider, provider_ref) pour google_play / lemonsqueezy
+-- notifications : type 'renew'
+-- card_subscriptions : abonnements carte Lemon Squeezy (lecture par le propriétaire)
+-- challenge_quote(id, user) ; payment_complete : défis activés, boutique créée après paiement (seller_credits + trigger apply_seller_credit)
+-- pg_cron : vibzo-renewal-reminders (tous les jours 7h17 UTC), vibzo-notchpay-sweep (toutes les 10 min, via pg_net)

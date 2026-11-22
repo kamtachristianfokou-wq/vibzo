@@ -718,3 +718,4 @@ button.lvcnt{color:#fff}
 .paybadges{display:flex;justify-content:center;gap:6px;margin:4px 0 10px}
 .paybadges span{border:1px solid #d6e3ee;border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:800;color:#0b2540;background:#fff}
 .paybadges span:first-child{color:#1a1f71}.paybadges span:nth-child(2){color:#eb001b}
+.btn.momo{background:linear-gradient(90deg,#ffcc00,#ff7900);color:#1a1200;margin-top:8px}

@@ -1130,7 +1130,7 @@ const shopDaysLeft = sh => sh && sh.paid_until ? Math.ceil((new Date(sh.paid_unt
 SCREENS.shop = async () => {
   const sh = S.myShop;
   const banner = !uid() || !sh ? `<div class="sbanner"><div class="big">🛍️</div><div class="grow"><b>Tu as une boutique ?</b><div class="small" style="opacity:.92">Vends tes produits dans tes vidéos, partout dans ta région.</div></div><button class="btn" onclick="V.shopForm()">Ouvrir</button></div>`
-    : sh.status === 'pending' ? `<div class="sbanner" style="background:linear-gradient(135deg,#ffd76a,#e0a800);color:#3a2a00"><div class="big">⏳</div><div class="grow"><b>${esc(sh.name)} : en attente d’activation</b><div class="small">L’équipe Vibzo te contacte pour activer ton abonnement Vendeur.</div></div><button class="btn" onclick="V.myShopSheet()">Gérer</button></div>`
+    : sh.status === 'pending' ? `<div class="sbanner" style="background:linear-gradient(135deg,#ffd76a,#e0a800);color:#3a2a00"><div class="big">⏳</div><div class="grow"><b>${esc(sh.name)} : à activer</b><div class="small">Paie l’abonnement Vendeur : ta boutique s’active automatiquement.</div></div><button class="btn" onclick="V.myShopSheet()">Gérer</button></div>`
       : sh.status === 'suspended' ? `<div class="sbanner" style="background:#d81f45"><div class="big">⛔</div><div class="grow"><b>${esc(sh.name)} : suspendue</b><div class="small">Contacte l’équipe Vibzo.</div></div></div>`
       : shopExpired(sh) ? `<div class="sbanner" style="background:linear-gradient(135deg,#ffd76a,#e0a800);color:#3a2a00"><div class="big">⏰</div><div class="grow"><b>${esc(sh.name)} : abonnement terminé</b><div class="small">Tes produits ne sont plus visibles. Renouvelle pour les remettre en ligne.</div></div><button class="btn" onclick="V.myShopSheet()">Renouveler</button></div>`
         : `<div class="sbanner"><div class="big">🏪</div><div class="grow"><b>${esc(sh.name)}</b><div class="small" style="opacity:.92">Boutique active${sh.paid_until ? ' jusqu’au ' + new Date(sh.paid_until).toLocaleDateString('fr-FR') : ''}</div></div><button class="btn" onclick="V.myShopSheet()">Gérer</button></div>`;
@@ -1197,12 +1197,13 @@ async function saveShop() {
   const isNew = !S.myShop;
   const res = S.myShop ? await sb.from('shops').update(row).eq('id', S.myShop.id).select().single() : await sb.from('shops').insert({ ...row, owner_id: uid(), country: S.me.country }).select().single();
   busy(btn, false); if (res.error) return fail(res.error);
-  S.myShop = res.data; closeSheet(); toast(S.myShop.status === 'pending' ? 'Demande envoyée ✅ L’équipe Vibzo va te contacter.' : isNew ? '🎁 Boutique ouverte : ton 1er mois est offert !' : 'Boutique enregistrée ✅'); go('shop');
+  S.myShop = res.data; closeSheet(); toast(S.myShop.status === 'pending' ? 'Boutique créée ✅ Paie l’abonnement Vendeur pour l’activer.' : isNew ? '🎁 Boutique ouverte : ton 1er mois est offert !' : 'Boutique enregistrée ✅'); go('shop');
 }
 async function myShopSheet() {
+  setTimeout(() => subManage('seller'), 0);
   const sh = S.myShop;
   sheet('🏪 ' + esc(sh.name), `<div class="row"><span class="grow">${pill(sh.status)}</span><button class="chip" onclick="V.shopForm()">✏️ Modifier</button></div>
-  ${sh.status === 'pending' ? `<p class="small" style="margin-top:10px">Tu peux déjà ajouter tes produits. Ils seront visibles dès l’activation de ta boutique.${SUPPORT_WHATSAPP ? ` <a href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent('Bonjour, je souhaite activer ma boutique Vibzo « ' + sh.name + ' ».')}" target="_blank" rel="noopener">Contacter l’équipe sur WhatsApp</a>` : ''}</p>` : ''}
+  ${sh.status === 'pending' ? `<p class="small" style="margin-top:10px">Tu peux déjà ajouter tes produits. Ta boutique s’active automatiquement dès le paiement de l’abonnement Vendeur.</p>` : ''}<div id="subMan" data-plan="seller"></div>
   ${sh.status === 'suspended' ? '' : sh.status !== 'active' || shopExpired(sh) ? `<div class="card" style="margin-top:12px"><b>${shopExpired(sh) ? 'Renouveler mon abonnement Vendeur' : 'Activer ma boutique (abonnement Vendeur)'}</b>${goldBlock('vendeur')}</div>`
     : shopDaysLeft(sh) !== null && shopDaysLeft(sh) <= 7 ? `<div class="card" style="margin-top:12px"><b>Plus que ${shopDaysLeft(sh)} jour(s) : prolonge ton abonnement</b>${goldBlock('vendeur')}</div>`
     : `<p class="small mut" style="margin-top:10px">✅ Boutique en ligne jusqu’au ${new Date(sh.paid_until).toLocaleDateString('fr-FR')}.</p>`}<div class="lbl">Mes produits</div><div id="myProds">${loading()}</div>
@@ -1399,19 +1400,20 @@ function goldBlock(plan = 'gold') {
   if (IN_PLAY && !('getDigitalGoodsService' in window)) return playNoBuy();
   const zone = C[(S.me && S.me.country) || S.loc.country].z, p = subPrice(plan);
   return `<div class="card" style="text-align:center;margin:12px 0;background:#f2f9ff"><div class="mut small">Prix</div><div style="font-size:26px;font-weight:800;color:#1e9be8">${money(p.amount, p.cur)} <span style="font-size:14px;font-weight:600">/ mois</span></div>${plan !== 'gold' ? '<div class="small" style="margin-top:4px">🎁 1er mois offert à l’ouverture</div>' : ''}</div>
-  <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value,'${plan}')">${[1, 3, 12].map(m => `<option value="${m}">${m === 1 ? '1 mois' : m === 3 ? '3 mois' : '12 mois'} · ${money(p[m], p.cur)}${subSave(m, plan) ? ` (−${subSave(m, plan)} %)` : ''}</option>`).join('')}</select></div>
+  <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value,'${plan}')">${[1, 3, 12].map(m => `<option value="${m}">${m === 1 ? (IN_PLAY ? '1 mois' : '1 mois (carte : renouvelé automatiquement)') : m === 3 ? '3 mois' : '12 mois'} · ${money(p[m], p.cur)}${subSave(m, plan) ? ` (−${subSave(m, plan)} %)` : ''}</option>`).join('')}</select></div>
   <p class="small" style="text-align:center;margin:-4px 0 10px">Total : <b id="gTot">${subTotal(1, plan)}</b></p>
   ${IN_PLAY ? '' : CARD_BADGES}
   <button class="btn gold" id="gBtn" onclick="V.requestSub('${plan}')">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer par carte ou Google Pay'}</button>
-  <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Paiement sécurisé : Visa, Mastercard ou Google Pay. Activation immédiate après le paiement.'}</p>`;
+  ${momoOk() ? `<button class="btn momo" id="gBtnM" onclick="V.requestSub('${plan}','momo')">📱 MTN MoMo / Orange Money</button>` : ''}
+  <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Activation automatique et immédiate après le paiement.'}</p>`;
 }
 function goldHero() {
   return `<div class="hero" style="margin:0"><div class="cr">👑</div><h2>Vibzo Gold</h2><div class="perks"><div>💘 <span><b>Rencontres</b> : relation sérieuse ou sans lendemain, entre adultes, par ville, région ou pays</span></div><div>✨ <span>Badge Gold sur ton profil et tes vidéos</span></div><div>🛡️ <span>Profils 18+, signalement et blocage en un clic</span></div></div></div>`;
 }
-async function requestSub(plan) {
+async function requestSub(plan, method = 'card') {
   if (!requireAuth()) return;
-  const btn = $('#gBtn'); busy(btn, true);
-  await autoPay(plan === 'gold' ? 'gold' : 'seller', +$('#gMonths').value); busy(btn, false);
+  const btn = $(method === 'momo' ? '#gBtnM' : '#gBtn'); busy(btn, true);
+  await autoPay(plan === 'gold' ? 'gold' : 'seller', +$('#gMonths').value, method); busy(btn, false);
 }
 let payPreviewCc = null;
 function previewPay(z) {
@@ -1432,7 +1434,8 @@ function payInfo(plan, months, pay) {
 function gold() {
   if (!requireAuth()) return;
   const vip = isVip();
-  sheet('👑 Vibzo Gold', goldHero() + (vip ? `<p class="small" style="margin-top:14px;text-align:center">✅ Ton abonnement Gold est actif${S.me.vip_until ? ' jusqu’au ' + new Date(S.me.vip_until).toLocaleDateString('fr-FR') : ''}.</p><button class="btn gold" onclick="V.closeSheet();V.go('dating')">💘 Aller aux rencontres</button>` : goldBlock('gold')));
+  sheet('👑 Vibzo Gold', goldHero() + (vip ? `<p class="small" style="margin-top:14px;text-align:center">✅ Ton abonnement Gold est actif${S.me.vip_until ? ' jusqu’au ' + new Date(S.me.vip_until).toLocaleDateString('fr-FR') : ''}.</p><button class="btn gold" onclick="V.closeSheet();V.go('dating')">💘 Aller aux rencontres</button><div id="subMan" data-plan="gold"></div>${goldBlock('gold')}` : goldBlock('gold')));
+  if (vip) subManage('gold');
 }
 SCREENS.dating = async () => {
   const el = $('#s-dating');
@@ -1619,7 +1622,7 @@ async function refreshUnread() {
 /* =====================================================================
    NOTIFICATIONS ET PARRAINAGE
    ===================================================================== */
-const NT = { like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''], match: ['💘', ''], order: ['🛍️', ''], order_status: ['📦', ''], application: ['💼', ''], offer_ok: ['✅', ''], live: ['🔵', ''], review: ['⭐', ''], verified: ['✔️', ''], service: ['🛠️', ''], challenge: ['🏆', ''], follow_request: ['🔒', 'veut s’abonner à ton compte privé'], sound: ['🎵', ''], login: ['🛡️', ''] };
+const NT = { renew: ['🔔', ''], like: ['❤️', 'a aimé ta vidéo'], comment: ['💬', 'a commenté :'], reply: ['↩️', 'a répondu à ton commentaire :'], follow: ['👤', 'a commencé à te suivre'], mention: ['@', 't’a mentionné :'], repost: ['🔁', 'a republié ta vidéo'], comment_like: ['💗', 'a aimé ton commentaire'], referral: ['🎁', ''], system: ['📣', ''], gift: ['🎁', 't’a offert'], wallet: ['💰', ''], match: ['💘', ''], order: ['🛍️', ''], order_status: ['📦', ''], application: ['💼', ''], offer_ok: ['✅', ''], live: ['🔵', ''], review: ['⭐', ''], verified: ['✔️', ''], service: ['🛠️', ''], challenge: ['🏆', ''], follow_request: ['🔒', 'veut s’abonner à ton compte privé'], sound: ['🎵', ''], login: ['🛡️', ''] };
 async function refreshNotifs() {
   if (!uid()) return;
   const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false);
@@ -1634,6 +1637,7 @@ async function openNotifs() {
 }
 async function openNotif(type, vid, actor, ref) {
   closeSheet(); if (type === 'wallet') { walletSheet(); return; }
+  if (type === 'renew') { if (S.myShop && (!isVip() || (S.myShop.paid_until && (!S.me.vip_until || new Date(S.myShop.paid_until) < new Date(S.me.vip_until))))) return myShopSheet(); return gold(); }
   if (type === 'match' && ref) return openChat(ref);
   if (type === 'order') { orderTab = 'sell'; return go('orders'); }
   if (type === 'order_status') { const { data: o } = ref ? await sb.from('orders').select('buyer_id').eq('id', ref).maybeSingle() : { data: null }; orderTab = o && o.buyer_id !== uid() ? 'sell' : 'buy'; return go('orders'); }
@@ -1756,15 +1760,16 @@ async function mfaOff(factorId) {
 const PAY_FN = `${SUPABASE_URL}/functions/v1/notchpay`;
 const CARD_FN = `${SUPABASE_URL}/functions/v1/cardpay`, PLAY_FN = `${SUPABASE_URL}/functions/v1/playbilling`;
 /* Tous les paiements : carte (Visa, Mastercard) ou Google Pay sur le site, Google Play dans l'appli Android. */
-async function autoPay(kind, qty) {
-  if (IN_PLAY) return playPay(kind, qty);
-  if (window.__VIBZO_FAKE__ && !window.__AUTOPAY__) { toast('💳 Paiement par carte (test)'); return true; }
+const momoOk = () => !IN_PLAY && C[myCc()].z !== 'A';
+async function autoPay(kind, qty, method = 'card', ref = null) {
+  if (IN_PLAY && kind !== 'challenge') return playPay(kind, qty);
+  if (window.__VIBZO_FAKE__ && !window.__AUTOPAY__) { toast(method === 'momo' ? '📱 Paiement Mobile Money (test)' : '💳 Paiement par carte (test)'); return true; }
   try {
     const { data: { session } } = await sb.auth.getSession(); if (!session) return requireAuth(), true;
-    const r = await fetch(CARD_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', kind, qty, return_url: location.origin + location.pathname }) });
+    const r = await fetch(method === 'momo' ? PAY_FN : CARD_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', kind, qty, ref, auto: qty === 1 && (kind === 'gold' || kind === 'seller'), return_url: location.origin + location.pathname }) });
     const d = await r.json().catch(() => ({}));
     if (r.ok && d.url) { toast('🔒 Redirection vers le paiement sécurisé…'); setTimeout(() => { location.href = d.url; }, 400); return true; }
-    toast(d.error === 'not_configured' ? '💳 Le paiement par carte et Google Pay arrive très bientôt sur Vibzo' : '⚠️ ' + (d.error || 'Paiement indisponible, réessaie dans un instant'));
+    toast(d.error === 'not_configured' ? (method === 'momo' ? '📱 Le paiement MTN / Orange Money arrive très bientôt sur Vibzo' : '💳 Le paiement par carte et Google Pay arrive très bientôt sur Vibzo') : '⚠️ ' + (d.error || 'Paiement indisponible, réessaie dans un instant'));
   } catch (e) { toast('⚠️ Connexion impossible, réessaie'); }
   return true;
 }
@@ -1788,8 +1793,21 @@ async function playPay(kind, qty) {
   } catch (e) { if (!/abort/i.test(e && e.name || '')) toast('Achat annulé'); }
   return true;
 }
+async function subManage(plan) {
+  const el = $('#subMan'); if (!el || IN_PLAY) return;
+  const { data } = await sb.from('card_subscriptions').select('status,renews_at,ends_at').eq('plan', plan).order('updated_at', { ascending: false }).limit(1).maybeSingle().then(r => r, () => ({}));
+  if (!data || !$('#subMan')) return;
+  const on = ['active', 'on_trial', 'past_due'].includes(data.status);
+  $('#subMan').innerHTML = `<div class="safety" style="margin-top:10px">🔁 <span>${on ? `Renouvellement automatique par carte${data.renews_at ? ' le ' + new Date(data.renews_at).toLocaleDateString('fr-FR') : ''}` : `Renouvellement automatique arrêté${data.ends_at ? ' · fin le ' + new Date(data.ends_at).toLocaleDateString('fr-FR') : ''}`}</span></div><button class="btn ghost" onclick="V.subPortal('${plan}')">⚙️ <span>Gérer mon abonnement (carte, annulation)</span></button>`;
+}
+async function subPortal(plan) {
+  const { data: { session } } = await sb.auth.getSession(); if (!session) return;
+  const r = await fetch(CARD_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'portal', plan }) }).catch(() => null);
+  const d = r ? await r.json().catch(() => ({})) : {};
+  if (d.url) location.href = d.url; else toast('⚠️ ' + (d.error || 'Indisponible pour le moment'));
+}
 function payDone(d) {
-  const t = d.kind === 'coins' ? [`💰`, `${d.qty} pièces ajoutées !`, 'Offre des cadeaux à tes créateurs préférés.'] : d.kind === 'gold' ? ['👑', 'Vibzo Gold activé !', 'L’espace rencontres est ouvert.'] : ['🏪', 'Boutique activée !', 'Tes produits sont visibles par tous.'];
+  const t = d.kind === 'challenge' ? ['🏆', 'Ton défi est en ligne !', 'Les créateurs peuvent participer dès maintenant.'] : d.kind === 'coins' ? [`💰`, `${d.qty} pièces ajoutées !`, 'Offre des cadeaux à tes créateurs préférés.'] : d.kind === 'gold' ? ['👑', 'Vibzo Gold activé !', 'L’espace rencontres est ouvert.'] : ['🏪', 'Boutique activée !', 'Tes produits sont visibles par tous.'];
   modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:48px">${t[0]}</div><h3>Paiement reçu ✅</h3><p style="font-weight:700;margin-top:6px">${t[1]}</p><p class="mut small">${t[2]}</p><button class="btn" style="margin-top:12px" onclick="V.closeModal();${d.kind === 'gold' ? "V.go('dating')" : d.kind === 'coins' ? 'V.walletSheet()' : "V.go('profile')"}">Continuer</button></div>`);
 }
 async function checkPayReturn() {
@@ -1836,11 +1854,12 @@ function buyCoins() {
   <div class="packs">${COIN_PACKS.map(p => `<button class="pack ${p[0] === 500 ? 'on' : ''}" onclick="V.pickPack(${p[0]},this)"><b>🪙 ${p[0].toLocaleString('fr-FR')}</b>${p[3] ? `<i>${p[3]}</i>` : ''}<span>${money(cur === '₼' ? p[2] : p[1], cur)}</span></button>`).join('')}</div>
   ${IN_PLAY ? '' : CARD_BADGES}
   <button class="btn gold" id="cBtn" onclick="V.reqCoins()">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer par carte ou Google Pay'}</button>
-  <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Paiement sécurisé : Visa, Mastercard ou Google Pay. Les pièces arrivent tout de suite.'}</p>`);
+  ${momoOk() ? `<button class="btn momo" id="cBtnM" onclick="V.reqCoins('momo')">📱 MTN MoMo / Orange Money</button>` : ''}
+  <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Les pièces arrivent automatiquement dès le paiement.'}</p>`);
 }
-async function reqCoins() {
-  const btn = $('#cBtn'); busy(btn, true);
-  await autoPay('coins', packSel); busy(btn, false);
+async function reqCoins(method = 'card') {
+  const btn = $(method === 'momo' ? '#cBtnM' : '#cBtn'); busy(btn, true);
+  await autoPay('coins', packSel, method); busy(btn, false);
 }
 async function walletSheet() {
   if (!requireAuth()) return;
@@ -2476,13 +2495,16 @@ async function saveChallenge() {
   const btn = $('#cfBtn'); busy(btn, true);
   const { data, error } = await sb.rpc('create_challenge', { p_brand: $('#cfB').value.trim(), p_title: $('#cfT').value.trim(), p_tag: $('#cfH').value.trim(), p_desc: $('#cfD').value.trim(), p_p1: +$('#cf1').value || 0, p_p2: +$('#cf2').value || 0, p_p3: +$('#cf3').value || 0, p_days: +$('#cfJ').value, p_countries: countries });
   busy(btn, false); if (error) return fail(error);
-  closeSheet(); const pi = PAYMENT_INFO[C[cc].z] || {}, tag = ($('#cfH') ? $('#cfH').value : '').replace(/^#/, '');
-  const msg = `Bonjour Vibzo, je viens de créer un défi sponsorisé (réf. ${String(data.id).slice(0, 8)}). Montant à payer : ${money(data.total, data.currency)}. Voici ma preuve de paiement.`;
-  modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🏆</div><h3>Défi créé !</h3><p class="small">Il sera mis en ligne dès réception du paiement.</p>
-  <div class="card" style="margin:10px 0;text-align:left"><div class="small">Montant à payer</div><b style="font-size:20px">${money(data.total, data.currency)}</b><div class="mut small">${money(data.prizes, data.currency)} <span>de prix</span> + 15 %</div>
-  <div class="small" style="margin-top:8px">${pi.iban ? `🏦 ${esc(pi.bank)} · ${esc(pi.holder)}<br><b>${esc(pi.iban)}</b>` : `📱 ${esc(pi.momo || '')}<br><b>${esc(pi.number || '')}</b>`}</div></div>
-  <a class="btn" style="background:#25D366;display:flex;align-items:center;justify-content:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(msg)}">💬 Envoyer la preuve sur WhatsApp</a>
+  closeSheet(); S._chPay = data.id;
+  modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🏆</div><h3>Défi créé !</h3><p class="small">Il se met en ligne automatiquement dès le paiement.</p>
+  <div class="card" style="margin:10px 0;text-align:left"><div class="small">Montant à payer</div><b style="font-size:20px">${money(data.total, data.currency)}</b><div class="mut small">${money(data.prizes, data.currency)} <span>de prix</span> + 15 %</div></div>
+  ${CARD_BADGES}<button class="btn gold" id="chPayC" onclick="V.payChallenge('card')">💳 Payer par carte ou Google Pay</button>
+  ${momoOk() && data.currency !== '₼' ? `<button class="btn momo" id="chPayM" onclick="V.payChallenge('momo')">📱 MTN MoMo / Orange Money</button>` : ''}
   <button class="btn ghost" style="margin-top:8px" onclick="V.closeModal()">Plus tard</button></div>`);
+}
+async function payChallenge(method) {
+  const id = S._chPay; if (!id) return; const b = $(method === 'momo' ? '#chPayM' : '#chPayC'); busy(b, true);
+  await autoPay('challenge', 1, method, id); busy(b, false);
 }
 async function tagChallengeBanner(tag) {
   const { data } = await sb.from('challenges_view').select('*').eq('hashtag', tag.toLowerCase()).in('status', ['active', 'finished']).order('created_at', { ascending: false }).limit(1);
@@ -3394,7 +3416,7 @@ window.V = {
   pwProblem,
   saveAge, cancelReq, userMore, blockUser, doBlock, unblock, safetySheet, saveSafety, respondFollow, removeDevice, soundPicker, sndPreview, useLib, useTop, mySounds, uploadSound, removeSound, sndDecide,
   pickPhotos, phRemove, phSoundPick, phSoundUse, replyVideo, cancelReplyVideo, privacySheet, savePrivacy, pinVideo, historySheet, clearHistory, histPause, analyticsSheet, wellSheet, wellSet, wellGo, sTab: t => { S.sTab = t; search(); },
-  newPost, capIns, postBack, openEditor, closeEditor, editorBack, editorNext, coverPick, coverSeek, coverSave, saveDraft, draftsSheet, draftOpen, draftDel, publishStory, camMode, camLive, camImport, camPhotos,
+  payChallenge, subPortal, newPost, capIns, postBack, openEditor, closeEditor, editorBack, editorNext, coverPick, coverSeek, coverSave, saveDraft, draftsSheet, draftOpen, draftDel, publishStory, camMode, camLive, camImport, camPhotos,
   openCamera, closeCamera, camRecord, camRedo, camDone, camFlip, camTimer, camFilters, camFilter, camDur, camMic, camClip, camText, camTextAdd, camTextClear, camSoundPick, camSoundUse, useSound, duetWith, stitchWith,
   openStories, storyStep, closeStories, storyDel, storyReply, openUserStories, postKind: k => { S.postKind = k; go('create'); },
   livePinMsg, liveVote, livePollForm, livePollStart, livePollEnd, liveGoalForm, liveGoalStart, liveModForm, liveModSave, liveTools, liveMore, liveViewers, liveGuest, liveKick, liveRequest, liveFollow, liveQuick,

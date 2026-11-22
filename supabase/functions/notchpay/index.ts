@@ -53,15 +53,25 @@ Deno.serve(async (req) => {
       const { data: ud } = await sb.auth.getUser(token);
       const user = ud?.user;
       if (!user) return json({ error: 'Connecte-toi d’abord' }, 401);
-      const kind = String(body.kind), qty = Number(body.qty);
-      const { data: amount } = await sb.rpc('payment_quote', { p_kind: kind, p_qty: qty });
-      if (!amount) return json({ error: 'Offre inconnue' }, 400);
+      const kind = String(body.kind), qty = kind === 'challenge' ? 1 : Number(body.qty), ref = String(body.ref ?? '');
+      let amount = 0;
+      if (kind === 'challenge') {
+        if (!/^[0-9a-f-]{36}$/i.test(ref)) return json({ error: 'Défi inconnu' }, 400);
+        const { data: q } = await sb.rpc('challenge_quote', { p_id: ref, p_user: user.id });
+        const row = Array.isArray(q) ? q[0] : q;
+        if (!row) return json({ error: 'Défi introuvable ou déjà payé' }, 400);
+        if (row.currency !== 'XAF') return json({ error: 'Mobile Money : uniquement en FCFA. Paie par carte.' }, 400);
+        amount = row.amount;
+      } else {
+        const { data: a } = await sb.rpc('payment_quote', { p_kind: kind, p_qty: qty });
+        if (!a) return json({ error: 'Offre inconnue' }, 400); amount = a;
+      }
       const { data: prof } = await sb.from('profiles').select('username, display_name, country, phone').eq('id', user.id).single();
       const currency = WEST.includes(prof?.country) ? 'XOF' : 'XAF';
-      const { data: pay, error } = await sb.from('payments').insert({ user_id: user.id, kind, qty, amount, currency }).select().single();
+      const { data: pay, error } = await sb.from('payments').insert({ user_id: user.id, kind, qty, amount, currency, provider: 'notchpay', ref_id: kind === 'challenge' ? ref : null }).select().single();
       if (error) return json({ error: error.message }, 400);
       const back = ALLOWED_RETURN.test(String(body.return_url ?? '')) ? String(body.return_url).split(/[?#]/)[0] : 'https://vibzo.fun/';
-      const label = kind === 'coins' ? `${qty} pièces Vibzo` : kind === 'gold' ? `Vibzo Gold · ${qty} mois` : `Boutique Vibzo · ${qty} mois`;
+      const label = kind === 'coins' ? `${qty} pièces Vibzo` : kind === 'gold' ? `Vibzo Gold · ${qty} mois` : kind === 'challenge' ? 'Défi sponsorisé Vibzo' : `Boutique Vibzo · ${qty} mois`;
       const r = await fetch(`${API}/payments`, {
         method: 'POST',
         headers: { Authorization: KEY, 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -81,6 +91,13 @@ Deno.serve(async (req) => {
       return json({ url: d.authorization_url, id: pay.id });
     }
 
+    if (action === 'sweep') {
+      // filet de sécurité (appelé toutes les 10 min) : revérifie les paiements Mobile Money en attente
+      const since = new Date(Date.now() - 48 * 3600e3).toISOString();
+      const { data: list } = await sb.from('payments').select('id').eq('status', 'pending').not('provider_ref', 'is', null).or('provider.is.null,provider.eq.notchpay').gte('created_at', since).limit(50);
+      let done = 0; for (const p of list ?? []) { const r = await verify(p.id); if (r.status === 'complete') done++; }
+      return json({ checked: (list ?? []).length, done });
+    }
     if (action === 'verify') {
       const id = String(body.id ?? url.searchParams.get('id') ?? '');
       if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'id invalide' }, 400);
