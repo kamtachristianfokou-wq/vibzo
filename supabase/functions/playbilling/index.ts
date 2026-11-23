@@ -7,7 +7,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 const PKG = 'fun.vibzo.app';
 const SA = Deno.env.get('GOOGLE_SA_JSON') ?? '';
 const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
-const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...CORS, 'Content-Type': 'application/json' } });
 // produit Play (consommable) → (type, quantité)
 const SKUS: Record<string, [string, number]> = {
@@ -29,6 +29,17 @@ async function accessToken() {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (!SA) return json({ error: 'not_configured' }, 503);
+  // Vérification de la configuration (ne renvoie aucun secret) : GET ?check=1
+  if (req.method === 'GET') {
+    const out: Record<string, unknown> = { configured: true };
+    try { JSON.parse(SA); out.json = true; } catch { out.json = false; return json(out); }
+    try { const at = await accessToken(); out.google_auth = true;
+      const r = await fetch(`https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PKG}/purchases/products/coins_100/tokens/vibzo-check`, { headers: { Authorization: `Bearer ${at}` } });
+      const d = await r.json().catch(() => ({})); out.play_status = r.status; out.play_reason = d?.error?.errors?.[0]?.reason ?? d?.error?.status ?? null;
+      out.play_access = r.status !== 401 && r.status !== 403;
+    } catch (e) { out.google_auth = false; out.detail = String((e as Error).message ?? e).slice(0, 120); }
+    return json(out);
+  }
   try {
     const tok = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
     const { data: ud } = await sb.auth.getUser(tok); const user = ud?.user;
@@ -39,7 +50,8 @@ Deno.serve(async (req) => {
     if (dup) return json(dup.user_id === user.id ? { status: dup.status, kind: def[0], qty: def[1] } : { error: 'Achat déjà utilisé' }, dup.user_id === user.id ? 200 : 409);
     const at = await accessToken();
     const base = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PKG}/purchases/products/${encodeURIComponent(sku)}/tokens/${encodeURIComponent(token)}`;
-    const g = await (await fetch(base, { headers: { Authorization: `Bearer ${at}` } })).json();
+    const gr = await fetch(base, { headers: { Authorization: `Bearer ${at}` } }); const g = await gr.json();
+    if (!gr.ok) { console.error('play verify', gr.status, JSON.stringify(g?.error ?? g).slice(0, 300)); return json({ error: gr.status === 401 || gr.status === 403 ? 'Vérification Google indisponible, réessaie plus tard' : 'Achat introuvable chez Google' }, 502); }
     if (g.purchaseState !== 0) return json({ status: 'pending' });
     const { data: amount } = await sb.rpc('payment_quote', { p_kind: def[0], p_qty: def[1] });
     const { data: pay, error } = await sb.from('payments').insert({ user_id: user.id, kind: def[0], qty: def[1], amount: amount ?? 0, currency: 'XAF', provider: 'google_play', provider_ref: String(token) }).select().single();
