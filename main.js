@@ -1824,8 +1824,8 @@ async function autoPay(kind, qty, method = 'notch', ref = null) {
   if (window.__VIBZO_FAKE__ && !window.__AUTOPAY__) { toast('💳 Paiement en ligne (test)'); return true; }
   try {
     const { data: { session } } = await sb.auth.getSession(); if (!session) return requireAuth(), true;
-    // Mobile Money : CamPay d'abord (MTN, Orange), puis Notch Pay ; carte : Notch Pay d'abord, puis CamPay
-    const order = pm === 'card' ? [PAY_FN, CAMPAY_FN] : [CAMPAY_FN, PAY_FN];
+    // Notch Pay en priorité (MTN, Orange, carte) ; CamPay en secours s'il est configuré en réel
+    const order = [PAY_FN, CAMPAY_FN];
     let d = {}, off = 0;
     for (const fn of order) {
       const r = await fetch(fn, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', channel: pm, kind, qty, ref, auto: qty === 1 && (kind === 'gold' || kind === 'seller'), return_url: location.origin + location.pathname }) });

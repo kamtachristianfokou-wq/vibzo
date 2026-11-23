@@ -56,13 +56,17 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (!USER || !PASS) return json({ error: 'not_configured' }, 503);
   const url = new URL(req.url);
-  const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
+  // corps JSON ou formulaire (les notifications CamPay peuvent arriver sous l'une ou l'autre forme)
+  let body: Record<string, any> = {};
+  if (req.method === 'POST') { const raw = await req.text(); try { body = JSON.parse(raw); } catch { body = Object.fromEntries(new URLSearchParams(raw)); } }
   const action = body.action ?? url.searchParams.get('action') ?? 'webhook';
   try {
     if (action === 'init') {
       const jwt = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
       const { data: ud } = await sb.auth.getUser(jwt); const user = ud?.user;
       if (!user) return json({ error: 'Connecte-toi d’abord' }, 401);
+      // mode démo : faux argent, réservé aux tests de l'administrateur (sinon on laisse la place à l'autre moyen)
+      if (!LIVE) { const { data: me } = await sb.from('profiles').select('role').eq('id', user.id).single(); if (me?.role !== 'admin') return json({ error: 'not_configured' }, 503); }
       const kind = String(body.kind), qty = kind === 'challenge' ? 1 : Number(body.qty), ref = String(body.ref ?? '');
       let amount = 0;
       if (kind === 'challenge') {
