@@ -726,7 +726,7 @@ SCREENS.discover = () => {
 async function loadTrends() {
   const el = $('#trends'); if (!el) return;
   const q = ($('#q') ? $('#q').value : '').trim();
-  if (q) { el.innerHTML = q.startsWith('#') ? `<div class="taghead"><div class="big">#</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Hashtag · publie ta vidéo avec #${esc(q.slice(1))} pour participer au défi</div></div><button class="btn sm" style="width:auto" onclick="V.go('create')">＋ Participer</button></div>` : q.startsWith('♪') ? `<div class="taghead"><div class="big">♪</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Son · toutes les vidéos avec ce son</div></div><button class="btn sm" style="width:auto" onclick="V.useSound(${esc(JSON.stringify(q.slice(1)))})">🎵 Utiliser</button></div>` : ''; if (q.startsWith('#') && q.length > 1) tagChallengeBanner(q.slice(1)).catch(() => { }); return; }
+  if (q) { el.innerHTML = q.startsWith('#') ? `<div class="taghead"><div class="big">#</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Hashtag · publie ta vidéo avec #${esc(q.slice(1))} pour participer au défi</div></div><button class="btn sm" style="width:auto" onclick="V.go('create')">＋ Participer</button></div>` : q.startsWith('♪') ? `<div class="taghead"><div class="big">♪</div><div><b>${esc(q.slice(1))}</b><div class="mut small">Son · toutes les vidéos avec ce son</div></div><button class="btn sm" style="width:auto" onclick="V.useSound(${esc(JSON.stringify(q.slice(1)))})">🎵 Utiliser</button></div><div id="sndCredit"></div>` : ''; if (q.startsWith('♪') && q.length > 1) soundCredit(q.slice(1)).catch(() => { }); if (q.startsWith('#') && q.length > 1) tagChallengeBanner(q.slice(1)).catch(() => { }); return; }
   const [{ data: tags }, { data: snds }] = await Promise.all([sb.rpc('trending_tags', { p_limit: 12 }), sb.rpc('trending_sounds', { p_limit: 6 })]);
   el.innerHTML = (tags || []).length || (snds || []).length ? `<div class="lbl">🔥 Tendances de la semaine</div><div class="trend">${(tags || []).map((t, i) => `<button onclick="V.openTag('${esc(t.tag)}')"><b>${i < 3 ? ['🥇', '🥈', '🥉'][i] : '#'}</b> ${esc(t.tag)} <span>${fmtN(t.videos)}</span></button>`).join('')}${(snds || []).map(s => `<button onclick="V.openSound('${esc(s.sound.replace(/'/g, '’'))}')">♪ ${esc(s.sound)} <span>${fmtN(s.videos)}</span></button>`).join('')}</div>` : '';
 }
@@ -1399,6 +1399,7 @@ function settings() {
   <button onclick="V.verifySheet()"><span class="e">✔️</span>Badge vérifié<span class="r">${S.me.verified ? '✅' : 'Obtenir'} ›</span></button>
   <button onclick="V.safetySheet()"><span class="e">🛡️</span>Sécurité et confidentialité<span class="r">${S.safety && S.safety.is_private ? '🔒 ' : ''}›</span></button>
   <button onclick="V.mySounds()"><span class="e">🎵</span>Vibzo Sons · publier ma musique<span class="r">›</span></button>
+  <button onclick="V.musicCredits()"><span class="e">🎼</span>Crédits musique<span class="r">›</span></button>
   <button onclick="V.analyticsSheet()"><span class="e">📊</span>Statistiques créateur<span class="r">›</span></button>
   <button onclick="V.historySheet()"><span class="e">🕒</span>Historique de visionnage<span class="r">›</span></button>
   <button onclick="V.wellSheet()"><span class="e">🧘</span>Bien-être et temps d’écran<span class="r">${WB.limit ? WB.limit + ' min/j' : ''} ›</span></button>
@@ -1429,15 +1430,37 @@ const subSave = (m, plan = 'gold') => { const p = subPrice(plan); const full = p
    On détecte l'app Android (TWA) et on masque les achats de Gold, Vendeur, pièces et défis sponsorisés. */
 const IN_PLAY = (() => { try { const f = /[?&]src=twa\b/.test(location.search) || /^android-app:\/\//.test(document.referrer || ''); if (f) localStorage.setItem('vibzo_play', '1'); return f || localStorage.getItem('vibzo_play') === '1'; } catch (e) { return false; } })();
 const playNoBuy = () => `<div class="safety" style="margin-top:10px">📱 <span>Les achats ne sont pas encore disponibles dans l’application Android. Tous les autres services de Vibzo restent gratuits ici.</span></div>`;
-const CARD_BADGES = `<div class="paybadges"><span>MTN MoMo</span><span>Orange Money</span><span>VISA</span><span>Mastercard</span></div>`;
+/* Choix du moyen de paiement : chacun choisit, peut changer à tout moment, et paie. */
+const PAYM = [['mtn', 'MTN MoMo', '<i class="pm-mtn">MTN</i>'], ['orange', 'Orange Money', '<i class="pm-or">OM</i>'], ['card', 'Carte bancaire', '💳'], ['gpay', 'Google Pay', '<i class="pm-g">G</i>']];
+const MOMO_CC = ['CM', 'CI', 'CG', 'GA', 'TD', 'CF', 'GQ', 'SN', 'BJ', 'TG', 'BF', 'ML', 'NE', 'GN', 'GH', 'UG', 'RW', 'ZM'];
+function payM() {
+  let m = null; try { m = localStorage.getItem('vibzo_paym'); } catch (e) { }
+  if (PAYM.some(x => x[0] === m)) return m;
+  return MOMO_CC.includes(myCc()) ? 'mtn' : 'card';
+}
+const payLabel = m => m === 'mtn' ? '📱 Payer avec MTN MoMo' : m === 'orange' ? '🟠 Payer avec Orange Money' : m === 'gpay' ? 'Payer avec Google Pay' : '💳 Payer par carte (Visa, Mastercard)';
+const payHint = m => m === 'gpay' ? 'Google Pay se règle dans l’application Android Vibzo (paiement Google Play).' : m === 'card' ? 'Visa, Mastercard · paiement sécurisé, activation automatique.' : 'Tu confirmes sur ton téléphone avec ton code Mobile Money. Activation automatique.';
+function payPicker() {
+  if (IN_PLAY) return `<div class="paym one"><span class="on">▶ Google Play</span></div><p class="mut small" style="text-align:center;margin:-2px 0 8px">Google Pay, carte ou crédit opérateur, au choix dans la fenêtre Google Play.</p>`;
+  const m = payM();
+  return `<div class="pmlbl">Moyen de paiement</div><div class="paym" role="radiogroup" aria-label="Moyen de paiement">${PAYM.map(x => `<button type="button" role="radio" aria-checked="${x[0] === m}" class="${x[0] === m ? 'on' : ''}" data-m="${x[0]}" onclick="V.setPayM('${x[0]}')"><b>${x[2]}</b><span>${x[1]}</span></button>`).join('')}</div><p class="mut small pmhint" style="text-align:center;margin:0 0 8px">${payHint(m)}</p>`;
+}
+function setPayM(m) {
+  try { localStorage.setItem('vibzo_paym', m); } catch (e) { }
+  document.querySelectorAll('.paym button').forEach(b => { const on = b.dataset.m === m; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
+  document.querySelectorAll('.pmhint').forEach(e => e.textContent = payHint(m));
+  document.querySelectorAll('.paybtn').forEach(b => { b.textContent = payLabel(m); b.classList.toggle('gpb', m === 'gpay'); });
+}
+const payBtnTxt = () => IN_PLAY ? '▶ Payer avec Google Play' : payLabel(payM());
+const CARD_BADGES = '';
 function goldBlock(plan = 'gold') {
   if (IN_PLAY && !('getDigitalGoodsService' in window)) return playNoBuy();
   const zone = C[(S.me && S.me.country) || S.loc.country].z, p = subPrice(plan);
   return `<div class="card" style="text-align:center;margin:12px 0;background:#f2f9ff"><div class="mut small">Prix</div><div style="font-size:26px;font-weight:800;color:#1e9be8">${money(p.amount, p.cur)} <span style="font-size:14px;font-weight:600">/ mois</span></div>${plan !== 'gold' ? '<div class="small" style="margin-top:4px">🎁 1er mois offert à l’ouverture</div>' : ''}</div>
   <div class="field"><label>Durée</label><select id="gMonths" onchange="document.getElementById('gTot').textContent=V.subTotal(+this.value,'${plan}')">${[1, 3, 12].map(m => `<option value="${m}">${m === 1 ? '1 mois' : m === 3 ? '3 mois' : '12 mois'} · ${money(p[m], p.cur)}${subSave(m, plan) ? ` (−${subSave(m, plan)} %)` : ''}</option>`).join('')}</select></div>
   <p class="small" style="text-align:center;margin:-4px 0 10px">Total : <b id="gTot">${subTotal(1, plan)}</b></p>
-  ${IN_PLAY ? '' : CARD_BADGES}
-  <button class="btn gold" id="gBtn" onclick="V.requestSub('${plan}')">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer : MTN, Orange Money ou carte'}</button>
+  ${payPicker()}
+  <button class="btn gold paybtn${!IN_PLAY && payM() === 'gpay' ? ' gpb' : ''}" id="gBtn" onclick="V.requestSub('${plan}')">${payBtnTxt()}</button>
   <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Activation automatique et immédiate après le paiement.'}</p>`;
 }
 function goldHero() {
@@ -1795,15 +1818,23 @@ const CARD_FN = `${SUPABASE_URL}/functions/v1/paddlepay`, PLAY_FN = `${SUPABASE_
 /* Tous les paiements : carte (Visa, Mastercard) ou Google Pay sur le site, Google Play dans l'appli Android. */
 async function autoPay(kind, qty, method = 'notch', ref = null) {
   if (IN_PLAY && kind !== 'challenge') return playPay(kind, qty);
+  const pm = payM();
+  if (pm === 'gpay') { gpayInfo(); return true; }
   if (window.__VIBZO_FAKE__ && !window.__AUTOPAY__) { toast('💳 Paiement en ligne (test)'); return true; }
   try {
     const { data: { session } } = await sb.auth.getSession(); if (!session) return requireAuth(), true;
-    const r = await fetch(method === 'card' ? CARD_FN : PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', kind, qty, ref, auto: qty === 1 && (kind === 'gold' || kind === 'seller'), return_url: location.origin + location.pathname }) });
+    const r = await fetch(PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', channel: pm, kind, qty, ref, auto: qty === 1 && (kind === 'gold' || kind === 'seller'), return_url: location.origin + location.pathname }) });
     const d = await r.json().catch(() => ({}));
     if (r.ok && d.url) { toast('🔒 Redirection vers le paiement sécurisé…'); setTimeout(() => { location.href = d.url; }, 400); return true; }
-    toast(d.error === 'not_configured' ? '💳 Le paiement en ligne (MTN, Orange Money, carte) arrive très bientôt sur Vibzo' : '⚠️ ' + (d.error || 'Paiement indisponible, réessaie dans un instant'));
+    toast(d.error === 'not_configured' ? '💳 Ce moyen de paiement arrive très bientôt sur Vibzo : choisis-en un autre ou réessaie plus tard' : '⚠️ ' + (d.error || 'Paiement indisponible, réessaie dans un instant'));
   } catch (e) { toast('⚠️ Connexion impossible, réessaie'); }
   return true;
+}
+function gpayInfo() {
+  modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center"><div class="gpaylogo"><i class="pm-g">G</i> Pay</div><h3 style="margin-top:8px">Google Pay dans l’appli Android</h3>
+  <p class="small" style="margin:6px 0 12px">Sur Android, ouvre l’application <b>Vibzo</b> : à l’achat, la fenêtre Google Play te propose <b>Google Pay</b>, ta carte ou ton crédit téléphonique. Sur ce site, choisis plutôt MTN MoMo, Orange Money ou la carte bancaire.</p>
+  <a class="btn" style="display:flex;justify-content:center;text-decoration:none" href="https://play.google.com/apps/testing/fun.vibzo.app" target="_blank" rel="noopener">▶ Obtenir l’appli Android</a>
+  <button class="btn ghost" style="margin-top:8px" onclick="V.closeModal();V.setPayM('${MOMO_CC.includes(myCc()) ? 'mtn' : 'card'}')">Choisir un autre moyen</button></div>`);
 }
 async function playPay(kind, qty) {
   if (!('getDigitalGoodsService' in window) || !window.PaymentRequest) { toast('Mets à jour l’application Vibzo pour acheter'); return true; }
@@ -1884,8 +1915,8 @@ function buyCoins() {
   if (!requireAuth()) return; if (IN_PLAY && !('getDigitalGoodsService' in window)) return sheet('🪙 Pièces', playNoBuy()); const cur = coinCur(); packSel = 500;
   sheet('🪙 Acheter des pièces', `<p class="mut small" style="margin-bottom:10px">Les pièces servent à offrir des cadeaux aux créateurs que tu aimes. 1 pièce = ${cur === '₼' ? '0,03 ₼' : '10 FCFA'}.</p>
   <div class="packs">${COIN_PACKS.map(p => `<button class="pack ${p[0] === 500 ? 'on' : ''}" onclick="V.pickPack(${p[0]},this)"><b>🪙 ${p[0].toLocaleString('fr-FR')}</b>${p[3] ? `<i>${p[3]}</i>` : ''}<span>${money(cur === '₼' ? p[2] : p[1], cur)}</span></button>`).join('')}</div>
-  ${IN_PLAY ? '' : CARD_BADGES}
-  <button class="btn gold" id="cBtn" onclick="V.reqCoins()">${IN_PLAY ? '▶ Payer avec Google Play' : '💳 Payer : MTN, Orange Money ou carte'}</button>
+  ${payPicker()}
+  <button class="btn gold paybtn${!IN_PLAY && payM() === 'gpay' ? ' gpb' : ''}" id="cBtn" onclick="V.reqCoins()">${payBtnTxt()}</button>
   <p class="mut small" style="margin-top:8px;text-align:center">${IN_PLAY ? 'Paiement sécurisé par Google Play.' : 'Les pièces arrivent automatiquement dès le paiement.'}</p>`);
 }
 async function reqCoins(method = 'notch') {
@@ -2529,7 +2560,7 @@ async function saveChallenge() {
   closeSheet(); S._chPay = data.id;
   modal(`<div class="card" style="max-width:360px;width:100%;background:#fff;text-align:center"><div style="font-size:44px">🏆</div><h3>Défi créé !</h3><p class="small">Il se met en ligne automatiquement dès le paiement.</p>
   <div class="card" style="margin:10px 0;text-align:left"><div class="small">Montant à payer</div><b style="font-size:20px">${money(data.total, data.currency)}</b><div class="mut small">${money(data.prizes, data.currency)} <span>de prix</span> + 15 %</div></div>
-  ${CARD_BADGES}<button class="btn gold" id="chPayC" onclick="V.payChallenge()">💳 Payer : MTN, Orange Money ou carte</button>
+  ${payPicker()}<button class="btn gold paybtn${payM() === 'gpay' ? ' gpb' : ''}" id="chPayC" onclick="V.payChallenge()">${payBtnTxt()}</button>
   <button class="btn ghost" style="margin-top:8px" onclick="V.closeModal()">Plus tard</button></div>`);
 }
 async function payChallenge(method = 'notch') {
@@ -3342,7 +3373,7 @@ async function removeDevice(k) { const { error } = await sb.from('login_devices'
    ===================================================================== */
 const SGEN = ['Afrobeats', 'Makossa', 'Coupé-décalé', 'Ndombolo', 'Bongo Flava', 'Amapiano', 'Gospel', 'Rap', 'Zouk', 'Mugham', 'Pop', 'Autre'];
 let SPV = null;
-const sndRow = (x, i, mode) => `<div class="citem sndrow"><button class="im sndplay" onclick="V.sndPreview(this,${esc(JSON.stringify(x.audio_url))})" style="${x.cover_url ? `background:url('${esc(x.cover_url)}') center/cover` : 'background:var(--grad)'}" aria-label="Écouter">▶</button><div class="grow" style="text-align:left"><b>${esc(x.title)}</b><div class="mut small">${esc(x.artist)}${vb(x.verified)} · ${fmtN(x.uses || 0)} <span>vidéos</span>${x.genre ? ' · ' + esc(x.genre) : ''}</div></div>${mode === 'use' ? `<button class="btn sm" style="width:auto" onclick="V.useLib(${i})">Utiliser</button>` : mode === 'useTop' ? `<button class="btn sm" style="width:auto" onclick="V.useTop(${i})">Utiliser</button>` : `<button class="btn sm" style="width:auto" onclick="V.${mode}(${i})">Choisir</button>`}<button class="ib" style="width:30px;height:30px;font-size:14px" onclick="V.report('sound','${x.id}')" aria-label="Signaler">🚩</button></div>`;
+const sndRow = (x, i, mode) => `<div class="citem sndrow"><button class="im sndplay" onclick="V.sndPreview(this,${esc(JSON.stringify(x.audio_url))})" style="${x.cover_url ? `background:url('${esc(x.cover_url)}') center/cover` : 'background:var(--grad)'}" aria-label="Écouter">▶</button><div class="grow" style="text-align:left"><b>${esc(x.title)}</b><div class="mut small">${esc(x.artist)}${vb(x.verified)} · ${fmtN(x.uses || 0)} <span>vidéos</span>${x.genre ? ' · ' + esc(x.genre) : ''}</div>${x.license ? `<div class="mut small sndlic">${esc(x.license)} · <a href="${esc(x.source_url || '#')}" target="_blank" rel="noopener">${esc((x.source_url || '').replace(/^https?:\/\/|\/$/g, ''))}</a></div>` : ''}</div>${mode === 'use' ? `<button class="btn sm" style="width:auto" onclick="V.useLib(${i})">Utiliser</button>` : mode === 'useTop' ? `<button class="btn sm" style="width:auto" onclick="V.useTop(${i})">Utiliser</button>` : `<button class="btn sm" style="width:auto" onclick="V.${mode}(${i})">Choisir</button>`}<button class="ib" style="width:30px;height:30px;font-size:14px" onclick="V.report('sound','${x.id}')" aria-label="Signaler">🚩</button></div>`;
 function sndPreview(btn, url) {
   if (SPV && SPV._btn === btn && !SPV.paused) { SPV.pause(); btn.textContent = '▶'; return; }
   if (SPV) { SPV.pause(); if (SPV._btn) SPV._btn.textContent = '▶'; }
@@ -3363,6 +3394,18 @@ async function soundPicker(kind, hasSound, tab = 'lib', q = '') {
   S._snds = rows; if (!$('#sndL')) return;
   $('#sndL').innerHTML = rows.length ? (tab === 'lib' ? rows.map((x, i) => sndRow(x, i, use)).join('') : rows.map((x, i) => `<button class="citem" style="width:100%;text-align:left" onclick="V.${use}(${i})"><div class="im" style="background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">♪</div><div class="grow"><b>${esc(x.sound || 'Son')}</b><div class="mut small">${fmtN(x.videos || 0)} <span>vidéos</span></div></div></button>`).join(''))
     : `<div class="empty">${tab === 'lib' ? 'Aucun son pour le moment. Tu es artiste ? Publie ta musique depuis Paramètres → Vibzo Sons.' : 'Aucun son tendance pour le moment.'}</div>`;
+}
+/* Crédit obligatoire des musiques sous licence libre (ex. Kevin MacLeod, CC BY 4.0) */
+const creditLine = x => `« ${esc(x.title)} » ${esc(x.artist)} (${esc((x.source_url || '').replace(/^https?:\/\/|\/$/g, ''))}) · Licence ${esc(x.license)}${/CC BY 4\.0/.test(x.license || '') ? ' · <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener">creativecommons.org/licenses/by/4.0</a>' : ''}`;
+async function soundCredit(name) {
+  const i = (name || '').lastIndexOf(' · '); if (i < 0) return;
+  const { data } = await sb.from('sounds_view').select('title,artist,license,source_url').eq('status', 'active').eq('title', name.slice(0, i)).eq('artist', name.slice(i + 3)).limit(1).maybeSingle();
+  const el = $('#sndCredit'); if (data && data.license && el) el.innerHTML = `<p class="mut small" style="margin:6px 16px 0">🎼 ${creditLine(data)}</p>`;
+}
+async function musicCredits() {
+  sheet('🎼 Crédits musique', loading());
+  const { data } = await sb.from('sounds_view').select('title,artist,license,source_url,genre').eq('status', 'active').order('genre').order('title').limit(500);
+  $('#sheet .sh-b').innerHTML = `<p class="mut small">Ces musiques sont proposées gratuitement à tous les créateurs Vibzo, sous licence libre. Merci à leurs auteurs !</p>${(data || []).filter(x => x.license).map(x => `<p class="small" style="margin:8px 0">${creditLine(x)}</p>`).join('') || '<div class="empty">Aucune musique sous licence libre.</div>'}`;
 }
 async function libByName(name) {
   const i = (name || '').lastIndexOf(' · '); if (i < 0) return null;
@@ -3444,7 +3487,7 @@ window.addEventListener('keydown', e => {
 
 function feedStep(d) { const feed = $('#feed'); if (feed) feed.scrollBy({ top: d * feed.clientHeight, behavior: 'smooth' }); }
 window.V = {
-  pwProblem, feedStep, back,
+  pwProblem, feedStep, back, musicCredits, setPayM,
   saveAge, cancelReq, userMore, blockUser, doBlock, unblock, safetySheet, saveSafety, respondFollow, removeDevice, soundPicker, sndPreview, useLib, useTop, mySounds, uploadSound, removeSound, sndDecide,
   pickPhotos, phRemove, phSoundPick, phSoundUse, replyVideo, cancelReplyVideo, privacySheet, savePrivacy, pinVideo, historySheet, clearHistory, histPause, analyticsSheet, wellSheet, wellSet, wellGo, sTab: t => { S.sTab = t; search(); },
   payChallenge, subPortal, newPost, capIns, postBack, openEditor, closeEditor, editorBack, editorNext, coverPick, coverSeek, coverSave, saveDraft, draftsSheet, draftOpen, draftDel, publishStory, camMode, camLive, camImport, camPhotos,

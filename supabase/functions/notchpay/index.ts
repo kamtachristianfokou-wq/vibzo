@@ -71,6 +71,10 @@ Deno.serve(async (req) => {
       const { data: pay, error } = await sb.from('payments').insert({ user_id: user.id, kind, qty, amount, currency, provider: 'notchpay', ref_id: kind === 'challenge' ? ref : null }).select().single();
       if (error) return json({ error: error.message }, 400);
       const back = ALLOWED_RETURN.test(String(body.return_url ?? '')) ? String(body.return_url).split(/[?#]/)[0] : 'https://vibzo.fun/';
+      // moyen choisi dans l'appli : MTN MoMo, Orange Money ou carte → on ouvre directement la bonne page Notch Pay
+      const ch = String(body.channel ?? ''), cc = String(prof?.country ?? '').toLowerCase();
+      const MTN = ['cm', 'ci', 'gh', 'ug', 'bj', 'cg', 'rw', 'zm'], ORANGE = ['cm', 'ci', 'sn', 'ml', 'bf', 'gn'];
+      const locked = ch === 'card' ? 'card' : ch === 'mtn' && MTN.includes(cc) ? `${cc}.mtn` : ch === 'orange' && ORANGE.includes(cc) ? `${cc}.orange` : undefined;
       const label = kind === 'coins' ? `${qty} pièces Vibzo` : kind === 'gold' ? `Vibzo Gold · ${qty} mois` : kind === 'challenge' ? 'Défi sponsorisé Vibzo' : `Boutique Vibzo · ${qty} mois`;
       const r = await fetch(`${API}/payments`, {
         method: 'POST',
@@ -79,7 +83,8 @@ Deno.serve(async (req) => {
           amount, currency, description: label, reference: `vz_${pay.id}`,
           callback: `${back}?pay=${pay.id}`,
           customer: { name: prof?.display_name || prof?.username || 'Vibzo', email: user.email || `${prof?.username}@vibzo.fun`, phone: prof?.phone || undefined },
-          metadata: { payment_id: pay.id, kind, qty },
+          metadata: { payment_id: pay.id, kind, qty, channel: ch || null },
+          ...(locked ? { locked_channel: locked } : {}),
         }),
       });
       const d = await r.json().catch(() => ({}));
