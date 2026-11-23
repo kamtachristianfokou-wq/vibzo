@@ -1814,6 +1814,7 @@ async function mfaOff(factorId) {
 /* Paiement automatique (Notch Pay : MTN MoMo, Orange Money, carte). Si le service n'est pas encore activé
    ou indisponible, l'appli bascule sur le paiement manuel (WhatsApp + Mobile Money / IBAN). */
 const PAY_FN = `${SUPABASE_URL}/functions/v1/notchpay`;
+const CAMPAY_FN = `${SUPABASE_URL}/functions/v1/campay`;
 const CARD_FN = `${SUPABASE_URL}/functions/v1/paddlepay`, PLAY_FN = `${SUPABASE_URL}/functions/v1/playbilling`;
 /* Tous les paiements : carte (Visa, Mastercard) ou Google Pay sur le site, Google Play dans l'appli Android. */
 async function autoPay(kind, qty, method = 'notch', ref = null) {
@@ -1823,10 +1824,17 @@ async function autoPay(kind, qty, method = 'notch', ref = null) {
   if (window.__VIBZO_FAKE__ && !window.__AUTOPAY__) { toast('💳 Paiement en ligne (test)'); return true; }
   try {
     const { data: { session } } = await sb.auth.getSession(); if (!session) return requireAuth(), true;
-    const r = await fetch(PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', channel: pm, kind, qty, ref, auto: qty === 1 && (kind === 'gold' || kind === 'seller'), return_url: location.origin + location.pathname }) });
-    const d = await r.json().catch(() => ({}));
-    if (r.ok && d.url) { toast('🔒 Redirection vers le paiement sécurisé…'); setTimeout(() => { location.href = d.url; }, 400); return true; }
-    toast(d.error === 'not_configured' ? '💳 Ce moyen de paiement arrive très bientôt sur Vibzo : choisis-en un autre ou réessaie plus tard' : '⚠️ ' + (d.error || 'Paiement indisponible, réessaie dans un instant'));
+    // Mobile Money : CamPay d'abord (MTN, Orange), puis Notch Pay ; carte : Notch Pay d'abord, puis CamPay
+    const order = pm === 'card' ? [PAY_FN, CAMPAY_FN] : [CAMPAY_FN, PAY_FN];
+    let d = {}, off = 0;
+    for (const fn of order) {
+      const r = await fetch(fn, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.access_token }, body: JSON.stringify({ action: 'init', channel: pm, kind, qty, ref, auto: qty === 1 && (kind === 'gold' || kind === 'seller'), return_url: location.origin + location.pathname }) });
+      d = await r.json().catch(() => ({}));
+      if (r.ok && d.url) { toast('🔒 Redirection vers le paiement sécurisé…'); setTimeout(() => { location.href = d.url; }, 400); return true; }
+      if (d.error === 'not_configured') { off++; continue; }
+      break;
+    }
+    toast(off === order.length ? '💳 Ce moyen de paiement arrive très bientôt sur Vibzo : choisis-en un autre ou réessaie plus tard' : '⚠️ ' + (d.error || 'Paiement indisponible, réessaie dans un instant'));
   } catch (e) { toast('⚠️ Connexion impossible, réessaie'); }
   return true;
 }
@@ -1874,12 +1882,12 @@ function payDone(d) {
   modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:48px">${t[0]}</div><h3>Paiement reçu ✅</h3><p style="font-weight:700;margin-top:6px">${t[1]}</p><p class="mut small">${t[2]}</p><button class="btn" style="margin-top:12px" onclick="V.closeModal();${d.kind === 'gold' ? "V.go('dating')" : d.kind === 'coins' ? 'V.walletSheet()' : "V.go('profile')"}">Continuer</button></div>`);
 }
 async function checkPayReturn() {
-  const qs = new URLSearchParams(location.search), card = !!qs.get('cpay'), id = qs.get('cpay') || qs.get('pay'); if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
+  const qs = new URLSearchParams(location.search), card = !!qs.get('cpay'), mm = !!qs.get('mpay'), id = qs.get('mpay') || qs.get('cpay') || qs.get('pay'); if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
   history.replaceState(null, '', location.pathname + location.hash);
   modal(`<div class="card" style="max-width:340px;width:100%;background:#fff;text-align:center"><div style="font-size:40px">⏳</div><h3>Vérification du paiement…</h3><p class="mut small">Valide la demande sur ton téléphone si ce n’est pas encore fait.</p></div>`);
   for (let i = 0; i < 20; i++) {
     let d = {};
-    try { const r = await fetch(card ? CARD_FN : PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }, body: JSON.stringify({ action: 'verify', id }) }); d = await r.json(); } catch (e) { }
+    try { const r = await fetch(mm ? CAMPAY_FN : card ? CARD_FN : PAY_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }, body: JSON.stringify({ action: 'verify', id }) }); d = await r.json(); } catch (e) { }
     if (d.status === 'complete') {
       await loadMe().catch(() => { }); payDone(d);
       return;
