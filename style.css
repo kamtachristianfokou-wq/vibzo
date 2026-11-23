@@ -664,7 +664,35 @@ button.lvcnt{color:#fff}
 #camOv.has .camfx,#camOv.has .camup,#camOv.has .camdurs,#camOv.has .cammodes{display:none!important}
 #camOv.rec .camside,#camOv.rec .camtop{opacity:.0;pointer-events:none}
 #edOv{position:absolute;inset:0;z-index:33;background:#000;color:#fff;overflow:hidden}
-#edOv video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#edOv .edstage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:100%;max-width:100%;aspect-ratio:9/16;overflow:hidden;background:#000}
+#edOv .edstage video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform-origin:center}
+.edvig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.75) 100%);display:none}
+.edlay{position:absolute;inset:0;z-index:2}
+.edlay .edit{position:absolute;transform:translate(-50%,-50%);max-width:90%;text-align:center;line-height:1.2;white-space:pre-wrap;word-break:break-word;padding:.12em .4em;border-radius:.35em;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.edlay .edit.emoji{padding:0;line-height:1}
+.edlay .edit.pill{border-radius:.5em;padding:.2em .5em}
+.edlay .edit.del{opacity:.45;outline:2px dashed #fe2c55}
+body.eddrag #edOv .edbot::before{content:"🗑️ Glisse ici pour supprimer";position:absolute;left:0;right:0;bottom:62px;text-align:center;font-weight:800;text-shadow:0 1px 4px #000}
+.edside{position:absolute;right:8px;top:calc(78px + var(--st,0px));z-index:4;display:flex;flex-direction:column;gap:6px;max-height:calc(100% - 190px);overflow-y:auto;scrollbar-width:none}
+.edside button{display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;font-size:10.5px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.6);min-width:54px}
+.edside b{width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:17px}
+.edfonts,.edpills{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.edfonts button,.edpills button{padding:8px 12px;border-radius:999px;background:var(--bg2,#eef3f8);font-weight:700;font-size:13.5px}
+.edfonts button.on,.edpills button.on{background:#fe2c55;color:#fff}
+.edcols{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+.edcols button{width:30px;height:30px;border-radius:50%;border:2px solid #ccd6e0}
+.edcols button.on{outline:3px solid #fe2c55;outline-offset:2px}
+.edemo{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.edemo button{font-size:28px;padding:6px 0;border-radius:10px}
+.edemo button:active{background:#eef3f8}
+.edfil{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.edfil button{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:700;flex:0 0 auto}
+.edfil i{width:58px;height:78px;border-radius:10px;background:linear-gradient(135deg,#ffb36b,#fe2c55 45%,#25f4ee);border:2px solid transparent}
+.edfil button.on i{border-color:#fe2c55}
+.pshare button{width:34px;height:34px;border-radius:50%;background:#e9eef4;margin-left:6px;font-weight:800;color:#0b2540;opacity:.75}
+.pshare button.on{background:var(--c);color:#fff;opacity:1;outline:2px solid var(--c);outline-offset:2px}
+.vlabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.vlabs>span{background:rgba(0,0,0,.45);color:#fff;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px}
 #edOv .camtop .ib{font-size:30px;color:#fff;width:40px}
 .edbot{position:absolute;left:12px;right:12px;bottom:calc(20px + var(--sb));z-index:4;display:flex;gap:10px}
 .edbot button{flex:1;height:50px;border-radius:12px;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}

@@ -409,7 +409,8 @@ function slideHTML(v) {
     <button class="disc" onclick="V.openSound('${esc((v.sound || '').replace(/'/g, '’'))}','${v.user_id}','${esc(v.username)}')" aria-label="Son" style="${v.avatar_url ? `background:#222 url('${esc(v.avatar_url)}') center/cover` : gbg(gfor(v.username))}"></button>
   </div>
   <div class="vinfo">
-    <div class="vauth" onclick="V.openProfile('${v.user_id}')">@${esc(v.username)}${v.is_vip ? '<span class="vgold">👑 Gold</span>' : ''}<span class="vloc">📍 ${esc(v.region || C[v.country]?.n || '')}</span></div>
+    <div class="vauth" onclick="V.openProfile('${v.user_id}')">@${esc(v.username)}${v.is_vip ? '<span class="vgold">👑 Gold</span>' : ''}<span class="vloc">📍 ${esc(v.location || v.region || C[v.country]?.n || '')}</span></div>
+    ${v.ai_generated || v.branded || (v.publish_at && new Date(v.publish_at) > new Date()) ? `<div class="vlabs">${v.publish_at && new Date(v.publish_at) > new Date() ? `<span>🕒 <span>Programmée</span> ${esc(new Date(v.publish_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }))}</span>` : ''}${v.ai_generated ? '<span>🤖 <span>Généré par IA</span></span>' : ''}${v.branded === 'brand' ? '<span>🤝 <span>Partenariat rémunéré</span></span>' : v.branded === 'mine' ? '<span>📣 <span>Contenu promotionnel</span></span>' : ''}</div>` : ''}
     <div class="vcap">${richText(v.caption)} ${(v.tags || []).map(t => `<b class="tg" onclick="V.openTag('${esc(t)}')">#${esc(t)}</b>`).join(' ')}</div>
     ${v.product_id ? `<button class="vprod" onclick="V.openProduct('${v.product_id}')">🛍️ ${esc(v.product_name)} · ${money(v.product_price, v.product_currency)}</button>` : ''}
     <div class="vsnd" onclick="V.openSound('${esc((v.sound || '').replace(/'/g, '’'))}','${v.user_id}','${esc(v.username)}')">♪ <span class="mq2">${esc(v.sound || 'Son original · @' + v.username)}</span> · ${esc(ago(v.created_at))}${v.view_count ? ' · ▶ ' + fmtN(v.view_count) : ''}</div>
@@ -804,15 +805,17 @@ SCREENS.create = async () => {
   <button class="prow" onclick="V.phSoundPick()"><span class="e">♪</span><span class="grow">${PHS ? esc(PHS) : 'Ajouter un son'}</span><i>›</i></button>`
     : cm.sound ? `<div class="prow"><span class="e">♪</span><span class="grow">${esc(cm.sound.name)}</span></div>` : ''}
   ${cm.src ? `<div class="prow"><span class="e">${cm.mode === 'duet' ? '🎭' : '✂️'}</span><span class="grow">${cm.mode === 'duet' ? 'Duo' : 'Collage'} <span>avec</span> @${esc(cm.src.username || '')}</span></div>` : ''}
-  <div class="prow"><span class="e">📍</span><span class="grow">${esc((C[S.me.country] || {}).f || '')} ${esc(S.me.region || '')}</span></div>
+  ${photo ? `<div class="prow"><span class="e">📍</span><span class="grow">${esc((C[S.me.country] || {}).f || '')} ${esc(S.me.region || '')}</span></div>` : `<button class="prow" onclick="V.postLoc()"><span class="e">📍</span><span class="grow">${draft.loc ? esc(draft.loc) : 'Ajouter un lieu'}</span>${draft.loc ? '' : `<span class="mut small">${esc(S.me.region || (C[S.me.country] || {}).n || '')}</span>`}<i>›</i></button>`}
   ${prods.length ? `<label class="prow"><span class="e">🛍️</span><span class="grow">Ajouter un produit</span><select id="cp"><option value="">Aucun</option>${prods.map(p => `<option value="${p.id}">${esc(p.name)} · ${money(p.price, p.currency)}</option>`).join('')}</select></label>` : ''}
   <label class="prow"><span class="e">👁</span><span class="grow">Qui peut voir cette publication</span><select id="pvV"><option value="public">Tout le monde</option><option value="friends">Amis</option><option value="private">Moi uniquement</option></select></label>
   <label class="prow"><span class="e">💬</span><span class="grow">Autoriser les commentaires</span><input type="checkbox" class="tgl" id="pvC" checked></label>
   ${photo ? '' : `<label class="prow"><span class="e">🎭</span><span class="grow">Autoriser Duo et Collage</span><input type="checkbox" class="tgl" id="pvD" checked></label>`}
   <label class="prow"><span class="e">⬇️</span><span class="grow">Autoriser le téléchargement</span><input type="checkbox" class="tgl" id="pvL" checked></label>
+  ${photo ? '' : (() => { const o = postOpt(); return `<button class="prow" onclick="V.postMore()"><span class="e">⋯</span><span class="grow">Plus d’options<div class="mut small">${[o.hd ? 'HD' : '', o.save ? 'Enregistrer sur l’appareil' : '', o.ai ? 'Contenu IA' : '', o.branded === 'brand' ? 'Partenariat rémunéré' : o.branded === 'mine' ? 'Promotionnel' : '', o.when ? '🕒 ' + new Date(o.when).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : ''].filter(Boolean).join(' · ') || 'Qualité, programmation, étiquettes'}</div></span><i>›</i></button>
+  <div class="prow pshare"><span class="e">↗</span><span class="grow">Partager sur</span>${[['wa', '💬', '#25D366', 'WhatsApp'], ['fb', 'f', '#1877F2', 'Facebook'], ['tg', '✈️', '#2AABEE', 'Telegram'], ['ln', '🔗', '#8a9bb0', 'Copier le lien']].map(x => `<button class="${o.share === x[0] ? 'on' : ''}" style="--c:${x[2]}" onclick="V.postShareTo('${x[0]}')" aria-label="${x[3]}">${x[1]}</button>`).join('')}</div>`; })()}
   <p class="mut small" style="margin-top:12px">Interdit : nudité, violence, arnaques, contenus mettant en scène des mineurs.</p>
   <div class="progress" id="prog" style="display:none"><i></i></div>
-  <div class="pbar">${photo ? '' : `<button class="btn ghost" onclick="V.saveDraft()">📥 <span>Brouillons</span></button>`}<button class="btn" id="pubBtn" onclick="V.publish()">⬆ <span>Publier</span></button></div></div>`;
+  <div class="pbar">${photo ? '' : `<button class="btn ghost" onclick="V.saveDraft()">📥 <span>Brouillons</span></button>`}<button class="btn" id="pubBtn" onclick="V.publish()">⬆ <span>${!photo && postOpt().when ? 'Programmer' : 'Publier'}</span></button></div></div>`;
 };
 function capIns(ch) { const t = $('#cd'); if (!t) return; const s = t.selectionStart ?? t.value.length, pre = t.value.slice(0, s), add = (pre && !/\s$/.test(pre) ? ' ' : '') + ch; t.value = pre + add + t.value.slice(t.selectionEnd ?? s); t.focus(); const p = s + add.length; t.setSelectionRange(p, p); }
 function postBack() {
@@ -828,23 +831,282 @@ function newPost() {
   go('create');
 }
 /* ---------- Écran d'édition (après la caméra ou l'import), comme TikTok ---------- */
+const ED_COLORS = ['#ffffff', '#000000', '#fe2c55', '#25f4ee', '#ffd60a', '#34c759', '#0a84ff', '#bf5af2', '#ff9f0a'];
+const ED_FX = [['Aucun', ''], ['Miroir', 'mirror'], ['Zoom lent', 'zoom'], ['Tremblement', 'shake'], ['Arc-en-ciel', 'rainbow'], ['Vignette', 'vignette'], ['Flash', 'flash'], ['Rétro', 'retro']];
+const ED_EMOJI = '😂 😍 🔥 💯 😱 🥰 😎 🤣 👏 🙏 💪 🎉 ❤️ 💔 👀 ✨ 🌍 🇨🇲 🇨🇮 🇸🇳 🇦🇿 🍕 ⚽ 🎵 💃 🕺 😭 🤯 😴 🤔 👑 💰 📍 🚀 🌈 🌞 🌙 ⭐ 💥 ✅ ❌ ➡️ ⬇️ 👇 👆'.split(' ');
+const ED_FONTS = [['Classique', '800', "'Plus Jakarta Sans', Arial, sans-serif"], ['Machine', '700', "'Courier New', monospace"], ['Élégant', 'italic 700', 'Georgia, serif'], ['Néon', '900', "Impact, 'Arial Black', sans-serif"]];
+function edState() {
+  if (!draft.ed) draft.ed = { filter: 0, fx: '', items: [], start: 0, end: 0, dur: 0, speed: 1, vol: 1, mvol: 0.8, vvol: 1, sound: null, voice: null };
+  return draft.ed;
+}
+function edHas(e) { return !!(e && (e.filter || e.fx || e.items.length || e.speed !== 1 || e.vol !== 1 || e.sound || e.voice || (e.dur && (e.start > 0.05 || e.end < e.dur - 0.05)))); }
+/* Même calcul pour l'aperçu et pour le rendu final : filtre, échelle, décalage, miroir */
+function edLook(e, t, rel) {
+  let f = CAM_FILTERS[e.filter][1], sc = 1, dx = 0, dy = 0, mir = false;
+  const add = x => { f = (f === 'none' ? '' : f + ' ') + x; };
+  if (e.fx === 'mirror') mir = true;
+  if (e.fx === 'zoom') sc = 1 + 0.18 * rel;
+  if (e.fx === 'shake') { sc = 1.06; dx = Math.sin(t * 37) * 9; dy = Math.cos(t * 29) * 9; }
+  if (e.fx === 'rainbow') add(`hue-rotate(${Math.round(t * 120) % 360}deg) saturate(1.4)`);
+  if (e.fx === 'flash') add(`brightness(${(1 + Math.max(0, Math.sin(t * 6)) * 0.45).toFixed(2)})`);
+  if (e.fx === 'retro') add('sepia(.45) contrast(1.25) saturate(1.3)');
+  return { f: f || 'none', sc, dx, dy, mir };
+}
 function openEditor() {
   if (!draft) return go('create');
   closeEditor(); const d = document.createElement('div'); d.id = 'edOv';
-  const cm = draft.cam || {}, story = cm.mode === 'story';
-  d.innerHTML = `<video id="edVid" src="${draft.url}" autoplay loop playsinline></video>
-  <div class="camtop"><button class="ib" onclick="V.editorBack()" aria-label="Retour">‹</button>${cm.sound ? `<span class="camsnd">♪ ${esc(cm.sound.name)}</span>` : '<span></span>'}<span style="width:36px"></span></div>
-  <div class="progress" id="edProg" style="display:none;position:absolute;left:16px;right:16px;bottom:calc(96px + var(--sb));z-index:4"><i></i></div>
-  <div class="edbot"><button class="edstory" id="edStory" onclick="V.publishStory()">${avatar(S.me, 26)} <span>Ta story</span></button><button class="ednext" onclick="V.editorNext()">${story ? '<span>Suivant</span>' : '<span>Suivant</span>'}</button></div>`;
+  const cm = draft.cam || {}, e = edState();
+  d.innerHTML = `<div class="edstage" id="edSt"><video id="edVid" src="${draft.url}" autoplay loop playsinline></video><div class="edvig" id="edVig"></div><div class="edlay" id="edLay"></div></div>
+  <div class="camtop"><button class="ib" onclick="V.editorBack()" aria-label="Retour">‹</button><button class="camsnd" onclick="V.edSound()">♪ <span id="edSndT">${esc((e.sound || cm.sound || {}).name || 'Ajouter un son')}</span></button><span style="width:36px"></span></div>
+  <div class="edside">
+    <button onclick="V.edSound()"><b>♪</b><span>Sons</span></button>
+    <button onclick="V.edText()"><b>Aa</b><span>Texte</span></button>
+    <button onclick="V.edStickers()"><b>😀</b><span>Stickers</span></button>
+    <button onclick="V.edFilters()"><b>✨</b><span>Filtres</span></button>
+    <button onclick="V.edEffects()"><b>🌀</b><span>Effets</span></button>
+    <button onclick="V.edTrim()"><b>✂️</b><span>Couper</span></button>
+    <button onclick="V.edSpeed()"><b id="edSpB">${e.speed}x</b><span>Vitesse</span></button>
+    <button onclick="V.edVolume()"><b>🔊</b><span>Volume</span></button>
+    <button onclick="V.edVoice()"><b>🎙️</b><span>Voix off</span></button>
+  </div>
+  <div class="progress" id="edProg" style="display:none;position:absolute;left:16px;right:16px;bottom:calc(96px + var(--sb));z-index:6"><i></i></div>
+  <div class="edbot"><button class="edstory" id="edStory" onclick="V.publishStory()">${avatar(S.me, 26)} <span>Ta story</span></button><button class="ednext" onclick="V.editorNext()"><span>Suivant</span></button></div>`;
   $('#sheetBg').parentNode.appendChild(d);
   document.querySelectorAll('#feed video').forEach(v => v.pause());
+  const v = $('#edVid');
+  const setDur = () => { if (isFinite(v.duration) && v.duration && !e.dur) { e.dur = v.duration; e.end = v.duration; if (v.currentTime > 1e5 || v.currentTime > v.duration) v.currentTime = e.start; } };
+  v.onloadedmetadata = () => { if (isFinite(v.duration)) { setDur(); v.currentTime = e.start; } else { v.ondurationchange = () => { setDur(); if (e.dur) { v.ondurationchange = null; v.currentTime = e.start; v.play().catch(() => { }); } }; v.currentTime = 1e101; } };
+  edRenderItems(); edApply(); edLoop();
 }
-function closeEditor() { const e = $('#edOv'); if (e) { const v = e.querySelector('video'); if (v) v.pause(); e.remove(); } }
+/* Boucle d'aperçu : coupe, vitesse, effets, son ajouté et voix off synchronisés */
+function edLoop() {
+  const v = $('#edVid'); if (!v || !draft || !draft.ed) return; const e = draft.ed;
+  if (e.end && (v.currentTime >= e.end - 0.03 || v.currentTime < e.start - 0.3)) { v.currentTime = e.start; edSyncAud(true); }
+  const t = v.currentTime - e.start, len = Math.max(0.1, (e.end || v.duration || 1) - e.start), L = edLook(e, t, Math.min(1, t / len));
+  v.style.filter = L.f; v.style.transform = `translate(${L.dx / 7.2}%,${L.dy / 12.8}%) scale(${L.sc}) ${L.mir ? 'scaleX(-1)' : ''}`;
+  if (draft.edA && !v.paused && Math.abs(draft.edA.currentTime - (t / e.speed) % (draft.edA.duration || 1e9)) > 0.4) edSyncAud();
+  if (draft.edVo && !v.paused && t / e.speed < (draft.edVo.duration || 0) && Math.abs(draft.edVo.currentTime - t / e.speed) > 0.4) edSyncAud();
+  draft.edRaf = requestAnimationFrame(edLoop);
+}
+function edSyncAud(restart) {
+  const v = $('#edVid'), e = draft.ed; if (!v) return; const t = Math.max(0, (v.currentTime - e.start) / e.speed);
+  [[draft.edA, e.mvol, true], [draft.edVo, e.vvol, false]].forEach(([a, vol, loop]) => { if (!a) return; a.volume = Math.min(1, vol); a.loop = loop;
+    try { a.currentTime = loop && a.duration ? t % a.duration : t; } catch (x) { } if (!v.paused && (loop || t < (a.duration || 0))) a.play().catch(() => { }); else a.pause(); });
+}
+function edApply() {
+  const v = $('#edVid'), e = draft && draft.ed; if (!v || !e) return;
+  v.playbackRate = e.speed; v.volume = Math.min(1, e.vol); v.muted = e.vol === 0; v.preservesPitch = true;
+  $('#edVig').style.display = e.fx === 'vignette' ? 'block' : 'none';
+  const sb2 = $('#edSpB'); if (sb2) sb2.textContent = e.speed + 'x';
+  const st = $('#edSndT'); if (st) st.textContent = (e.sound || (draft.cam || {}).sound || {}).name || 'Ajouter un son';
+  if (e.sound && (!draft.edA || draft.edA.dataset.u !== e.sound.url)) { if (draft.edA) draft.edA.pause(); const a = new Audio(); a.crossOrigin = 'anonymous'; a.src = e.sound.url; a.dataset.u = e.sound.url; draft.edA = a; }
+  if (!e.sound && draft.edA) { draft.edA.pause(); draft.edA = null; }
+  if (e.voice && (!draft.edVo || draft.edVo.dataset.u !== e.voice.url)) { if (draft.edVo) draft.edVo.pause(); const a = new Audio(e.voice.url); a.dataset.u = e.voice.url; draft.edVo = a; }
+  if (!e.voice && draft.edVo) { draft.edVo.pause(); draft.edVo = null; }
+  v.onplay = () => edSyncAud(); v.onpause = () => [draft && draft.edA, draft && draft.edVo].forEach(a => a && a.pause());
+  edSyncAud();
+}
+function edRenderItems() {
+  const lay = $('#edLay'), e = draft && draft.ed; if (!lay || !e) return;
+  const k = lay.clientWidth / 720 || 0.5;
+  lay.innerHTML = e.items.map((it, i) => `<div class="edit ${it.k}" data-i="${i}" style="left:${it.x * 100}%;top:${it.y * 100}%;font-size:${Math.round(it.s * k)}px;${edCss(it)}">${esc(it.t)}</div>`).join('');
+  lay.querySelectorAll('.edit').forEach(el => edDrag(el));
+}
+function edTxtCol(c) { return c === '#ffffff' || c === '#ffd60a' || c === '#25f4ee' ? '#000' : '#fff'; }
+function edCss(it) {
+  const f = ED_FONTS[it.f || 0];
+  if (it.k === 'emoji') return '';
+  if (it.k === 'pill') return `background:#fff;color:${it.c};font-weight:800`;
+  return `font-style:${/italic/.test(f[1]) ? 'italic' : 'normal'};font-weight:${f[1].replace('italic ', '')};font-family:${f[2]};${it.bg ? `background:${it.c};color:${edTxtCol(it.c)};` : `color:${it.c};-webkit-text-stroke:${it.c === '#000000' ? '0' : '.04em'} rgba(0,0,0,.7);text-shadow:0 2px 6px rgba(0,0,0,.5);`}`;
+}
+function edDrag(el) {
+  el.onpointerdown = ev => {
+    ev.preventDefault(); const i = +el.dataset.i, it = draft.ed.items[i], r = $('#edSt').getBoundingClientRect(), x0 = ev.clientX, y0 = ev.clientY; let moved = false;
+    el.setPointerCapture(ev.pointerId); document.body.classList.add('eddrag');
+    el.onpointermove = m => { const dx = m.clientX - x0, dy = m.clientY - y0; if (Math.abs(dx) + Math.abs(dy) > 6) moved = true; if (!moved) return;
+      it.x = Math.max(0.05, Math.min(0.95, (m.clientX - r.left) / r.width)); it.y = Math.max(0.04, Math.min(0.96, (m.clientY - r.top) / r.height)); el.style.left = it.x * 100 + '%'; el.style.top = it.y * 100 + '%';
+      const del = m.clientY > r.bottom - 90; el.classList.toggle('del', del); };
+    el.onpointerup = m => { el.onpointermove = null; document.body.classList.remove('eddrag');
+      if (moved && m.clientY > r.bottom - 90) { draft.ed.items.splice(i, 1); edRenderItems(); return toast('Élément supprimé'); }
+      if (!moved) edItemEdit(i); };
+  };
+}
+function edText(i) {
+  const e = edState(), it = i != null ? e.items[i] : { k: 'text', t: '', x: 0.5, y: 0.45, s: 56, c: '#ffffff', bg: 0, f: 0 };
+  S._edIt = { ...it, i };
+  sheet('Aa Texte', `<div class="field"><input id="edT" maxlength="80" placeholder="Écris quelque chose…" value="${esc(it.t)}"></div>
+  <div class="edfonts">${ED_FONTS.map((f, k) => `<button class="${(it.f || 0) === k ? 'on' : ''}" style="font:${f[1]} 15px ${f[2]}" onclick="V.edTxtSet('f',${k},this)">${f[0]}</button>`).join('')}</div>
+  <div class="edcols">${ED_COLORS.map(c => `<button class="${it.c === c ? 'on' : ''}" style="background:${c}" onclick="V.edTxtSet('c','${c}',this)" aria-label="Couleur"></button>`).join('')}</div>
+  <label class="prow"><span class="e">🅰️</span><span class="grow">Fond coloré</span><input type="checkbox" class="tgl" id="edTb" ${it.bg ? 'checked' : ''}></label>
+  <label class="prow"><span class="e">↕️</span><span class="grow">Taille</span><input type="range" id="edTs" min="28" max="110" value="${it.s}"></label>
+  <button class="btn" onclick="V.edTxtOk()">${i != null ? 'Enregistrer' : 'Ajouter'}</button>${i != null ? `<button class="btn ghost" onclick="V.edItemDel(${i})">🗑️ <span>Supprimer</span></button>` : ''}`);
+  setTimeout(() => { const t = $('#edT'); if (t) t.focus(); }, 80);
+}
+function edTxtSet(k, v, b) { S._edIt[k] = v; b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }
+function edTxtOk() {
+  const o = S._edIt, t = ($('#edT').value || '').trim(); if (!t) return toast('Écris ton texte');
+  const it = { k: 'text', t, x: o.x, y: o.y, s: +$('#edTs').value, c: o.c, bg: $('#edTb').checked ? 1 : 0, f: o.f || 0 }, e = edState();
+  if (o.i != null) e.items[o.i] = it; else e.items.push(it);
+  closeSheet(); edRenderItems();
+}
+function edItemDel(i) { draft.ed.items.splice(i, 1); closeSheet(); edRenderItems(); }
+function edItemEdit(i) {
+  const it = draft.ed.items[i]; if (!it) return;
+  if (it.k === 'text') return edText(i);
+  sheet('Sticker', `<label class="prow"><span class="e">↕️</span><span class="grow">Taille</span><input type="range" min="40" max="220" value="${it.s}" oninput="V.edStkSize(${i},this.value)"></label>
+  <p class="mut small">Astuce : fais glisser un élément tout en bas de l’écran pour le supprimer.</p><button class="btn ghost" onclick="V.edItemDel(${i})">🗑️ <span>Supprimer</span></button>`);
+}
+function edStkSize(i, v) { const it = draft.ed.items[i]; if (it) { it.s = +v; edRenderItems(); } }
+function edStickers() {
+  const loc = draft.loc || S.me.region || (C[S.me.country] || {}).n || '';
+  sheet('😀 Stickers', `<div class="edpills"><button onclick="V.edPill('📍 ${esc(loc).replace(/'/g, '’')}')">📍 <span>Lieu</span></button><button onclick="V.edPill('🕒 '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}))">🕒 <span>Heure</span></button><button onclick="V.edPill('📅 '+new Date().toLocaleDateString())">📅 <span>Date</span></button><button onclick="V.edPillAsk('@')">@ <span>Mention</span></button><button onclick="V.edPillAsk('#')"># <span>Hashtag</span></button><button onclick="V.edPill('👉 Abonne-toi')">➕ <span>Abonne-toi</span></button></div>
+  <div class="edemo">${ED_EMOJI.map(x => `<button onclick="V.edEmoji('${x}')">${x}</button>`).join('')}</div>`);
+}
+function edEmoji(x) { edState().items.push({ k: 'emoji', t: x, x: 0.5, y: 0.4, s: 120 }); closeSheet(); edRenderItems(); }
+function edPill(t) { edState().items.push({ k: 'pill', t, x: 0.5, y: 0.3, s: 44, c: '#fe2c55' }); closeSheet(); edRenderItems(); }
+function edPillAsk(ch) {
+  sheet(ch === '@' ? '@ Mentionner' : '# Hashtag', `<div class="field"><input id="edPA" maxlength="30" placeholder="${ch === '@' ? 'nom d’utilisateur' : 'tendance'}"></div><button class="btn" onclick="V.edPillGo('${ch}')">Ajouter</button>`);
+  setTimeout(() => { const t = $('#edPA'); if (t) t.focus(); }, 80);
+}
+function edPillGo(ch) { const w = ($('#edPA').value || '').trim().replace(/^[@#]/, '').replace(/\s+/g, ''); if (!w) return toast('Écris un mot'); edPill(ch + w); if (ch === '#' && draft) { draft.caption = ((draft.caption || '') + ' #' + w).trim(); } }
+function edFilters() {
+  const e = edState();
+  sheet('✨ Filtres', `<div class="edfil">${CAM_FILTERS.map((f, i) => `<button class="${e.filter === i ? 'on' : ''}" onclick="V.edFilter(${i},this)"><i style="filter:${f[1]}"></i><span>${f[0]}</span></button>`).join('')}</div>`);
+}
+function edFilter(i, b) { edState().filter = i; b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }
+function edEffects() {
+  const e = edState();
+  sheet('🌀 Effets', `<div class="edpills">${ED_FX.map(f => `<button class="${e.fx === f[1] ? 'on' : ''}" onclick="V.edFx('${f[1]}',this)">${f[0]}</button>`).join('')}</div>`);
+}
+function edFx(x, b) { edState().fx = x; b.parentNode.querySelectorAll('button').forEach(y => y.classList.toggle('on', y === b)); edApply(); }
+const edFmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}.${Math.floor((t % 1) * 10)}`;
+function edTrim() {
+  const e = edState(); if (!e.dur) return toast('Patiente, la vidéo se charge…');
+  const m = Math.round(e.dur * 10);
+  sheet('✂️ Couper', `<p class="mut small" id="edTrL" style="text-align:center">${edFmt(e.start)} → ${edFmt(e.end)} · ${edFmt(e.end - e.start)}</p>
+  <div class="field"><label>Début</label><input type="range" id="edTa" min="0" max="${m}" value="${Math.round(e.start * 10)}" style="width:100%" oninput="V.edTrimSet()"></div>
+  <div class="field"><label>Fin</label><input type="range" id="edTb2" min="0" max="${m}" value="${Math.round(e.end * 10)}" style="width:100%" oninput="V.edTrimSet()"></div>
+  <button class="btn" onclick="V.closeSheet()">OK</button><button class="btn ghost" onclick="V.edTrimReset()">Réinitialiser</button>`);
+}
+function edTrimSet() {
+  const e = draft.ed; let a = +$('#edTa').value / 10, b = +$('#edTb2').value / 10;
+  if (b - a < 1) { if (document.activeElement === $('#edTa')) a = Math.max(0, b - 1); else b = Math.min(e.dur, a + 1); }
+  e.start = a; e.end = b; $('#edTrL').textContent = `${edFmt(a)} → ${edFmt(b)} · ${edFmt(b - a)}`;
+  const v = $('#edVid'); if (v) v.currentTime = document.activeElement === $('#edTb2') ? Math.max(a, b - 0.5) : a;
+}
+function edTrimReset() { const e = draft.ed; e.start = 0; e.end = e.dur; closeSheet(); }
+function edSpeed() {
+  const e = edState();
+  sheet('⏩ Vitesse', `<div class="edpills">${[0.3, 0.5, 1, 2, 3].map(r => `<button class="${e.speed === r ? 'on' : ''}" onclick="V.edSpeedSet(${r},this)">${r}x</button>`).join('')}</div><p class="mut small">La voix off est enregistrée à la vitesse choisie.</p>`);
+}
+function edSpeedSet(r, b) { const e = edState(); if (e.voice && r !== e.speed && !confirm('Changer la vitesse retire la voix off. Continuer ?')) return; if (e.voice && r !== e.speed) e.voice = null; e.speed = r; b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); edApply(); }
+function edVolume() {
+  const e = edState(), has = e.sound || e.voice;
+  sheet('🔊 Volume', `<label class="prow"><span class="e">🎬</span><span class="grow">Son original</span><input type="range" min="0" max="200" value="${Math.round(e.vol * 100)}" oninput="V.edVol('vol',this.value)"></label>
+  ${e.sound ? `<label class="prow"><span class="e">♪</span><span class="grow">Son ajouté</span><input type="range" min="0" max="200" value="${Math.round(e.mvol * 100)}" oninput="V.edVol('mvol',this.value)"></label>` : ''}
+  ${e.voice ? `<label class="prow"><span class="e">🎙️</span><span class="grow">Voix off</span><input type="range" min="0" max="200" value="${Math.round(e.vvol * 100)}" oninput="V.edVol('vvol',this.value)"></label>` : ''}
+  ${has ? '' : '<p class="mut small">Ajoute un son ou une voix off pour régler le mélange.</p>'}`);
+}
+function edVol(k, v) { draft.ed[k] = +v / 100; edApply(); }
+function edSound() { soundPicker('ed', !!edState().sound); }
+async function edSoundUse(i) {
+  closeSheet(); if (!draft) return; const e = edState();
+  if (i < 0) { e.sound = null; return edApply(); }
+  const s = (S._snds || [])[i]; if (!s) return;
+  let url = s.audio_url, name = s.audio_url ? `${s.title} · ${s.artist}` : (s.sound || s.name);
+  if (!url) { const { data } = await sb.from('videos').select('video_url').eq('sound', name).eq('status', 'published').eq('photos', '{}').order('created_at').limit(1).maybeSingle(); if (!data) return toast('Son indisponible'); url = data.video_url; }
+  e.sound = { name, url, id: s.audio_url ? s.id : null }; if (e.vol === 1) e.vol = 0.4;
+  edApply(); toast('♪ Son ajouté · règle le mélange dans Volume'); soundCredit(name);
+}
+let EDREC = null;
+function edVoice() {
+  const e = edState();
+  sheet('🎙️ Voix off', `<p class="mut small">La vidéo défile pendant que tu parles. Appuie sur stop quand tu as fini.</p>
+  <label class="prow"><span class="e">🔇</span><span class="grow">Couper le son original pendant l’enregistrement</span><input type="checkbox" class="tgl" id="edVm" checked></label>
+  <button class="btn" id="edVr" onclick="V.edVoiceRec()">🔴 <span>Enregistrer</span></button>${e.voice ? `<button class="btn ghost" onclick="V.edVoiceDel()">🗑️ <span>Supprimer la voix off</span></button>` : ''}`);
+}
+async function edVoiceRec() {
+  const b = $('#edVr'), v = $('#edVid'), e = draft.ed;
+  if (EDREC) { EDREC.stop(); return; }
+  let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (x) { return toast('⚠️ Autorise le micro pour enregistrer'); }
+  const mt = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '', ch = [], mute = $('#edVm').checked;
+  EDREC = new MediaRecorder(st, mt ? { mimeType: mt } : undefined); EDREC.ondataavailable = x => x.data.size && ch.push(x.data);
+  const stop = () => { if (EDREC && EDREC.state !== 'inactive') EDREC.stop(); };
+  EDREC.onstop = () => { st.getTracks().forEach(t => t.stop()); EDREC = null; v.loop = true; v.ontimeupdate = null; v.muted = e.vol === 0;
+    const bl = new Blob(ch, { type: (mt || 'audio/webm').split(';')[0] }); if (bl.size > 1000) { e.voice = { blob: bl, url: URL.createObjectURL(bl) }; if (e.vol === 1) e.vol = 0.3; toast('🎙️ Voix off ajoutée'); }
+    closeSheet(); edApply(); };
+  if (draft.edVo) { draft.edVo.pause(); draft.edVo = null; } e.voice = null;
+  v.loop = false; v.muted = mute; v.currentTime = e.start; await v.play().catch(() => { });
+  v.ontimeupdate = () => { if (v.currentTime >= e.end - 0.05) stop(); }; v.onended = stop;
+  EDREC.start(250); b.innerHTML = '⏹ <span>Arrêter</span>';
+}
+function edVoiceDel() { draft.ed.voice = null; closeSheet(); edApply(); }
+function closeEditor() {
+  const e = $('#edOv'); if (e) { const v = e.querySelector('video'); if (v) v.pause(); e.remove(); }
+  if (draft) { cancelAnimationFrame(draft.edRaf); [draft.edA, draft.edVo].forEach(a => a && a.pause()); }
+  if (EDREC) try { EDREC.stop(); } catch (x) { }
+}
 function editorBack() {
   if (!confirm('Abandonner cette vidéo ?')) return;
   closeEditor(); draft = null; openCamera({ mode: 'video' });
 }
 function editorNext() { closeEditor(); S.postKind = 'video'; go('create'); }
+/* Applique les modifications (rendu en temps réel sur un canevas + mixage audio) */
+function edDrawItems(ctx, items) {
+  items.forEach(it => {
+    ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const X = it.x * 720, Y = it.y * 1280;
+    if (it.k === 'emoji') { ctx.font = `${it.s}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; ctx.fillText(it.t, X, Y); ctx.restore(); return; }
+    const f = ED_FONTS[it.f || 0]; ctx.font = it.k === 'pill' ? `800 ${it.s}px "Plus Jakarta Sans", Arial, sans-serif` : `${f[1]} ${it.s}px ${f[2]}`;
+    const lines = []; let cur = ''; String(it.t).split(' ').forEach(w => { const tt = cur ? cur + ' ' + w : w; if (ctx.measureText(tt).width > 640 && cur) { lines.push(cur); cur = w; } else cur = tt; }); if (cur) lines.push(cur);
+    const lh = it.s * 1.2, top = Y - (lines.length - 1) * lh / 2;
+    if (it.k === 'pill' || it.bg) { const w = Math.max(...lines.map(l => ctx.measureText(l).width)) + it.s * 0.9, h = lines.length * lh + it.s * 0.4;
+      ctx.fillStyle = it.k === 'pill' ? '#fff' : it.c; ctx.beginPath(); (ctx.roundRect ? ctx.roundRect(X - w / 2, Y - h / 2, w, h, it.s * 0.35) : ctx.rect(X - w / 2, Y - h / 2, w, h)); ctx.fill(); }
+    lines.forEach((l, k) => { const yy = top + k * lh;
+      if (it.k === 'pill') { ctx.fillStyle = it.c; }
+      else if (it.bg) ctx.fillStyle = edTxtCol(it.c);
+      else { ctx.lineJoin = 'round'; ctx.lineWidth = it.s * 0.12; ctx.strokeStyle = 'rgba(0,0,0,.7)'; if (it.c !== '#000000') ctx.strokeText(l, X, yy); ctx.fillStyle = it.c; }
+      ctx.fillText(l, X, yy); });
+    ctx.restore();
+  });
+}
+async function renderEdits(onProgress) {
+  const e = draft.ed, W = 720, H = 1280;
+  const v = document.createElement('video'); v.playsInline = true; v.preload = 'auto'; v.src = draft.url;
+  await new Promise((ok, ko) => { v.onloadeddata = ok; v.onerror = () => ko(new Error('lecture')); });
+  const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), dest = ac.createMediaStreamDestination();
+  const hook = (el, vol) => { const g = ac.createGain(); g.gain.value = vol; ac.createMediaElementSource(el).connect(g); g.connect(dest); };
+  hook(v, e.vol);
+  const load = (url, cors) => new Promise(ok => { const a = new Audio(); if (cors) a.crossOrigin = 'anonymous'; a.preload = 'auto'; a.src = url; a.oncanplaythrough = () => ok(a); a.onerror = () => ok(null); setTimeout(() => ok(a), 8000); });
+  const mus = e.sound ? await load(e.sound.url, true) : null, voi = e.voice ? await load(e.voice.url, false) : null;
+  if (mus) { mus.loop = true; hook(mus, e.mvol); } if (voi) hook(voi, e.vvol);
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  const mime = camMime(), cs = cv.captureStream(30), stream = new MediaStream([...cs.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: draft.opt && draft.opt.hd ? 6_000_000 : 3_000_000 } : undefined), ch = [];
+  rec.ondataavailable = x => x.data && x.data.size && ch.push(x.data);
+  v.currentTime = e.start; await new Promise(ok => { v.onseeked = ok; setTimeout(ok, 1500); });
+  v.playbackRate = e.speed; v.preservesPitch = true; if (ac.state === 'suspended') await ac.resume();
+  const end = e.end || 1e9, len = Math.max(0.5, (e.end || (isFinite(v.duration) ? v.duration : 60)) - e.start);
+  const draw = () => {
+    const t = v.currentTime - e.start, L = edLook(e, t, Math.min(1, t / len));
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    const vw = v.videoWidth || W, vh = v.videoHeight || H, s = Math.min(W / vw, H / vh) * L.sc, dw = vw * s, dh = vh * s;
+    ctx.save(); ctx.filter = L.f; ctx.translate(W / 2 + L.dx, H / 2 + L.dy); if (L.mir) ctx.scale(-1, 1); ctx.drawImage(v, -dw / 2, -dh / 2, dw, dh); ctx.restore(); ctx.filter = 'none';
+    if (e.fx === 'vignette') { const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, H * 0.7); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.75)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+    edDrawItems(ctx, e.items);
+    onProgress && onProgress(Math.min(1, t / len));
+  };
+  draw(); rec.start(500);
+  await Promise.all([v.play(), mus && mus.play(), voi && voi.play()].filter(Boolean).map(p => p.catch(() => { })));
+  await new Promise(ok => {
+    const tick = () => { if (v.currentTime >= end - 0.02 || v.ended) return ok(); draw(); v.requestVideoFrameCallback ? v.requestVideoFrameCallback(tick) : setTimeout(tick, 33); };
+    tick(); v.onended = ok; setTimeout(ok, (len / e.speed + 20) * 1000);
+  });
+  draw(); [v, mus, voi].forEach(a => a && a.pause());
+  await new Promise(ok => { rec.onstop = ok; rec.stop(); });
+  ac.close().catch(() => { }); v.removeAttribute('src'); v.load();
+  const b = new Blob(ch, { type: (mime || 'video/webm').split(';')[0] });
+  return new File([b], `vibzo-edit-${Date.now()}.${/mp4/.test(mime) ? 'mp4' : 'webm'}`, { type: b.type });
+}
 /* ---------- Couverture ---------- */
 function coverPick() {
   if (!draft) return;
@@ -882,7 +1144,7 @@ async function draftCount() { try { return (await ddo('readonly', s => s.count()
 async function saveDraft() {
   if (!draft) return;
   const cm = draft.cam || {};
-  const rec = { id: draft.did || 'd' + Date.now(), uid: uid(), created: Date.now(), file: draft.file, caption: ($('#cd') || {}).value || '', cover: draft.cover ? draft.cover.blob : null, sound: cm.sound ? { name: cm.sound.name, id: cm.sound.id || null } : null };
+  const rec = { id: draft.did || 'd' + Date.now(), uid: uid(), created: Date.now(), file: draft.file, caption: ($('#cd') || {}).value || '', cover: draft.cover ? draft.cover.blob : null, sound: cm.sound ? { name: cm.sound.name, id: cm.sound.id || null } : null, ed: draft.ed ? { ...draft.ed, voice: draft.ed.voice ? { blob: draft.ed.voice.blob } : null } : null, opt: draft.opt || null, loc: draft.loc || null };
   try { await ddo('readwrite', s => s.put(rec)); draft = null; S.replyCm = null; toast('📥 Enregistré dans tes brouillons'); go('profile'); }
   catch (e) { toast('Impossible d’enregistrer le brouillon sur cet appareil'); }
 }
@@ -894,7 +1156,7 @@ async function draftsSheet() {
 }
 function draftOpen(i) {
   const d = (S._drafts || [])[i]; if (!d) return; closeSheet(); closeCamera();
-  draft = { file: d.file, url: URL.createObjectURL(d.file), caption: d.caption, did: d.id, cam: d.sound ? { mode: 'video', sound: d.sound } : {}, cover: d.cover ? { blob: d.cover, url: URL.createObjectURL(d.cover), r: 0.05 } : null };
+  draft = { file: d.file, url: URL.createObjectURL(d.file), caption: d.caption, did: d.id, cam: d.sound ? { mode: 'video', sound: d.sound } : {}, cover: d.cover ? { blob: d.cover, url: URL.createObjectURL(d.cover), r: 0.05 } : null, ed: d.ed ? { ...d.ed, voice: d.ed.voice && d.ed.voice.blob ? { blob: d.ed.voice.blob, url: URL.createObjectURL(d.ed.voice.blob) } : null } : null, opt: d.opt || null, loc: d.loc || null };
   S.postKind = 'video'; go('create');
 }
 async function draftDel(i) { const d = (S._drafts || [])[i]; if (!d || !confirm('Supprimer ce brouillon ?')) return; await ddo('readwrite', s => s.delete(d.id)).catch(() => { }); draftsSheet(); }
@@ -908,7 +1170,7 @@ async function isHevc(f) {
   try { return await scan(f.slice(0, n)) || (f.size > n && await scan(f.slice(Math.max(n, f.size - n)))); } catch (e) { return false; }
 }
 const HEVC_MSG = 'Ton appareil n’arrive pas à convertir cette vidéo (format HEVC). Dans les réglages de ton appareil photo, désactive « Vidéos haute efficacité / HEVC » (Android) ou choisis « Le plus compatible » (iPhone), puis filme à nouveau. Tu peux aussi publier depuis ton téléphone.';
-async function convertVideo(file, onProgress) {
+async function convertVideo(file, onProgress, hd) {
   if (!('VideoEncoder' in window) || !('VideoDecoder' in window)) throw new Error('webcodecs');
   const M = await import('https://cdn.jsdelivr.net/npm/mediabunny@1/+esm');
   const input = new M.Input({ source: new M.BlobSource(file), formats: M.ALL_FORMATS });
@@ -916,7 +1178,7 @@ async function convertVideo(file, onProgress) {
   const output = new M.Output({ format: new M.Mp4OutputFormat({ fastStart: 'in-memory' }), target: new M.BufferTarget() });
   const conv = await M.Conversion.init({
     input, output,
-    video: { codec: 'avc', width: 720, height: 1280, fit: 'contain', bitrate: 2_000_000, frameRate: 30, forceTranscode: true },
+    video: { codec: 'avc', width: hd ? 1080 : 720, height: hd ? 1920 : 1280, fit: 'contain', bitrate: hd ? 5_000_000 : 2_000_000, frameRate: 30, forceTranscode: true },
     audio: { codec: 'aac', bitrate: 128_000, numberOfChannels: 2, sampleRate: 44100 },
   });
   if (!conv.isValid || conv.discardedTracks.some(t => t.track.type === 'video')) throw new Error('invalid');
@@ -967,16 +1229,25 @@ function pickVid(inp) {
 }
 /* Prépare (conversion MP4) puis envoie la vidéo du brouillon ; renvoie l'URL publique */
 async function uploadDraftVideo(story, say, bar) {
-  let body = draft.file, type = draft.file.type || 'video/mp4', ext = (draft.file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
+  let src = draft.file;
+  const hd = !!(draft.opt && draft.opt.hd);
+  if (edHas(draft.ed)) {
+    say('Application des modifications…');
+    try { src = await renderEdits(p => { bar(Math.round(p * 35)); say(`Montage ${Math.round(p * 100)} %`); }); }
+    catch (re) { console.warn('rendu', re); throw new Error('Impossible d’appliquer les modifications sur cet appareil. Retire les effets et réessaie.'); }
+  }
+  const b0 = edHas(draft.ed) ? 35 : 0, k0 = 70 - b0;
+  let body = src, type = src.type || 'video/mp4', ext = (src.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
   say('Préparation de la vidéo…');
   try {
-    body = await convertVideo(draft.file, p => { bar(Math.round(p * 70)); say(`Préparation ${Math.round(p * 100)} %`); });
+    body = await convertVideo(src, p => { bar(b0 + Math.round(p * k0)); say(`Préparation ${Math.round(p * 100)} %`); }, hd);
     type = 'video/mp4'; ext = 'mp4';
   } catch (ce) {
     console.warn('conversion rapide impossible, plan B', ce); say('Conversion du format…');
-    try { body = await convertVideoSoft(draft.file, p => { bar(Math.round(p * 70)); say(`Conversion ${Math.round(p * 100)} %`); }); type = 'video/mp4'; ext = 'mp4'; }
+    try { body = await convertVideoSoft(src, p => { bar(b0 + Math.round(p * k0)); say(`Conversion ${Math.round(p * 100)} %`); }); type = 'video/mp4'; ext = 'mp4'; }
     catch (se) { console.warn('conversion logicielle', se); throw new Error('Impossible de préparer cette vidéo. Vérifie ta connexion internet et réessaie, ou choisis une autre vidéo.'); }
   }
+  draft.outBlob = body;
   if (body.size > 50 * 1024 * 1024) throw new Error('Vidéo trop lourde après préparation (50 Mo max). Raccourcis-la.');
   say('Envoi en cours…'); let pct = 70; bar(pct);
   const t = setInterval(() => { pct = Math.min(95, pct + (95 - pct) * 0.08); bar(pct); }, 400);
@@ -995,6 +1266,40 @@ async function publishStory() {
     bi.style.width = '100%'; closeEditor(); draft = null; S.postKind = 'video'; toast('Story publiée ⏱ Elle reste 24 heures'); go('home');
   } catch (e) { fail(e); b.disabled = false; b.innerHTML = `${avatar(S.me, 26)} <span>Ta story</span>`; pg.style.display = 'none'; }
 }
+/* ---------- Options de publication façon TikTok ---------- */
+function postOpt() { if (!draft) return {}; if (!draft.opt) draft.opt = { hd: false, save: false, ai: false, branded: '', when: '', share: '' }; return draft.opt; }
+function postKeep() { if (draft) draft.caption = ($('#cd') || {}).value; }
+function postLoc() {
+  postKeep(); const me = S.me || {}, c = (C[me.country] || {}).n || '';
+  const sug = [...new Set([me.region && c ? `${me.region}, ${c}` : '', me.region, c, ...(S._locHist || [])].filter(Boolean))];
+  sheet('📍 Ajouter un lieu', `<div class="field"><input id="plQ" maxlength="80" placeholder="Ville, quartier, restaurant, plage…" value="${esc(draft.loc || '')}"></div>
+  <div class="edpills">${sug.map(x => `<button onclick="V.postLocSet(${esc(JSON.stringify(x))})">📍 ${esc(x)}</button>`).join('')}</div>
+  <button class="btn" onclick="V.postLocSet(document.getElementById('plQ').value)">Enregistrer</button>${draft.loc ? `<button class="btn ghost" onclick="V.postLocSet('')">Retirer le lieu</button>` : ''}`);
+}
+function postLocSet(x) { x = String(x || '').trim().slice(0, 80); draft.loc = x; if (x) S._locHist = [x, ...(S._locHist || []).filter(y => y !== x)].slice(0, 5); closeSheet(); go('create'); }
+function postMore() {
+  postKeep(); const o = postOpt(), pad = n => String(n).padStart(2, '0'), dl = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const min = new Date(Date.now() + 15 * 60000), max = new Date(Date.now() + 10 * 864e5);
+  sheet('⋯ Plus d’options', `<label class="prow"><span class="e">🎞️</span><span class="grow">Importer en haute qualité (HD)<div class="mut small">Image plus nette, envoi plus long</div></span><input type="checkbox" class="tgl" id="poH" ${o.hd ? 'checked' : ''}></label>
+  <label class="prow"><span class="e">💾</span><span class="grow">Enregistrer sur l’appareil<div class="mut small">Garde une copie après la publication</div></span><input type="checkbox" class="tgl" id="poS" ${o.save ? 'checked' : ''}></label>
+  <label class="prow"><span class="e">🤖</span><span class="grow">Contenu généré par l’IA<div class="mut small">Ajoute l’étiquette « Généré par IA »</div></span><input type="checkbox" class="tgl" id="poA" ${o.ai ? 'checked' : ''}></label>
+  <label class="prow"><span class="e">📣</span><span class="grow">Divulguer le contenu de la publication<div class="mut small">Obligatoire si tu fais la promotion d’une marque</div></span><select id="poB"><option value="">Non</option><option value="mine" ${o.branded === 'mine' ? 'selected' : ''}>Ta marque</option><option value="brand" ${o.branded === 'brand' ? 'selected' : ''}>Contenu de marque (partenariat)</option></select></label>
+  <label class="prow"><span class="e">🕒</span><span class="grow">Programmer la vidéo<div class="mut small">Jusqu’à 10 jours à l’avance</div></span><input type="checkbox" class="tgl" id="poW" ${o.when ? 'checked' : ''} onchange="document.getElementById('poWd').style.display=this.checked?'':'none'"></label>
+  <div class="field" id="poWd" style="${o.when ? '' : 'display:none'}"><input type="datetime-local" id="poWv" min="${dl(min)}" max="${dl(max)}" value="${o.when || dl(new Date(Date.now() + 3600000))}"></div>
+  <button class="btn" onclick="V.postMoreOk()">Enregistrer</button>`);
+}
+function postMoreOk() {
+  const o = postOpt(); o.hd = $('#poH').checked; o.save = $('#poS').checked; o.ai = $('#poA').checked; o.branded = $('#poB').value;
+  if ($('#poW').checked) { const w = $('#poWv').value, t = new Date(w).getTime(); if (!w || t < Date.now() + 5 * 60000) return toast('Choisis une heure au moins 15 minutes plus tard'); if (t > Date.now() + 10 * 864e5) return toast('10 jours maximum'); o.when = w; } else o.when = '';
+  closeSheet(); go('create');
+}
+function postShareTo(k) { postKeep(); const o = postOpt(); o.share = o.share === k ? '' : k; go('create'); }
+function postShareGo(k, id, txt) {
+  const url = shareURL(id), enc = encodeURIComponent, t = (txt || 'Regarde ma nouvelle vidéo sur Vibzo 🔥').slice(0, 120);
+  if (k === 'ln') { navigator.clipboard && navigator.clipboard.writeText(url).then(() => toast('Lien copié 🔗'), () => { }); return; }
+  const u = k === 'wa' ? `https://wa.me/?text=${enc(t + ' ' + url)}` : k === 'fb' ? `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}` : `https://t.me/share/url?url=${enc(url)}&text=${enc(t)}`;
+  window.open(u, '_blank', 'noopener');
+}
 async function publish() {
   if (S.postKind === 'photo') return publishPhotos();
   if (!draft) return toast('Choisis d’abord une vidéo 📹');
@@ -1006,11 +1311,13 @@ async function publish() {
     let cover_url = null;
     if (!draft.cover) await autoCover();
     if (draft.cover) { const cp = `${uid()}/covers/${Date.now()}.jpg`; const { error: ce } = await sb.storage.from('images').upload(cp, draft.cover.blob, { contentType: 'image/jpeg', upsert: false }); if (!ce) cover_url = sb.storage.from('images').getPublicUrl(cp).data.publicUrl; }
-    const cm = draft.cam || {};
-    const row = { user_id: uid(), video_url: url, title: '', caption: (caption + (cm.src ? ` ${cm.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} avec @${cm.src.username || ''}` : '')).trim().slice(0, 300), tags: capTags(caption), country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: cm.sound ? cm.sound.name : '', sound_id: cm.sound && cm.sound.id ? cm.sound.id : null, duet_of: cm.mode === 'duet' && cm.src ? cm.src.id : null, stitch_of: cm.mode === 'stitch' && cm.src ? cm.src.id : null, ...privacyVals(), visibility: vis, cover_url, reply_to: S.replyCm ? S.replyCm.id : null };
-    const { error } = await sb.from('videos').insert(row); if (error) throw error;
+    const cm = draft.cam || {}, snd = (draft.ed && draft.ed.sound) || cm.sound, opt = postOpt();
+    const row = { user_id: uid(), video_url: url, title: '', caption: (caption + (cm.src ? ` ${cm.mode === 'duet' ? '🎭 Duo' : '✂️ Collage'} avec @${cm.src.username || ''}` : '')).trim().slice(0, 300), tags: capTags(caption), country: S.me.country, region: S.me.region, product_id: ($('#cp') && $('#cp').value) || null, sound: snd ? snd.name : '', sound_id: snd && snd.id ? snd.id : null, duet_of: cm.mode === 'duet' && cm.src ? cm.src.id : null, stitch_of: cm.mode === 'stitch' && cm.src ? cm.src.id : null, ...privacyVals(), visibility: vis, cover_url, location: draft.loc || null, ai_generated: !!postOpt().ai, branded: postOpt().branded || '', publish_at: postOpt().when ? new Date(postOpt().when).toISOString() : null, reply_to: S.replyCm ? S.replyCm.id : null };
+    const { data: ins, error } = await sb.from('videos').insert(row).select('id').single(); if (error) throw error;
+    if (opt.save && draft.outBlob) { try { const a = document.createElement('a'), u = URL.createObjectURL(draft.outBlob); a.href = u; a.download = `vibzo-${Date.now()}.mp4`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); } catch (x) { } }
+    if (opt.share && ins && !opt.when) postShareGo(opt.share, ins.id, caption);
     if (draft.did) ddo('readwrite', s => s.delete(draft.did)).catch(() => { });
-    bar.style.width = '100%'; draft = null; S.draftTag = null; S.replyCm = null; toast(vis === 'private' ? '🔒 Vidéo publiée (visible par toi uniquement)' : 'Vidéo publiée 🎉');
+    bar.style.width = '100%'; draft = null; S.draftTag = null; S.replyCm = null; toast(opt.when ? `🕒 Vidéo programmée pour le ${new Date(opt.when).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}` : vis === 'private' ? '🔒 Vidéo publiée (visible par toi uniquement)' : 'Vidéo publiée 🎉');
     S.tab = 'pour'; S.loc = worldLoc(S.me.country); saveLoc();
     go('profile');
   } catch (e) { fail(e); } finally { busy(btn, false); }
@@ -3389,7 +3696,7 @@ function sndPreview(btn, url) {
 }
 const stopPreview = () => { if (SPV) { SPV.pause(); if (SPV._btn) SPV._btn.textContent = '▶'; SPV = null; } };
 async function soundPicker(kind, hasSound, tab = 'lib', q = '') {
-  const use = kind === 'cam' ? 'camSoundUse' : 'phSoundUse';
+  const use = kind === 'cam' ? 'camSoundUse' : kind === 'ed' ? 'edSoundUse' : 'phSoundUse';
   sheet('♪ Ajouter un son', `<div class="seg" style="margin-bottom:10px"><button class="${tab === 'lib' ? 'on' : ''}" onclick="V.soundPicker('${kind}',${hasSound},'lib')">🎵 Vibzo Sons</button><button class="${tab === 'trend' ? 'on' : ''}" onclick="V.soundPicker('${kind}',${hasSound},'trend')">🔥 Tendances</button></div>
   ${tab === 'lib' ? `<div class="search" style="margin-bottom:8px">${I.search}<input id="sndQ" placeholder="Titre, artiste…" value="${esc(q)}" onchange="V.soundPicker('${kind}',${hasSound},'lib',this.value)"></div>` : '<p class="mut small">Les sons les plus utilisés dans les vidéos Vibzo ce mois-ci.</p>'}
   <div id="sndL">${loading()}</div>${hasSound ? `<button class="btn ghost" onclick="V.${use}(-1)">Retirer le son</button>` : ''}`);
@@ -3498,7 +3805,7 @@ window.V = {
   pwProblem, feedStep, back, musicCredits, setPayM,
   saveAge, cancelReq, userMore, blockUser, doBlock, unblock, safetySheet, saveSafety, respondFollow, removeDevice, soundPicker, sndPreview, useLib, useTop, mySounds, uploadSound, removeSound, sndDecide,
   pickPhotos, phRemove, phSoundPick, phSoundUse, replyVideo, cancelReplyVideo, privacySheet, savePrivacy, pinVideo, historySheet, clearHistory, histPause, analyticsSheet, wellSheet, wellSet, wellGo, sTab: t => { S.sTab = t; search(); },
-  payChallenge, subPortal, newPost, capIns, postBack, openEditor, closeEditor, editorBack, editorNext, coverPick, coverSeek, coverSave, saveDraft, draftsSheet, draftOpen, draftDel, publishStory, camMode, camLive, camImport, camPhotos,
+  payChallenge, subPortal, newPost, capIns, postBack, openEditor, closeEditor, editorBack, editorNext, edSound, edSoundUse, edText, edTxtSet, edTxtOk, edItemDel, edStickers, edEmoji, edPill, edPillAsk, edPillGo, edStkSize, edFilters, edFilter, edEffects, edFx, edTrim, edTrimSet, edTrimReset, edSpeed, edSpeedSet, edVolume, edVol, edVoice, edVoiceRec, edVoiceDel, renderEdits, postLoc, postLocSet, postMore, postMoreOk, postShareTo, coverPick, coverSeek, coverSave, saveDraft, draftsSheet, draftOpen, draftDel, publishStory, camMode, camLive, camImport, camPhotos,
   openCamera, closeCamera, camRecord, camRedo, camDone, camFlip, camTimer, camFilters, camFilter, camDur, camMic, camClip, camText, camTextAdd, camTextClear, camSoundPick, camSoundUse, useSound, duetWith, stitchWith,
   openStories, storyStep, closeStories, storyDel, storyReply, openUserStories, postKind: k => { S.postKind = k; go('create'); },
   livePinMsg, liveVote, livePollForm, livePollStart, livePollEnd, liveGoalForm, liveGoalStart, liveModForm, liveModSave, liveTools, liveMore, liveViewers, liveGuest, liveKick, liveRequest, liveFollow, liveQuick,
