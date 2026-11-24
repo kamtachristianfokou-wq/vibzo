@@ -74,7 +74,11 @@ Deno.serve(async (req) => {
       // moyen choisi dans l'appli : MTN MoMo, Orange Money ou carte → on ouvre directement la bonne page Notch Pay
       const ch = String(body.channel ?? ''), cc = String(prof?.country ?? '').toLowerCase();
       const MTN = ['cm', 'ci', 'gh', 'ug', 'bj', 'cg', 'rw', 'zm'], ORANGE = ['cm', 'ci', 'sn', 'ml', 'bf', 'gn'];
-      const locked = ch === 'card' ? 'card' : ch === 'mtn' && MTN.includes(cc) ? `${cc}.mtn` : ch === 'orange' && ORANGE.includes(cc) ? `${cc}.orange` : undefined;
+      const locked = ch === 'mtn' && MTN.includes(cc) ? `${cc}.mtn` : ch === 'orange' && ORANGE.includes(cc) ? `${cc}.orange` : undefined;
+      // téléphone seulement s'il est au format international (sinon Notch Pay le demande lui-même sur sa page)
+      const rawPhone = String(prof?.phone ?? '').replace(/[\s().-]/g, '');
+      // Notch Pay refuse les numéros hors de ses pays Mobile Money (ex. +994) : on ne les transmet pas
+      const phone = /^\+(237|225|221|223|226|224|229|242|233|256|250|260)\d{7,10}$/.test(rawPhone) ? rawPhone : undefined;
       const label = kind === 'coins' ? `${qty} pièces Vibzo` : kind === 'gold' ? `Vibzo Gold · ${qty} mois` : kind === 'challenge' ? 'Défi sponsorisé Vibzo' : `Boutique Vibzo · ${qty} mois`;
       const r = await fetch(`${API}/payments`, {
         method: 'POST',
@@ -82,7 +86,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           amount, currency, description: label, reference: `vz_${pay.id}`,
           callback: `${back}?pay=${pay.id}`,
-          customer: { name: prof?.display_name || prof?.username || 'Vibzo', email: user.email || `${prof?.username}@vibzo.fun`, phone: prof?.phone || undefined },
+          customer: { name: prof?.display_name || prof?.username || 'Vibzo', email: user.email || `${prof?.username}@vibzo.fun`, ...(phone ? { phone } : {}) },
           metadata: { payment_id: pay.id, kind, qty, channel: ch || null },
           ...(locked ? { locked_channel: locked } : {}),
         }),
@@ -90,7 +94,9 @@ Deno.serve(async (req) => {
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.authorization_url) {
         await sb.from('payments').update({ status: 'failed' }).eq('id', pay.id);
-        return json({ error: d.message || 'Notch Pay indisponible' }, 502);
+        console.error('notchpay init', r.status, JSON.stringify(d).slice(0, 800));
+        const det = d.errors ? Object.values(d.errors).flat().join(' ') : '';
+        return json({ error: d.message || 'Notch Pay indisponible', detail: det || undefined }, 502);
       }
       await sb.from('payments').update({ provider_ref: d.transaction?.reference ?? null }).eq('id', pay.id);
       return json({ url: d.authorization_url, id: pay.id });
