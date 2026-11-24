@@ -993,7 +993,115 @@ Supprimer mon compte|Delete my account|Eliminar a minha conta|Eliminar mi cuenta
 Supprimer définitivement ton compte|Permanently delete your account|Eliminar definitivamente a tua conta|¿Eliminar definitivamente tu cuenta|حذف حسابك نهائياً|Futa akaunti yako kabisa|መለያህን በቋሚነት ሰርዝ|Hesabını həmişəlik sil
 Écris SUPPRIMER pour confirmer|Type SUPPRIMER to confirm|Escreve SUPPRIMER para confirmar|Escribe SUPPRIMER para confirmar|اكتب SUPPRIMER للتأكيد|Andika SUPPRIMER kuthibitisha|ለማረጋገጥ SUPPRIMER ጻፍ|Təsdiq üçün SUPPRIMER yaz
 Ton compte a été supprimé|Your account has been deleted|A tua conta foi eliminada|Tu cuenta ha sido eliminada|تم حذف حسابك|Akaunti yako imefutwa|መለያህ ተሰርዟል|Hesabın silindi
-Utilisateurs par pays|Users by country|Utilizadores por país|Usuarios por país|المستخدمون حسب البلد|Watumiaji kwa nchi|ተጠቃሚዎች በአገር|Ölkələr üzrə istifadəçilər`;
+Utilisateurs par pays|Users by country|Utilizadores por país|Usuarios por país|المستخدمون حسب البلد|Watumiaji kwa nchi|ተጠቃሚዎች በአገር|Ölkələr üzrə istifadəçilər
+Aa Texte|Aa Text|Aa Texto|Aa Texto|Aa نص|Aa Maandishi|Aa ጽሑፍ|Aa Mətn
+Texte|Text|Texto|Texto|نص|Maandishi|ጽሑፍ|Mətn
+Sons|Sounds|Sons|Sonidos|أصوات|Sauti|ድምፆች|Səslər
+Filtres|Filters|Filtros|Filtros|فلاتر|Vichujio|ማጣሪያዎች|Filtrlər
+Effets|Effects|Efeitos|Efectos|مؤثرات|Athari|ውጤቶች|Effektlər
+Couper|Trim|Cortar|Recortar|قص|Kata|ቁረጥ|Kəs
+Vitesse|Speed|Velocidade|Velocidad|السرعة|Kasi|ፍጥነት|Sürət
+Volume|Volume|Volume|Volumen|الصوت|Sauti kubwa|የድምፅ መጠን|Səs
+Voix off|Voice-over|Voz off|Voz en off|تعليق صوتي|Sauti juu|የድምፅ ትረካ|Səsləndirmə
+Ta story|Your story|A tua story|Tu historia|قصتك|Hadithi yako|የእርስዎ ታሪክ|Sənin hekayən
+Suivant|Next|Seguinte|Siguiente|التالي|Inayofuata|ቀጣይ|Növbəti
+Ajouter un son|Add a sound|Adicionar um som|Añadir un sonido|أضف صوتاً|Ongeza sauti|ድምፅ ያክሉ|Səs əlavə et
+Abonne-toi|Follow me|Segue-me|Sígueme|تابعني|Nifuate|ይከተሉኝ|Məni izlə
+Lieu|Place|Local|Lugar|المكان|Mahali|ቦታ|Məkan
+Heure|Time|Hora|Hora|الوقت|Saa|ሰዓት|Saat
+Mention|Mention|Menção|Mención|إشارة|Taja|መጥቀስ|Qeyd et
+Hashtag|Hashtag|Hashtag|Hashtag|وسم|Hashtag|ሃሽታግ|Heşteq
+Classique|Classic|Clássico|Clásico|كلاسيكي|Kawaida|ክላሲክ|Klassik
+Machine|Typewriter|Máquina|Máquina|آلة كاتبة|Taipureta|የጽሕፈት መኪና|Makina
+Élégant|Elegant|Elegante|Elegante|أنيق|Maridadi|ውብ|Zərif
+Néon|Neon|Néon|Neón|نيون|Neon|ኒዮን|Neon
+Fond coloré|Colored background|Fundo colorido|Fondo de color|خلفية ملوّنة|Mandharinyuma ya rangi|ባለቀለም ዳራ|Rəngli fon
+Taille|Size|Tamanho|Tamaño|الحجم|Ukubwa|መጠን|Ölçü
+Aucun|None|Nenhum|Ninguno|بدون|Hakuna|ምንም|Heç biri
+Miroir|Mirror|Espelho|Espejo|مرآة|Kioo|መስታወት|Güzgü
+Zoom lent|Slow zoom|Zoom lento|Zoom lento|تكبير بطيء|Kukuza polepole|ቀስ ያለ ማጉላት|Yavaş zoom
+Tremblement|Shake|Tremor|Temblor|اهتزاز|Mtikisiko|መንቀጥቀጥ|Titrəmə
+Arc-en-ciel|Rainbow|Arco-íris|Arcoíris|قوس قزح|Upinde wa mvua|ቀስተ ደመና|Göy qurşağı
+Vignette|Vignette|Vinheta|Viñeta|تظليل الحواف|Kivuli cha pembe|የጠርዝ ጥላ|Vinyetka
+Flash|Flash|Flash|Destello|وميض|Mwako|ብልጭታ|Parıltı
+Rétro|Retro|Retro|Retro|قديم|Ya zamani|ሬትሮ|Retro
+Début|Start|Início|Inicio|البداية|Mwanzo|መጀመሪያ|Başlanğıc
+Fin|End|Fim|Fin|النهاية|Mwisho|መጨረሻ|Son
+Réinitialiser|Reset|Repor|Restablecer|إعادة ضبط|Weka upya|ዳግም አስጀምር|Sıfırla
+Son original|Original sound|Som original|Sonido original|الصوت الأصلي|Sauti asili|የመጀመሪያው ድምፅ|Orijinal səs
+Son ajouté|Added sound|Som adicionado|Sonido añadido|الصوت المضاف|Sauti iliyoongezwa|የተጨመረ ድምፅ|Əlavə olunan səs
+Ajoute un son ou une voix off pour régler le mélange.|Add a sound or a voice-over to adjust the mix.|Adiciona um som ou uma voz off para ajustar a mistura.|Añade un sonido o una voz en off para ajustar la mezcla.|أضف صوتاً أو تعليقاً صوتياً لضبط المزج.|Ongeza sauti au sauti juu ili kurekebisha mchanganyiko.|ድብልቁን ለማስተካከል ድምፅ ወይም ትረካ ያክሉ።|Qarışığı tənzimləmək üçün səs və ya səsləndirmə əlavə et.
+La vidéo défile pendant que tu parles. Appuie sur stop quand tu as fini.|The video plays while you talk. Tap stop when you’re done.|O vídeo passa enquanto falas. Toca em parar quando terminares.|El vídeo avanza mientras hablas. Toca detener cuando termines.|يُعرض الفيديو أثناء حديثك. اضغط إيقاف عند الانتهاء.|Video inacheza unapozungumza. Gusa simamisha ukimaliza.|ሲናገሩ ቪዲዮው ይጫወታል። ሲጨርሱ አቁም ይንኩ።|Sən danışarkən video oynayır. Bitirəndə dayan düyməsinə toxun.
+Couper le son original pendant l’enregistrement|Mute the original sound while recording|Silenciar o som original durante a gravação|Silenciar el sonido original al grabar|كتم الصوت الأصلي أثناء التسجيل|Zima sauti asili wakati wa kurekodi|በሚቀዳበት ጊዜ የመጀመሪያውን ድምፅ አጥፋ|Yazarkən orijinal səsi söndür
+Arrêter|Stop|Parar|Detener|إيقاف|Simamisha|አቁም|Dayandır
+Supprimer la voix off|Delete the voice-over|Eliminar a voz off|Eliminar la voz en off|حذف التعليق الصوتي|Futa sauti juu|ትረካውን ሰርዝ|Səsləndirməni sil
+La voix off est enregistrée à la vitesse choisie.|The voice-over is recorded at the chosen speed.|A voz off é gravada à velocidade escolhida.|La voz en off se graba a la velocidad elegida.|يُسجَّل التعليق الصوتي بالسرعة المختارة.|Sauti juu inarekodiwa kwa kasi uliyochagua.|ትረካው በተመረጠው ፍጥነት ይቀዳል።|Səsləndirmə seçilmiş sürətlə yazılır.
+Astuce : fais glisser un élément tout en bas de l’écran pour le supprimer.|Tip: drag an item to the very bottom of the screen to delete it.|Dica: arrasta um elemento para o fundo do ecrã para o eliminar.|Consejo: arrastra un elemento al fondo de la pantalla para eliminarlo.|نصيحة: اسحب العنصر إلى أسفل الشاشة لحذفه.|Kidokezo: buruta kipengele hadi chini kabisa ya skrini ili kukifuta.|ጠቃሚ ምክር፦ ለመሰረዝ ንጥሉን ወደ ማያ ገጹ ታች ይጎትቱ።|Məsləhət: silmək üçün elementi ekranın ən aşağısına sürüşdür.
+Glisse ici pour supprimer|Drag here to delete|Arrasta aqui para eliminar|Arrastra aquí para eliminar|اسحب هنا للحذف|Buruta hapa kufuta|ለመሰረዝ እዚህ ይጎትቱ|Silmək üçün bura sürüşdür
+Élément supprimé|Item deleted|Elemento eliminado|Elemento eliminado|تم حذف العنصر|Kipengele kimefutwa|ንጥሉ ተሰርዟል|Element silindi
+Écris ton texte|Write your text|Escreve o teu texto|Escribe tu texto|اكتب نصك|Andika maandishi yako|ጽሑፍዎን ይጻፉ|Mətnini yaz
+Écris quelque chose…|Write something…|Escreve algo…|Escribe algo…|اكتب شيئاً…|Andika kitu…|አንድ ነገር ይጻፉ…|Nəsə yaz…
+Écris un mot|Write a word|Escreve uma palavra|Escribe una palabra|اكتب كلمة|Andika neno|ቃል ይጻፉ|Bir söz yaz
+Ajouter un lieu|Add a place|Adicionar um local|Añadir un lugar|أضف مكاناً|Ongeza mahali|ቦታ ያክሉ|Məkan əlavə et
+Ville, quartier, restaurant, plage…|City, neighborhood, restaurant, beach…|Cidade, bairro, restaurante, praia…|Ciudad, barrio, restaurante, playa…|مدينة، حي، مطعم، شاطئ…|Jiji, mtaa, mgahawa, ufukwe…|ከተማ፣ ሰፈር፣ ምግብ ቤት፣ ባህር ዳርቻ…|Şəhər, məhəllə, restoran, çimərlik…
+Retirer le lieu|Remove the place|Remover o local|Quitar el lugar|إزالة المكان|Ondoa mahali|ቦታውን አስወግድ|Məkanı sil
+Plus d’options|More options|Mais opções|Más opciones|خيارات أخرى|Chaguo zaidi|ተጨማሪ አማራጮች|Daha çox seçim
+Qualité, programmation, étiquettes|Quality, scheduling, labels|Qualidade, agendamento, etiquetas|Calidad, programación, etiquetas|الجودة، الجدولة، الوسوم|Ubora, kupanga, lebo|ጥራት፣ መርሐግብር፣ መለያዎች|Keyfiyyət, planlaşdırma, etiketlər
+Importer en haute qualité (HD)|Upload in high quality (HD)|Carregar em alta qualidade (HD)|Subir en alta calidad (HD)|الرفع بجودة عالية (HD)|Pakia kwa ubora wa juu (HD)|በከፍተኛ ጥራት ይስቀሉ (HD)|Yüksək keyfiyyətlə yüklə (HD)
+Image plus nette, envoi plus long|Sharper image, longer upload|Imagem mais nítida, envio mais demorado|Imagen más nítida, subida más larga|صورة أوضح، رفع أطول|Picha angavu zaidi, upakiaji mrefu zaidi|የጠራ ምስል፣ ረዘም ያለ ስቀላ|Daha aydın görüntü, daha uzun yükləmə
+Enregistrer sur l’appareil|Save to device|Guardar no dispositivo|Guardar en el dispositivo|حفظ على الجهاز|Hifadhi kwenye kifaa|በመሣሪያው ላይ አስቀምጥ|Cihazda saxla
+Garde une copie après la publication|Keep a copy after posting|Guarda uma cópia após publicar|Guarda una copia tras publicar|احتفظ بنسخة بعد النشر|Hifadhi nakala baada ya kuchapisha|ካጋሩ በኋላ ቅጂ ያስቀምጡ|Paylaşdıqdan sonra nüsxəni saxla
+Contenu généré par l’IA|AI-generated content|Conteúdo gerado por IA|Contenido generado por IA|محتوى مُنشأ بالذكاء الاصطناعي|Maudhui yaliyotengenezwa na AI|በ AI የተፈጠረ ይዘት|Süni intellektlə yaradılmış məzmun
+Ajoute l’étiquette « Généré par IA »|Adds the “AI-generated” label|Adiciona a etiqueta « Gerado por IA »|Añade la etiqueta « Generado por IA »|يضيف وسم « مُنشأ بالذكاء الاصطناعي »|Inaongeza lebo « Imetengenezwa na AI »|« በ AI የተፈጠረ » መለያ ያክላል|« Süni intellekt » etiketi əlavə edir
+Divulguer le contenu de la publication|Disclose post content|Divulgar o conteúdo da publicação|Divulgar el contenido de la publicación|الإفصاح عن محتوى المنشور|Fichua maudhui ya chapisho|የልጥፉን ይዘት ይግለጹ|Paylaşımın məzmununu açıqla
+Obligatoire si tu fais la promotion d’une marque|Required if you promote a brand|Obrigatório se promoveres uma marca|Obligatorio si promocionas una marca|إلزامي إذا كنت تروّج لعلامة تجارية|Lazima ukitangaza chapa|የምርት ስም ካስተዋወቁ ግዴታ ነው|Brendi reklam edirsənsə məcburidir
+Non|No|Não|No|لا|Hapana|አይ|Xeyr
+Ta marque|Your brand|A tua marca|Tu marca|علامتك التجارية|Chapa yako|የእርስዎ የምርት ስም|Sənin brendin
+Contenu de marque (partenariat)|Branded content (partnership)|Conteúdo de marca (parceria)|Contenido de marca (colaboración)|محتوى ترويجي (شراكة)|Maudhui ya chapa (ushirikiano)|የምርት ይዘት (ሽርክና)|Brend məzmunu (tərəfdaşlıq)
+Programmer la vidéo|Schedule the video|Agendar o vídeo|Programar el vídeo|جدولة الفيديو|Panga video|ቪዲዮውን ያቅዱ|Videonu planlaşdır
+Jusqu’à 10 jours à l’avance|Up to 10 days ahead|Até 10 dias de antecedência|Hasta 10 días antes|حتى 10 أيام مسبقاً|Hadi siku 10 mapema|እስከ 10 ቀን አስቀድሞ|10 günə qədər əvvəlcədən
+Programmer|Schedule|Agendar|Programar|جدولة|Panga|አቅድ|Planlaşdır
+Programmée|Scheduled|Agendado|Programado|مجدول|Imepangwa|የታቀደ|Planlaşdırılıb
+Généré par IA|AI-generated|Gerado por IA|Generado por IA|مُنشأ بالذكاء الاصطناعي|Imetengenezwa na AI|በ AI የተፈጠረ|Süni intellektlə yaradılıb
+Partenariat rémunéré|Paid partnership|Parceria paga|Colaboración pagada|شراكة مدفوعة|Ushirikiano wa kulipwa|የሚከፈልበት ሽርክና|Ödənişli tərəfdaşlıq
+Contenu promotionnel|Promotional content|Conteúdo promocional|Contenido promocional|محتوى ترويجي|Maudhui ya matangazo|የማስተዋወቂያ ይዘት|Reklam məzmunu
+Partager sur|Share to|Partilhar em|Compartir en|مشاركة على|Shiriki kwenye|ያጋሩ በ|Paylaş
+Copier le lien|Copy link|Copiar link|Copiar enlace|نسخ الرابط|Nakili kiungo|ሊንክ ቅዳ|Linki kopyala
+Lien copié|Link copied|Link copiado|Enlace copiado|تم نسخ الرابط|Kiungo kimenakiliwa|ሊንኩ ተቀድቷል|Link kopyalandı
+Choisis une heure au moins 15 minutes plus tard|Pick a time at least 15 minutes from now|Escolhe uma hora pelo menos 15 minutos depois|Elige una hora al menos 15 minutos más tarde|اختر وقتاً بعد 15 دقيقة على الأقل|Chagua saa angalau dakika 15 baadaye|ቢያንስ ከ15 ደቂቃ በኋላ ያለ ሰዓት ይምረጡ|Ən azı 15 dəqiqə sonrakı vaxtı seç
+10 jours maximum|10 days maximum|10 dias no máximo|10 días como máximo|10 أيام كحد أقصى|Siku 10 zaidi|ቢበዛ 10 ቀን|Maksimum 10 gün
+Application des modifications…|Applying your edits…|A aplicar as alterações…|Aplicando los cambios…|جارٍ تطبيق التعديلات…|Inatekeleza mabadiliko…|ለውጦቹን በመተግበር ላይ…|Dəyişikliklər tətbiq olunur…
+Voix off ajoutée|Voice-over added|Voz off adicionada|Voz en off añadida|تمت إضافة التعليق الصوتي|Sauti juu imeongezwa|ትረካ ታክሏል|Səsləndirmə əlavə olundu
+Son ajouté · règle le mélange dans Volume|Sound added · adjust the mix in Volume|Som adicionado · ajusta a mistura em Volume|Sonido añadido · ajusta la mezcla en Volumen|تمت إضافة الصوت · اضبط المزج في الصوت|Sauti imeongezwa · rekebisha mchanganyiko kwenye Sauti kubwa|ድምፅ ታክሏል · ድብልቁን በድምፅ መጠን ያስተካክሉ|Səs əlavə olundu · qarışığı Səs bölməsində tənzimlə
+Moyen de paiement|Payment method|Método de pagamento|Método de pago|طريقة الدفع|Njia ya malipo|የክፍያ ዘዴ|Ödəniş üsulu
+Carte bancaire|Bank card|Cartão bancário|Tarjeta bancaria|بطاقة بنكية|Kadi ya benki|የባንክ ካርድ|Bank kartı
+Payer avec MTN MoMo|Pay with MTN MoMo|Pagar com MTN MoMo|Pagar con MTN MoMo|ادفع عبر MTN MoMo|Lipa kwa MTN MoMo|በ MTN MoMo ይክፈሉ|MTN MoMo ilə ödə
+Payer avec Orange Money|Pay with Orange Money|Pagar com Orange Money|Pagar con Orange Money|ادفع عبر Orange Money|Lipa kwa Orange Money|በ Orange Money ይክፈሉ|Orange Money ilə ödə
+Payer avec Google Pay|Pay with Google Pay|Pagar com Google Pay|Pagar con Google Pay|ادفع عبر Google Pay|Lipa kwa Google Pay|በ Google Pay ይክፈሉ|Google Pay ilə ödə
+Payer par carte (Visa, Mastercard)|Pay by card (Visa, Mastercard)|Pagar com cartão (Visa, Mastercard)|Pagar con tarjeta (Visa, Mastercard)|ادفع بالبطاقة (Visa، Mastercard)|Lipa kwa kadi (Visa, Mastercard)|በካርድ ይክፈሉ (Visa, Mastercard)|Kartla ödə (Visa, Mastercard)
+Payer avec Google Play|Pay with Google Play|Pagar com Google Play|Pagar con Google Play|ادفع عبر Google Play|Lipa kwa Google Play|በ Google Play ይክፈሉ|Google Play ilə ödə
+Tu confirmes sur ton téléphone avec ton code Mobile Money. Activation automatique.|You confirm on your phone with your Mobile Money PIN. Automatic activation.|Confirmas no telemóvel com o teu código Mobile Money. Ativação automática.|Confirmas en tu teléfono con tu código Mobile Money. Activación automática.|تؤكّد على هاتفك برمز Mobile Money. تفعيل تلقائي.|Unathibitisha kwenye simu yako kwa PIN ya Mobile Money. Uanzishaji wa moja kwa moja.|በስልክዎ በ Mobile Money ኮድዎ ያረጋግጣሉ። በራስ-ሰር ይነቃል።|Telefonunda Mobile Money kodunla təsdiqləyirsən. Avtomatik aktivləşmə.
+Visa, Mastercard · paiement sécurisé, activation automatique.|Visa, Mastercard · secure payment, automatic activation.|Visa, Mastercard · pagamento seguro, ativação automática.|Visa, Mastercard · pago seguro, activación automática.|Visa، Mastercard · دفع آمن، تفعيل تلقائي.|Visa, Mastercard · malipo salama, uanzishaji wa moja kwa moja.|Visa, Mastercard · ደህንነቱ የተጠበቀ ክፍያ፣ በራስ-ሰር ይነቃል።|Visa, Mastercard · təhlükəsiz ödəniş, avtomatik aktivləşmə.
+Google Pay se règle dans l’application Android Vibzo (paiement Google Play).|Google Pay is paid in the Vibzo Android app (Google Play payment).|O Google Pay paga-se na app Android Vibzo (pagamento Google Play).|Google Pay se paga en la app Android de Vibzo (pago de Google Play).|يتم الدفع عبر Google Pay في تطبيق Vibzo على Android (دفع Google Play).|Google Pay hulipwa kwenye programu ya Android ya Vibzo (malipo ya Google Play).|Google Pay በ Vibzo Android መተግበሪያ ይከፈላል (የGoogle Play ክፍያ)።|Google Pay Vibzo Android tətbiqində ödənilir (Google Play ödənişi).
+Recharger|Top up|Carregar|Recargar|اشحن|Ongeza salio|ሙላ|Artır
+pièces|coins|moedas|monedas|عملات|sarafu|ሳንቲሞች|sikkə
+Pièces à offrir|Coins to give|Moedas para oferecer|Monedas para regalar|عملات للإهداء|Sarafu za kutoa|የሚሰጡ ሳንቲሞች|Hədiyyə üçün sikkələr
+Gains des cadeaux|Gift earnings|Ganhos dos presentes|Ganancias de regalos|أرباح الهدايا|Mapato ya zawadi|የስጦታ ገቢ|Hədiyyə qazancı
+Historique des cadeaux|Gift history|Histórico de presentes|Historial de regalos|سجل الهدايا|Historia ya zawadi|የስጦታ ታሪክ|Hədiyyə tarixçəsi
+Recevoir sur|Receive to|Receber em|Recibir en|الاستلام على|Pokea kwenye|በዚህ ይቀበሉ|Burada al
+Numéro Mobile Money ou IBAN|Mobile Money number or IBAN|Número Mobile Money ou IBAN|Número Mobile Money o IBAN|رقم Mobile Money أو IBAN|Namba ya Mobile Money au IBAN|የ Mobile Money ቁጥር ወይም IBAN|Mobile Money nömrəsi və ya IBAN
+Demander le retrait|Request withdrawal|Pedir levantamento|Solicitar retiro|طلب السحب|Omba kutoa pesa|ማውጣት ይጠይቁ|Çıxarış tələb et
+80 % de la valeur va directement au créateur, qui peut la retirer en Mobile Money.|80% of the value goes straight to the creator, who can withdraw it via Mobile Money.|80 % do valor vai diretamente para o criador, que o pode levantar em Mobile Money.|El 80 % del valor va directamente al creador, que puede retirarlo por Mobile Money.|تذهب 80٪ من القيمة مباشرة إلى صانع المحتوى، ويمكنه سحبها عبر Mobile Money.|80% ya thamani huenda moja kwa moja kwa mtayarishi, anayeweza kuitoa kwa Mobile Money.|ከዋጋው 80% በቀጥታ ለፈጣሪው ይሄዳል፣ በ Mobile Money ማውጣት ይችላል።|Dəyərin 80 %-i birbaşa yaradıcıya gedir, o, Mobile Money ilə çıxara bilər.
+Même pays|Same country|Mesmo país|Mismo país|نفس البلد|Nchi moja|ተመሳሳይ አገር|Eyni ölkə
+Rose|Rose|Rosa|Rosa|وردة|Waridi|ጽጌረዳ|Qızılgül
+Cœur|Heart|Coração|Corazón|قلب|Moyo|ልብ|Ürək
+Feu|Fire|Fogo|Fuego|نار|Moto|እሳት|Alov
+Lion|Lion|Leão|León|أسد|Simba|አንበሳ|Aslan
+Couronne|Crown|Coroa|Corona|تاج|Taji|ዘውድ|Tac
+Fusée|Rocket|Foguetão|Cohete|صاروخ|Roketi|ሮኬት|Raket
+Château|Castle|Castelo|Castillo|قصر|Kasri|ቤተ መንግሥት|Qala
+Profil prêt ✅|Profile ready ✅|Perfil pronto ✅|Perfil listo ✅|الملف جاهز ✅|Wasifu uko tayari ✅|መገለጫው ዝግጁ ነው ✅|Profil hazırdır ✅
+Profil candidat enregistré ✅ Voici les offres qui te correspondent.|Candidate profile saved ✅ Here are the jobs that match you.|Perfil de candidato guardado ✅ Aqui estão as ofertas para ti.|Perfil de candidato guardado ✅ Aquí tienes las ofertas para ti.|تم حفظ ملف المرشح ✅ إليك الوظائف المناسبة لك.|Wasifu wa mwombaji umehifadhiwa ✅ Hizi ni kazi zinazokufaa.|የአመልካች መገለጫ ተቀምጧል ✅ የሚስማሙዎት ሥራዎች እነሆ።|Namizəd profili saxlanıldı ✅ Sənə uyğun vakansiyalar bunlardır.`;
 
 const DICT = new Map();
 const core = t => { const m = t.match(/^([^\p{L}\p{N}]*)([\s\S]*?)([^\p{L}\p{N}]*)$/u); return m ? m : [t, '', t, '']; };
@@ -1005,6 +1113,13 @@ RAW.split('\n').forEach(line => {
 
 const AGO = { en: ['{n} min ago', '{n} h ago', '{n} d ago'], pt: ['há {n} min', 'há {n} h', 'há {n} d'], es: ['hace {n} min', 'hace {n} h', 'hace {n} d'], ar: ['منذ {n} د', 'منذ {n} س', 'منذ {n} ي'], sw: ['dakika {n} zilizopita', 'saa {n} zilizopita', 'siku {n} zilizopita'], am: ['ከ{n} ደቂቃ በፊት', 'ከ{n} ሰዓት በፊት', 'ከ{n} ቀን በፊት'], az: ['{n} dəq əvvəl', '{n} saat əvvəl', '{n} gün əvvəl'] };
 
+const PAT = [
+  [/^Offrir un cadeau à (@\S+)$/, { en: 'Send a gift to $1', pt: 'Oferecer um presente a $1', es: 'Enviar un regalo a $1', ar: 'أرسل هدية إلى $1', sw: 'Tuma zawadi kwa $1', am: 'ለ$1 ስጦታ ይላኩ', az: '$1 üçün hədiyyə göndər' }],
+  [/^(.+) envoyé à (@\S+)$/, { en: '$1 sent to $2', pt: '$1 enviado a $2', es: '$1 enviado a $2', ar: 'تم إرسال $1 إلى $2', sw: '$1 imetumwa kwa $2', am: '$1 ለ$2 ተልኳል', az: '$1 $2 üçün göndərildi' }],
+  [/^([\d\s  ]+) pièces reçues · ≈ (.+)$/, { en: '$1 coins received · ≈ $2', pt: '$1 moedas recebidas · ≈ $2', es: '$1 monedas recibidas · ≈ $2', ar: '$1 عملة مستلمة · ≈ $2', sw: 'sarafu $1 zimepokelewa · ≈ $2', am: '$1 ሳንቲሞች ደርሰዋል · ≈ $2', az: '$1 sikkə alındı · ≈ $2' }],
+  [/^Tu reçois 80 % de la valeur de chaque cadeau \(1 pièce reçue = (.+)$/, { en: 'You get 80% of the value of each gift (1 coin received = $1', pt: 'Recebes 80 % do valor de cada presente (1 moeda recebida = $1', es: 'Recibes el 80 % del valor de cada regalo (1 moneda recibida = $1', ar: 'تحصل على 80٪ من قيمة كل هدية (1 عملة = $1', sw: 'Unapata 80% ya thamani ya kila zawadi (sarafu 1 = $1', am: 'ከእያንዳንዱ ስጦታ ዋጋ 80% ያገኛሉ (1 ሳንቲም = $1', az: 'Hər hədiyyənin dəyərinin 80 %-ni alırsan (1 sikkə = $1' }],
+  [/^Retirer (.+)$/, { en: 'Withdraw $1', pt: 'Levantar $1', es: 'Retirar $1', ar: 'سحب $1', sw: 'Toa $1', am: '$1 ያውጡ', az: '$1 çıxart' }],
+];
 let lang = 'fr';
 export const getLang = () => lang;
 
@@ -1014,6 +1129,7 @@ function translateText(s) {
   const row = DICT.get(mid);
   if (row && row[lang]) return pre + row[lang] + post;
   const c2 = mid.match(/^(.+?) \((\d+)$/); if (c2 && DICT.get(c2[1]) && DICT.get(c2[1])[lang]) return pre + DICT.get(c2[1])[lang] + ' (' + c2[2] + post;
+  for (const [re, tr] of PAT) { const mm = mid.match(re); if (mm && tr[lang]) return pre + mid.replace(re, tr[lang]) + post; }
   const a = mid.match(/^il y a (\d+) (min|h|j)$/);
   if (a && AGO[lang]) return pre + AGO[lang][{ min: 0, h: 1, j: 2 }[a[2]]].replace('{n}', a[1]) + post;
   return null;

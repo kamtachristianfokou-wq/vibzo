@@ -120,6 +120,19 @@ async function setLang(l) {
   if (uid()) { const { error } = await sb.from('profiles').update({ lang: l }).eq('id', uid()); if (!error && S.me) S.me.lang = l; }
 }
 
+/* Publications officielles traduites : chaque langue a sa propre vidéo / ses photos / sa légende (colonne i18n) */
+function locV(v) { if (!v || !v.i18n) return v; const x = v.i18n[getLang()]; return x ? { ...v, ...x } : v; }
+function localizeFeed(client) {
+  const from = client.from.bind(client);
+  const wrap = q => new Proxy(q, { get(t, k) {
+    const val = t[k];
+    if (k === 'then') return (ok, ko) => t.then(r => { if (r && r.data && typeof r.data === 'object') r.data = Array.isArray(r.data) ? r.data.map(locV) : locV(r.data); return r; }).then(ok, ko);
+    if (typeof val !== 'function') return val;
+    return (...a) => { const out = val.apply(t, a); return out && typeof out === 'object' && typeof out.then === 'function' ? wrap(out) : out; };
+  } });
+  client.from = name => wrap(from(name));
+  const rpc = client.rpc.bind(client); client.rpc = (...a) => wrap(rpc(...a));
+}
 /* ---------- état ---------- */
 let sb;
 const S = { postKind: 'video', sTab: 'top', replyCm: null, blocked: new Set(), safety: null,
@@ -255,7 +268,7 @@ SCREENS.auth = () => {
   <button class="btn ghost" onclick="V.go('home')">Continuer sans compte</button><button class="btn ghost" onclick="V.installApp()">📲 Installer l’application</button></div>`;
   if (authMode === 'signup') authRegions();
 };
-function authRegions() { const cc = $('#aCc').value; if (!savedLang() && langFor(cc) !== getLang()) { S.loc.country = cc; initI18n(langFor(cc)); } $('#aRg').innerHTML = C[cc].r.map(r => `<option>${esc(r)}</option>`).join(''); $('#aInd').textContent = C[cc].tel; }
+function authRegions() { const cc = $('#aCc').value; if (!savedLang() && langFor(cc) !== getLang()) { S.loc.country = cc; initI18n(langFor(cc)); } $('#aRg').innerHTML = C[cc].r.map(r => `<option value="${esc(String(r))}">${esc(r)}</option>`).join(''); $('#aInd').textContent = C[cc].tel; }
 function authTab(m) { authMode = m; SCREENS.auth(); }
 /* Mot de passe : 8 caractères, lettres et chiffres, et jamais vu dans une fuite de données.
    Vérification HaveIBeenPwned par k-anonymat : seuls les 5 premiers caractères de l'empreinte SHA-1 quittent l'appareil. */
@@ -317,7 +330,7 @@ function setupProfile() {
   <div class="err" id="sErr"></div><button class="btn" id="sBtn">C’est parti</button></form>`);
   setupRegions();
 }
-function setupRegions() { const cc = $('#sCc').value; $('#sRg').innerHTML = C[cc].r.map(r => `<option ${S.me.region === r ? 'selected' : ''}>${esc(r)}</option>`).join(''); }
+function setupRegions() { const cc = $('#sCc').value; $('#sRg').innerHTML = C[cc].r.map(r => `<option value="${esc(String(r))}" ${S.me.region === r ? 'selected' : ''}>${esc(r)}</option>`).join(''); }
 async function saveSetup() {
   const btn = $('#sBtn'); $('#sErr').textContent = ''; busy(btn, true);
   const cc = $('#sCc').value, upd = { display_name: $('#sName').value.trim(), username: $('#sUser').value.trim().toLowerCase(), country: cc, region: $('#sRg').value, needs_setup: false };
@@ -1329,7 +1342,7 @@ async function publish() {
 SCREENS.jobs = async () => {
   const t = S.jobTab;
   $('#s-jobs').innerHTML = hdr('Emplois', locBtn()) + `<div class="pad"><div class="seg"><button class="${t === 'pourtoi' ? 'on' : ''}" onclick="V.jobTab('pourtoi')">✨ Pour toi</button><button class="${t === 'offres' ? 'on' : ''}" onclick="V.jobTab('offres')">📋 Offres</button><button class="${t === 'cands' ? 'on' : ''}" onclick="V.jobTab('cands')">🙋 Candidats</button><button class="${t === 'mine' ? 'on' : ''}" onclick="V.jobTab('mine')">⭐ Mes annonces</button></div>
-  ${t !== 'mine' && t !== 'pourtoi' ? `<div class="row" style="margin-top:10px"><select onchange="V.jobSector(this.value)" style="flex:1"><option value="all">Tous les secteurs</option>${SECTORS.map(s => `<option ${S.jobSector === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>` : ''}
+  ${t !== 'mine' && t !== 'pourtoi' ? `<div class="row" style="margin-top:10px"><select onchange="V.jobSector(this.value)" style="flex:1"><option value="all">Tous les secteurs</option>${SECTORS.map(s => `<option value="${esc(String(s))}" ${S.jobSector === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>` : ''}
   <div class="row" style="margin-top:10px"><button class="btn sm" onclick="V.postJob()">＋ Publier une offre</button><button class="btn sm ghost" onclick="V.myCV()">📄 Mon profil candidat</button></div>
   <div class="list" id="jlist">${loading()}</div></div>`;
   if (t === 'pourtoi') return renderForYou();
@@ -1411,9 +1424,9 @@ function postJob() {
   if (!requireAuth('Connecte-toi pour publier une offre.')) return;
   const c = C[S.me.country];
   sheet('Publier une offre', `<div class="field"><label>Intitulé du poste</label><input id="jp" maxlength="80" placeholder="Ex : Vendeur(se) en boutique"></div><div class="field"><label>Entreprise</label><input id="jc" maxlength="80" placeholder="Nom de l’entreprise"></div>
-  <div class="row"><div class="field grow"><label>Secteur</label><select id="js">${SECTORS.map(s => `<option>${s}</option>`).join('')}</select></div><div class="field grow"><label>Contrat</label><select id="jk">${CONTRACTS.map(s => `<option>${s}</option>`).join('')}</select></div></div>
-  <div class="row"><div class="field grow"><label>Mode</label><select id="jt">${REMOTE.map(s => `<option>${s}</option>`).join('')}</select></div><div class="field grow"><label>Salaire / mois (${esc(c.cur)})</label><input id="jsal" type="number" inputmode="numeric" min="0" placeholder="Facultatif"></div></div>
-  <div class="field"><label>Région</label><select id="jr">${c.r.map(r => `<option ${r === S.me.region ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+  <div class="row"><div class="field grow"><label>Secteur</label><select id="js">${SECTORS.map(s => `<option value="${esc(String(s))}">${s}</option>`).join('')}</select></div><div class="field grow"><label>Contrat</label><select id="jk">${CONTRACTS.map(s => `<option value="${esc(String(s))}">${s}</option>`).join('')}</select></div></div>
+  <div class="row"><div class="field grow"><label>Mode</label><select id="jt">${REMOTE.map(s => `<option value="${esc(String(s))}">${s}</option>`).join('')}</select></div><div class="field grow"><label>Salaire / mois (${esc(c.cur)})</label><input id="jsal" type="number" inputmode="numeric" min="0" placeholder="Facultatif"></div></div>
+  <div class="field"><label>Région</label><select id="jr">${c.r.map(r => `<option value="${esc(String(r))}" ${r === S.me.region ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
   <div class="field"><label>Compétences recherchées (séparées par des virgules)</label><input id="jsk" maxlength="200" placeholder="Excel, anglais, permis B"></div>
   <div class="field"><label>Je recrute</label><select id="jo"><option value="pays">📍 Dans mon pays (${esc(c.n)})</option><option value="monde">🌍 Partout dans le monde</option></select></div>
   <div class="field"><label>Description du poste</label><textarea id="jd" rows="5" maxlength="2000" placeholder="Missions, profil recherché, horaires, comment postuler…"></textarea></div>
@@ -1433,10 +1446,10 @@ async function myCV() {
   const { data: c } = await sb.from('candidates').select('*').eq('user_id', uid()).maybeSingle();
   const cc = C[S.me.country];
   sheet('Mon profil candidat', `<div class="field"><label>Métier recherché</label><input id="cm" maxlength="80" value="${esc(c ? c.job_title : '')}" placeholder="Ex : Comptable"></div>
-  <div class="row"><div class="field grow"><label>Secteur</label><select id="cs2">${SECTORS.map(s => `<option ${c && c.sector === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div><div class="field" style="width:110px"><label>Expérience</label><input id="ce" type="number" min="0" max="60" inputmode="numeric" value="${c ? c.experience_years : 0}"></div></div>
+  <div class="row"><div class="field grow"><label>Secteur</label><select id="cs2">${SECTORS.map(s => `<option value="${esc(String(s))}" ${c && c.sector === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div><div class="field" style="width:110px"><label>Expérience</label><input id="ce" type="number" min="0" max="60" inputmode="numeric" value="${c ? c.experience_years : 0}"></div></div>
   <div class="field"><label>Compétences (séparées par des virgules)</label><input id="ck" value="${esc(c ? (c.skills || []).join(', ') : '')}" placeholder="Excel, anglais, vente"></div>
-  <div class="field"><label>Disponibilité</label><select id="cdp">${['Immédiate', 'Sous 2 semaines', 'Sous 1 mois', 'En poste, à l’écoute'].map(s => `<option ${c && c.availability === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
-  <div class="field"><label>Région</label><select id="cr">${cc.r.map(r => `<option ${(c ? c.region : S.me.region) === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+  <div class="field"><label>Disponibilité</label><select id="cdp">${['Immédiate', 'Sous 2 semaines', 'Sous 1 mois', 'En poste, à l’écoute'].map(s => `<option value="${esc(String(s))}" ${c && c.availability === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+  <div class="field"><label>Région</label><select id="cr">${cc.r.map(r => `<option value="${esc(String(r))}" ${(c ? c.region : S.me.region) === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
   <div class="field"><label>Je cherche un travail</label><select id="cmob"><option value="pays" ${!c || c.mobility === 'pays' ? 'selected' : ''}>📍 Dans mon pays (${esc(cc.n)})</option><option value="international" ${c && c.mobility === 'international' ? 'selected' : ''}>🌍 Partout dans le monde (je peux partir)</option><option value="teletravail" ${c && c.mobility === 'teletravail' ? 'selected' : ''}>💻 En télétravail, pour le monde entier</option></select></div>
   <div class="field"><label>À propos de toi</label><textarea id="ca" rows="3" maxlength="600">${esc(c ? c.about : '')}</textarea></div>
   <label class="check"><input type="checkbox" id="cv" ${!c || c.visible ? 'checked' : ''}> Visible par les recruteurs</label>
@@ -1527,7 +1540,7 @@ function shopForm() {
   <div class="field"><label>Plateforme</label><select id="spl"><option value="vibzo" ${sh.platform === 'vibzo' ? 'selected' : ''}>Boutique sur Vibzo</option><option value="shopify" ${sh.platform === 'shopify' ? 'selected' : ''}>J’ai une boutique Shopify</option><option value="woocommerce" ${sh.platform === 'woocommerce' ? 'selected' : ''}>J’ai une boutique WooCommerce</option></select></div>
   <div class="field"><label>Lien de ta boutique (facultatif)</label><input id="su" inputmode="url" value="${esc(sh.external_url || '')}" placeholder="https://"></div>
   <div class="field"><label>WhatsApp de la boutique</label><input id="sw" type="tel" inputmode="tel" value="${esc(sh.whatsapp || S.me.phone || '')}" placeholder="${esc(c.tel)} …"></div>
-  <div class="field"><label>Région</label><select id="sr">${c.r.map(r => `<option ${(sh.region || S.me.region) === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+  <div class="field"><label>Région</label><select id="sr">${c.r.map(r => `<option value="${esc(String(r))}" ${(sh.region || S.me.region) === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
   <button class="btn" id="sBtn" onclick="V.saveShop()">${sh.id ? 'Enregistrer' : 'Envoyer ma demande'}</button>`);
 }
 async function saveShop() {
@@ -1658,7 +1671,7 @@ function editProfile() {
   <div class="field"><label>▶️ YouTube</label><input id="eyt" maxlength="80" value="${esc(m.youtube || '')}" placeholder="TaChaine"></div>
   <button class="btn" id="eBtn" onclick="V.saveProfile()">Enregistrer</button>`);
 }
-const regionOpts = (cc, sel) => C[cc].r.map(r => `<option ${r === sel ? 'selected' : ''}>${esc(r)}</option>`).join('');
+const regionOpts = (cc, sel) => C[cc].r.map(r => `<option value="${esc(String(r))}" ${r === sel ? 'selected' : ''}>${esc(r)}</option>`).join('');
 async function saveProfile() {
   const btn = $('#eBtn'); busy(btn, true);
   try {
@@ -1686,7 +1699,7 @@ async function creatorSheet() {
   ${s.status === 'approved' ? `<div class="card" style="text-align:center"><div class="mut small">Gains à recevoir</div><div style="font-size:26px;font-weight:800;color:#12a150">${money(s.due, cur)}</div><div class="mut small">Total gagné : ${money(s.earned, cur)} · paiement chaque mois sur ton Mobile Money ou compte bancaire</div></div>` : `
   <div class="lbl">Conditions pour rejoindre</div>${bar('👥 Abonnés', s.followers, t.followers)}${bar('👁️ Vues sur 30 jours', s.views_30d, t.views_30d)}${bar('🎬 Vidéos publiées', s.videos, t.videos)}<p class="mut small" style="margin-top:6px">🛡️ Seuls les abonnés et les vues de vrais comptes (e-mail confirmé) comptent. Les fausses vues, comptes multiples ou robots entraînent l’exclusion du programme.</p>
   <div class="perks" style="margin-top:10px"><div>🔞 <span>Avoir 18 ans ou plus</span></div><div>🎥 <span>Publier tes propres vidéos (pas de copie d’autres créateurs)</span></div><div>🤝 <span>Respecter les règles de la communauté</span></div></div>
-  ${s.status === 'pending' ? '' : s.eligible ? `<div class="lbl">Où recevoir tes gains ?</div><div class="field"><select id="crm">${['MTN Mobile Money', 'Orange Money', 'Wave', 'M-Pesa', 'Airtel Money', 'Moov Money', 'Virement bancaire (IBAN)', 'm10 / Birbank'].map(x => `<option>${x}</option>`).join('')}</select></div><div class="field"><input id="crn" maxlength="60" placeholder="Numéro ou IBAN"></div><label class="check"><input type="checkbox" id="cr18"> J’ai 18 ans ou plus et je publie mes propres vidéos.</label><button class="btn gold" id="crBtn" onclick="V.creatorApply()">💰 Rejoindre le Programme Créateurs</button>`
+  ${s.status === 'pending' ? '' : s.eligible ? `<div class="lbl">Où recevoir tes gains ?</div><div class="field"><select id="crm">${['MTN Mobile Money', 'Orange Money', 'Wave', 'M-Pesa', 'Airtel Money', 'Moov Money', 'Virement bancaire (IBAN)', 'm10 / Birbank'].map(x => `<option value="${esc(String(x))}">${x}</option>`).join('')}</select></div><div class="field"><input id="crn" maxlength="60" placeholder="Numéro ou IBAN"></div><label class="check"><input type="checkbox" id="cr18"> J’ai 18 ans ou plus et je publie mes propres vidéos.</label><button class="btn gold" id="crBtn" onclick="V.creatorApply()">💰 Rejoindre le Programme Créateurs</button>`
       : `<p class="small mut" style="text-align:center;margin-top:12px">Continue à publier : dès que tu atteins les 3 objectifs, tu pourras envoyer ta candidature ici. 🚀</p>`}`}
   <div class="lbl">Astuces pour grandir</div><div class="perks"><div>🔗 <span>Lie ton Instagram, TikTok et YouTube (Modifier le profil) et partage tes vidéos Vibzo</span></div><div>⏱️ <span>Publie régulièrement, 1 vidéo par jour si possible</span></div><div>#️⃣ <span>Utilise des hashtags et réponds aux commentaires</span></div></div>`;
 }
@@ -1830,7 +1843,7 @@ function datingForm() {
   <div class="row"><div class="field grow"><label>Je suis</label><select id="dGender"><option value="homme" ${m.gender === 'homme' ? 'selected' : ''}>Un homme</option><option value="femme" ${m.gender === 'femme' ? 'selected' : ''}>Une femme</option></select></div>
   <div class="field grow"><label>Je cherche</label><select id="dLook"><option value="femme" ${m.looking_for === 'femme' ? 'selected' : ''}>Des femmes</option><option value="homme" ${m.looking_for === 'homme' ? 'selected' : ''}>Des hommes</option><option value="tous" ${m.looking_for === 'tous' ? 'selected' : ''}>Les deux</option></select></div></div>
   <div class="field"><label>Ce que je recherche</label><select id="dIntent">${Object.entries(INTENT).map(([k, v]) => `<option value="${k}" ${m.intent === k ? 'selected' : ''}>${v[0]} ${v[1]}</option>`).join('')}</select></div>
-  <div class="row"><div class="field grow"><label>Région</label><select id="dRegion">${c.r.map(r => `<option ${(m.region || (S.me && S.me.region)) === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+  <div class="row"><div class="field grow"><label>Région</label><select id="dRegion">${c.r.map(r => `<option value="${esc(String(r))}" ${(m.region || (S.me && S.me.region)) === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
   <div class="field grow"><label>Ville</label><input id="dCity" maxlength="60" list="dCities" value="${esc(m.city || (S.me && S.me.city) || '')}" placeholder="Ex : Douala"><datalist id="dCities">${c.r.map(r => `<option value="${esc(r)}">`).join('')}</datalist></div></div>
   <div class="field"><label>À propos de moi</label><textarea id="dBio" rows="3" maxlength="300" placeholder="Ce que j’aime, ce que je cherche…">${esc(m.bio || '')}</textarea></div>
   <div class="field"><label>Centres d’intérêt (séparés par des virgules)</label><input id="dInt" value="${esc((m.interests || []).join(', '))}" placeholder="Musique, voyage, cuisine"></div>
@@ -2249,7 +2262,7 @@ async function walletSheet() {
   <div class="wcard earn"><div class="mut small">💎 Gains des cadeaux</div><b>${money(val(w.earned), cur)}</b><div class="mut small">${fmtN(w.earned)} pièces reçues · ${toUsd(val(w.earned), cur)}</div></div></div>
   ${w.pending_out ? `<div class="safety">⏳<span>Retrait en cours : <b>${money(val(w.pending_out), cur)}</b>. L’équipe Vibzo t’envoie le paiement sous 72 h.</span></div>` : ''}
   ${w.earned >= w.min_out ? `<div class="card" style="margin:12px 0"><b>Retirer ${money(val(w.earned), cur)}</b>
-    <div class="field" style="margin-top:8px"><label>Recevoir sur</label><select id="wM">${OUT_METHODS[zone].map(x => `<option>${x}</option>`).join('')}</select></div>
+    <div class="field" style="margin-top:8px"><label>Recevoir sur</label><select id="wM">${OUT_METHODS[zone].map(x => `<option value="${esc(String(x))}">${x}</option>`).join('')}</select></div>
     <div class="field"><label>Numéro Mobile Money ou IBAN</label><input id="wN" placeholder="${zone === 'A' ? 'AZ00…' : '+237 6…'}" value="${esc((S.me && S.me.phone) || '')}"></div>
     <button class="btn" id="wBtn" onclick="V.withdraw()">💸 Demander le retrait</button></div>`
     : `<div class="card" style="margin:12px 0;text-align:center"><div class="mut small">Retrait possible à partir de ${w.min_out} pièces reçues (${money(val(w.min_out), cur)})</div><div class="rbar"><i style="width:${Math.min(100, w.earned / w.min_out * 100)}%"></i></div><div class="mut small">Encore ${fmtN(need)} pièces · publie des vidéos et fais des directs pour recevoir des cadeaux 🎁</div></div>`}
@@ -3738,7 +3751,7 @@ async function mySounds() {
   <div class="field"><label>Fichier audio (MP3, M4A, WAV · 15 Mo max)</label><input type="file" id="snF" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg"></div>
   <div class="field"><label>Titre du morceau</label><input id="snT" maxlength="60" placeholder="Ex : Douala by night"></div>
   <div class="field"><label>Nom d’artiste</label><input id="snA" maxlength="60" value="${esc(S.me.display_name || '')}"></div>
-  <div class="field"><label>Genre</label><select id="snG">${SGEN.map(g => `<option>${g}</option>`).join('')}</select></div>
+  <div class="field"><label>Genre</label><select id="snG">${SGEN.map(g => `<option value="${esc(String(g))}">${g}</option>`).join('')}</select></div>
   <div class="field"><label>Pochette (facultatif)</label><input type="file" id="snC" accept="image/*"></div>
   <label class="check"><input type="checkbox" id="snR"> <span>Je certifie être l’auteur ou détenir tous les droits de ce morceau (paroles, musique, enregistrement). Je n’envoie pas la chanson d’un autre artiste. Je sais que Vibzo retire tout son signalé comme copié et peut fermer le compte.</span></label>
   <button class="btn" id="snBtn" onclick="V.uploadSound()">🎵 Envoyer mon son</button>
@@ -3848,6 +3861,7 @@ async function start() {
   }
   applyLang();
   try { sb = await getClient(); } catch (e) { offlineHome(); return; }
+  localizeFeed(sb);
   const { data } = await sb.auth.getSession(); S.session = data.session;
   await loadMe().catch(fail);
   checkPayReturn(); checkMfa(); setTimeout(welcome, 1500);
